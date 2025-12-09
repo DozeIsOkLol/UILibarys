@@ -227,23 +227,100 @@ function UILIB:CreateWindow(config)
         end
 
         function ElementMethods:AddDropdown(config)
+            local isOpen = false
             local currentOption = config.Default or config.Options[1]
-            local currentIndex = table.find(config.Options, currentOption) or 1
+
+            -- This frame holds the button and the dropdown list.
+            -- It's essential for positioning and layering.
+            local DropdownFrame = Instance.new("Frame", TabContent)
+            DropdownFrame.BackgroundTransparency = 1
+            DropdownFrame.Size = UDim2.new(1, 0, 0, 35) -- Standard element height
+            DropdownFrame.ClipsDescendants = false -- Allows the list to show outside of the frame's bounds
+            DropdownFrame.ZIndex = 2 -- Ensures it renders above elements below it
+
+            -- The main button the user clicks to open/close the dropdown
+            local MainButton = Instance.new("TextButton", DropdownFrame)
+            MainButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            MainButton.Size = UDim2.new(1, 0, 1, 0)
+            MainButton.Font = Enum.Font.Gotham
+            MainButton.Text = config.Name .. ": " .. currentOption
+            MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            MainButton.TextSize = 14
+            Instance.new("UICorner", MainButton).CornerRadius = UDim.new(0, 6)
+
+            -- The container for the list of options
+            local OptionsContainer = Instance.new("ScrollingFrame")
+            OptionsContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            OptionsContainer.BorderColor3 = Color3.fromRGB(55, 55, 55)
+            OptionsContainer.Position = UDim2.new(0, 0, 1, 5) -- 5 pixels of padding below the button
+            OptionsContainer.Size = UDim2.new(1, 0, 0, 0) -- Starts with 0 height, will be animated
+            OptionsContainer.ScrollBarThickness = 4
+            OptionsContainer.ZIndex = 3 -- Higher ZIndex to appear on top of everything
+            Instance.new("UICorner", OptionsContainer).CornerRadius = UDim.new(0, 6)
+            Instance.new("UIPadding", OptionsContainer).PaddingLeft = UDim.new(0, 4)
+            Instance.new("UIPadding", OptionsContainer).PaddingRight = UDim.new(0, 4)
             
-            -- This simplified dropdown cycles through options on click.
-            -- A true dropdown that opens a list is significantly more complex.
-            local DropdownButton = ElementMethods:AddButton({
-                Name = config.Name .. ": " .. currentOption,
-                Callback = function()
-                    currentIndex = currentIndex + 1
-                    if currentIndex > #config.Options then currentIndex = 1 end
-                    currentOption = config.Options[currentIndex]
-                    
-                    DropdownButton.Text = config.Name .. ": " .. currentOption
-                    pcall(config.Callback, currentOption)
+            local ListLayout = Instance.new("UIListLayout", OptionsContainer)
+            ListLayout.Padding = UDim.new(0, 4)
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local function closeDropdown()
+                isOpen = false
+                TweenService:Create(OptionsContainer, TweenInfo.new(0.2), { Size = UDim2.new(1, 0, 0, 0) }):Play()
+                task.wait(0.2)
+                if OptionsContainer.Parent then OptionsContainer.Parent = nil end
+            end
+            
+            local function openDropdown()
+                isOpen = true
+                -- Clear any previous options to prevent duplicates
+                for _, child in ipairs(OptionsContainer:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
                 end
-            })
-            return DropdownButton
+
+                -- Populate the list with new buttons for each option
+                for _, optionName in ipairs(config.Options) do
+                    local OptionButton = Instance.new("TextButton")
+                    OptionButton.Parent = OptionsContainer
+                    OptionButton.BackgroundTransparency = 1 -- Transparent background
+                    OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                    OptionButton.Font = Enum.Font.Gotham
+                    OptionButton.Text = optionName
+                    OptionButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+                    OptionButton.TextSize = 14
+                    
+                    OptionButton.MouseButton1Click:Connect(function()
+                        currentOption = optionName
+                        MainButton.Text = config.Name .. ": " .. currentOption
+                        pcall(config.Callback, currentOption)
+                        closeDropdown()
+                    end)
+                    
+                    -- Add hover effects for better user experience
+                    local bg = Instance.new("Frame", OptionButton)
+                    bg.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+                    bg.BackgroundTransparency = 1
+                    bg.Size = UDim2.new(1, 0, 1, 0)
+                    bg.ZIndex = -1
+                    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 4)
+
+                    OptionButton.MouseEnter:Connect(function() TweenService:Create(bg, TweenInfo.new(0.1), { BackgroundTransparency = 0 }):Play() end)
+                    OptionButton.MouseLeave:Connect(function() TweenService:Create(bg, TweenInfo.new(0.1), { BackgroundTransparency = 1 }):Play() end)
+                end
+                
+                -- Parent the container and animate its size
+                OptionsContainer.Parent = DropdownFrame
+                local numOptions = #config.Options
+                local dropdownHeight = math.min(numOptions * 29 + 4, 120) -- Calculate height, max of 120px
+                TweenService:Create(OptionsContainer, TweenInfo.new(0.2), { Size = UDim2.new(1, 0, 0, dropdownHeight) }):Play()
+            end
+
+            -- Connect the main button to toggle the dropdown's visibility
+            MainButton.MouseButton1Click:Connect(function()
+                if isOpen then closeDropdown() else openDropdown() end
+            end)
+
+            return DropdownFrame
         end
 
         -- ================================================================================= --
