@@ -60,14 +60,196 @@ function UILIB:CreateWindow(config)
         TabButton.MouseButton1Click:Connect(SwitchToTab); Tab.Button = TabButton; table.insert(UILIB_Window.Tabs, Tab); if #UILIB_Window.Tabs == 1 then SwitchToTab() end
         
         local ElementMethods = {}
-        function ElementMethods:AddLabel(text) local Label = Instance.new("TextLabel", TabContent); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, 0, 0, 20); Label.Font = Enum.Font.GothamSemibold; Label.Text = text; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 16; Label.TextXAlignment = Enum.TextXAlignment.Left; return {} end
-        function ElementMethods:AddParagraph(text) local Frame = Instance.new("Frame", TabContent); Frame.BackgroundTransparency = 1; local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, 0, 1, 0); Label.Font = Enum.Font.Gotham; Label.Text = text; Label.TextColor3 = Color3.fromRGB(200, 200, 200); Label.TextSize = 14; Label.TextWrapped = true; Label.TextXAlignment = Enum.TextXAlignment.Left; Label.TextYAlignment = Enum.TextYAlignment.Top; local size = TextService:GetTextSize(text, 14, Enum.Font.Gotham, Vector2.new(ContentContainer.AbsoluteSize.X - 30, 1000)); Frame.Size = UDim2.new(1, 0, 0, size.Y + 5); return {} end
-        function ElementMethods:AddButton(config) local Button = Instance.new("TextButton", TabContent); Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Button.Size = UDim2.new(1, 0, 0, 35); Button.Font = Enum.Font.Gotham; Button.Text = config.Name; Button.TextColor3 = Color3.fromRGB(255, 255, 255); Button.TextSize = 14; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6); Button.MouseButton1Click:Connect(function() pcall(config.Callback) end); return {} end
-        function ElementMethods:AddToggle(config) local toggled = false; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.7, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Switch = Instance.new("Frame", Frame); Switch.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Switch.Position = UDim2.new(1, -60, 0.5, 0); Switch.Size = UDim2.new(0, 50, 0, 24); Switch.AnchorPoint = Vector2.new(0, 0.5); Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0); local Circle = Instance.new("Frame", Switch); Circle.BackgroundColor3 = Color3.fromRGB(180, 180, 180); Circle.Position = UDim2.new(0, 4, 0.5, 0); Circle.Size = UDim2.new(0, 16, 0, 16); Circle.AnchorPoint = Vector2.new(0, 0.5); Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0); local Button = Instance.new("TextButton", Frame); Button.BackgroundTransparency = 1; Button.Size = UDim2.new(1, 0, 1, 0); Button.Text = ""; Button.MouseButton1Click:Connect(function() toggled = not toggled; pcall(config.Callback, toggled); local pos = toggled and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 4, 0.5, 0); local cColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180); local sColor = toggled and Color3.fromRGB(0, 122, 255) or Color3.fromRGB(30, 30, 30); TweenService:Create(Circle, TweenInfo.new(0.2), {Position = pos, BackgroundColor3 = cColor}):Play(); TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = sColor}):Play() end); return {} end
-        function ElementMethods:AddSlider(config) local min, max = config.Min or 0, config.Max or 100; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 60); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, -70, 0, 25); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Value = Instance.new("TextLabel", Frame); Value.BackgroundTransparency = 1; Value.Size = UDim2.new(0, 50, 0, 25); Value.Position = UDim2.new(1, -60, 0, 0); Value.Font = Enum.Font.GothamBold; Value.Text = tostring(min); Value.TextColor3 = Color3.fromRGB(255, 255, 255); Value.TextSize = 14; Value.TextXAlignment = Enum.TextXAlignment.Right; local Track = Instance.new("Frame", Frame); Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Track.Position = UDim2.new(0.5, 0, 1, -18); Track.Size = UDim2.new(1, -20, 0, 8); Track.AnchorPoint = Vector2.new(0.5, 0); Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0); local Progress = Instance.new("Frame", Track); Progress.BackgroundColor3 = Color3.fromRGB(0, 122, 255); Progress.Size = UDim2.new(0, 0, 1, 0); Instance.new("UICorner", Progress).CornerRadius = UDim.new(1, 0); local Button = Instance.new("TextButton", Track); Button.BackgroundTransparency = 1; Button.Size = UDim2.new(1, 0, 1, 0); Button.Text = ""; local function update(pos) local percent = math.clamp((pos.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1); local val = math.floor(min + (max - min) * percent + 0.5); Progress.Size = UDim2.new(percent, 0, 1, 0); Value.Text = tostring(val); pcall(config.Callback, val) end; local dragging = false; Button.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; update(i.Position) end end); Button.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end end); Button.InputChanged:Connect(function(i) if (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) and dragging then update(i.Position) end end); return {} end
-        function ElementMethods:AddTextbox(config) local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.5, -10, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Box = Instance.new("TextBox", Frame); Box.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Box.Position = UDim2.new(1, -160, 0.5, 0); Box.Size = UDim2.new(0, 150, 0, 28); Box.AnchorPoint = Vector2.new(0, 0.5); Box.Font = Enum.Font.Gotham; Box.PlaceholderText = config.Placeholder or "..."; Box.PlaceholderColor3 = Color3.fromRGB(150, 150, 150); Box.TextColor3 = Color3.fromRGB(255, 255, 255); Box.TextSize = 14; Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6); Box.FocusLost:Connect(function(enter) if enter then pcall(config.Callback, Box.Text) end end); return {} end
-        function ElementMethods:AddKeybind(config) local key, listening = config.Key or Enum.KeyCode.RightControl, false; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.7, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Button = Instance.new("TextButton", Frame); Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Button.Position = UDim2.new(1, -100, 0.5, 0); Button.Size = UDim2.new(0, 90, 0, 25); Button.AnchorPoint = Vector2.new(0, 0.5); Button.Font = Enum.Font.GothamBold; Button.Text = key.Name; Button.TextColor3 = Color3.fromRGB(255, 255, 255); Button.TextSize = 12; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6); Button.MouseButton1Click:Connect(function() listening = true; Button.Text = ". . ." end); UserInputService.InputBegan:Connect(function(i, p) if p then return end; if listening then key = i.KeyCode; Button.Text = key.Name; listening = false elseif i.KeyCode == key then pcall(config.Callback) end end); return {} end
+        function ElementMethods:AddLabel(text) local Label = Instance.new("TextLabel", TabContent); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, 0, 0, 20); Label.Font = Enum.Font.GothamSemibold; Label.Text = text; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 16; Label.TextXAlignment = Enum.TextXAlignment.Left; return Label end
+        function ElementMethods:AddParagraph(text) local Frame = Instance.new("Frame", TabContent); Frame.BackgroundTransparency = 1; local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, 0, 1, 0); Label.Font = Enum.Font.Gotham; Label.Text = text; Label.TextColor3 = Color3.fromRGB(200, 200, 200); Label.TextSize = 14; Label.TextWrapped = true; Label.TextXAlignment = Enum.TextXAlignment.Left; Label.TextYAlignment = Enum.TextYAlignment.Top; local size = TextService:GetTextSize(text, 14, Enum.Font.Gotham, Vector2.new(ContentContainer.AbsoluteSize.X - 30, 1000)); Frame.Size = UDim2.new(1, 0, 0, size.Y + 5); return Frame end
+        function ElementMethods:AddButton(config) local Button = Instance.new("TextButton", TabContent); Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Button.Size = UDim2.new(1, 0, 0, 35); Button.Font = Enum.Font.Gotham; Button.Text = config.Name; Button.TextColor3 = Color3.fromRGB(255, 255, 255); Button.TextSize = 14; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6); Button.MouseButton1Click:Connect(function() pcall(config.Callback) end); return Button end
+        function ElementMethods:AddToggle(config) local toggled = false; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.7, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Switch = Instance.new("Frame", Frame); Switch.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Switch.Position = UDim2.new(1, -60, 0.5, 0); Switch.Size = UDim2.new(0, 50, 0, 24); Switch.AnchorPoint = Vector2.new(0, 0.5); Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0); local Circle = Instance.new("Frame", Switch); Circle.BackgroundColor3 = Color3.fromRGB(180, 180, 180); Circle.Position = UDim2.new(0, 4, 0.5, 0); Circle.Size = UDim2.new(0, 16, 0, 16); Circle.AnchorPoint = Vector2.new(0, 0.5); Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0); local Button = Instance.new("TextButton", Frame); Button.BackgroundTransparency = 1; Button.Size = UDim2.new(1, 0, 1, 0); Button.Text = ""; Button.MouseButton1Click:Connect(function() toggled = not toggled; pcall(config.Callback, toggled); local pos = toggled and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 4, 0.5, 0); local cColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180); local sColor = toggled and Color3.fromRGB(0, 122, 255) or Color3.fromRGB(30, 30, 30); TweenService:Create(Circle, TweenInfo.new(0.2), {Position = pos, BackgroundColor3 = cColor}):Play(); TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = sColor}):Play() end); return Frame end
+        function ElementMethods:AddSlider(config) local min, max = config.Min or 0, config.Max or 100; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 60); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, -70, 0, 25); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Value = Instance.new("TextLabel", Frame); Value.BackgroundTransparency = 1; Value.Size = UDim2.new(0, 50, 0, 25); Value.Position = UDim2.new(1, -60, 0, 0); Value.Font = Enum.Font.GothamBold; Value.Text = tostring(min); Value.TextColor3 = Color3.fromRGB(255, 255, 255); Value.TextSize = 14; Value.TextXAlignment = Enum.TextXAlignment.Right; local Track = Instance.new("Frame", Frame); Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Track.Position = UDim2.new(0.5, 0, 1, -18); Track.Size = UDim2.new(1, -20, 0, 8); Track.AnchorPoint = Vector2.new(0.5, 0); Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0); local Progress = Instance.new("Frame", Track); Progress.BackgroundColor3 = Color3.fromRGB(0, 122, 255); Progress.Size = UDim2.new(0, 0, 1, 0); Instance.new("UICorner", Progress).CornerRadius = UDim.new(1, 0); local Button = Instance.new("TextButton", Track); Button.BackgroundTransparency = 1; Button.Size = UDim2.new(1, 0, 1, 0); Button.Text = ""; local function update(pos) local percent = math.clamp((pos.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1); local val = math.floor(min + (max - min) * percent + 0.5); Progress.Size = UDim2.new(percent, 0, 1, 0); Value.Text = tostring(val); pcall(config.Callback, val) end; local dragging = false; Button.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; update(i.Position) end end); Button.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end end); Button.InputChanged:Connect(function(i) if (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) and dragging then update(i.Position) end end); return Frame end
+        function ElementMethods:AddTextbox(config) local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.5, -10, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Box = Instance.new("TextBox", Frame); Box.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Box.Position = UDim2.new(1, -160, 0.5, 0); Box.Size = UDim2.new(0, 150, 0, 28); Box.AnchorPoint = Vector2.new(0, 0.5); Box.Font = Enum.Font.Gotham; Box.PlaceholderText = config.Placeholder or "..."; Box.PlaceholderColor3 = Color3.fromRGB(150, 150, 150); Box.TextColor3 = Color3.fromRGB(255, 255, 255); Box.TextSize = 14; Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6); Box.FocusLost:Connect(function(enter) if enter then pcall(config.Callback, Box.Text) end end); return Frame end
+        function ElementMethods:AddKeybind(config) local key, listening = config.Key or Enum.KeyCode.RightControl, false; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45); Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.7, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local Button = Instance.new("TextButton", Frame); Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Button.Position = UDim2.new(1, -100, 0.5, 0); Button.Size = UDim2.new(0, 90, 0, 25); Button.AnchorPoint = Vector2.new(0, 0.5); Button.Font = Enum.Font.GothamBold; Button.Text = key.Name; Button.TextColor3 = Color3.fromRGB(255, 255, 255); Button.TextSize = 12; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6); Button.MouseButton1Click:Connect(function() listening = true; Button.Text = ". . ." end); UserInputService.InputBegan:Connect(function(i, p) if p then return end; if listening then key = i.KeyCode; Button.Text = key.Name; listening = false elseif i.KeyCode == key then pcall(config.Callback) end end); return Frame end
         
+        -- ================================================================================= --
+        -- ||                   START OF NEWLY ADDED UI ELEMENTS                          || --
+        -- ================================================================================= --
+
+        function ElementMethods:AddDivider()
+            local Divider = Instance.new("Frame", TabContent)
+            Divider.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Divider.BorderSizePixel = 0
+            Divider.Size = UDim2.new(1, 0, 0, 2)
+            return Divider
+        end
+
+        function ElementMethods:AddSection(text)
+            local Label = Instance.new("TextLabel", TabContent)
+            Label.BackgroundTransparency = 1
+            Label.Size = UDim2.new(1, 0, 0, 24)
+            Label.Font = Enum.Font.GothamBold -- Bolder font for sections
+            Label.Text = text
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 18 -- Larger text size
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            return Label
+        end
+
+        function ElementMethods:AddButtonRow(buttons)
+            local RowFrame = Instance.new("Frame", TabContent)
+            RowFrame.BackgroundTransparency = 1
+            RowFrame.Size = UDim2.new(1, 0, 0, 35)
+
+            local ListLayout = Instance.new("UIListLayout", RowFrame)
+            ListLayout.FillDirection = Enum.FillDirection.Horizontal
+            ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ListLayout.Padding = UDim.new(0, 10)
+
+            local numButtons = #buttons
+            for i, buttonInfo in ipairs(buttons) do
+                local text, callback = buttonInfo[1], buttonInfo[2]
+                local Button = Instance.new("TextButton", RowFrame)
+                Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                -- Distribute width evenly, accounting for padding
+                Button.Size = UDim2.new(1/numButtons, -((numButtons-1)*10)/numButtons, 1, 0)
+                Button.Font = Enum.Font.Gotham
+                Button.Text = text
+                Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Button.TextSize = 14
+                Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
+                Button.MouseButton1Click:Connect(function() pcall(callback) end)
+            end
+            return RowFrame
+        end
+
+        function ElementMethods:AddStepper(config)
+            local currentIndex = 1
+            if config.Default then
+                for i, v in ipairs(config.Options) do if v == config.Default then currentIndex = i break end end
+            end
+
+            local Frame = Instance.new("Frame", TabContent)
+            Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Frame.Size = UDim2.new(1, 0, 0, 40)
+            Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+
+            local Label = Instance.new("TextLabel", Frame)
+            Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.5, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left
+
+            local ValueLabel = Instance.new("TextLabel", Frame)
+            ValueLabel.BackgroundTransparency = 1; ValueLabel.Size = UDim2.new(0.5, -80, 1, 0); ValueLabel.Position = UDim2.new(0.5, -10, 0, 0); ValueLabel.Font = Enum.Font.GothamBold
+            ValueLabel.Text = config.Options[currentIndex]; ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255); ValueLabel.TextSize = 14; ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+            local BackButton = Instance.new("TextButton", Frame)
+            BackButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30); BackButton.Position = UDim2.new(1, -65, 0.5, 0); BackButton.Size = UDim2.new(0, 25, 0, 25)
+            BackButton.AnchorPoint = Vector2.new(0, 0.5); BackButton.Font = Enum.Font.GothamBold; BackButton.Text = "<"; BackButton.TextColor3 = Color3.fromRGB(255, 255, 255); BackButton.TextSize = 14
+            Instance.new("UICorner", BackButton).CornerRadius = UDim.new(0, 4)
+
+            local ForwardButton = Instance.new("TextButton", Frame)
+            ForwardButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ForwardButton.Position = UDim2.new(1, -35, 0.5, 0); ForwardButton.Size = UDim2.new(0, 25, 0, 25)
+            ForwardButton.AnchorPoint = Vector2.new(0, 0.5); ForwardButton.Font = Enum.Font.GothamBold; ForwardButton.Text = ">"; ForwardButton.TextColor3 = Color3.fromRGB(255, 255, 255); ForwardButton.TextSize = 14
+            Instance.new("UICorner", ForwardButton).CornerRadius = UDim.new(0, 4)
+
+            local function updateValue()
+                ValueLabel.Text = config.Options[currentIndex]
+                pcall(config.Callback, config.Options[currentIndex])
+            end
+
+            BackButton.MouseButton1Click:Connect(function()
+                currentIndex = currentIndex - 1
+                if currentIndex < 1 then currentIndex = #config.Options end
+                updateValue()
+            end)
+
+            ForwardButton.MouseButton1Click:Connect(function()
+                currentIndex = currentIndex + 1
+                if currentIndex > #config.Options then currentIndex = 1 end
+                updateValue()
+            end)
+
+            return Frame
+        end
+        
+        function ElementMethods:AddCheckbox(config)
+            local list = config.List or {}
+            local Frame = Instance.new("Frame", TabContent)
+            Frame.BackgroundTransparency = 1
+            Frame.Size = UDim2.new(1, 0, 0, 20 + (#list * 30)) -- Dynamic height based on list items
+
+            local Title = Instance.new("TextLabel", Frame)
+            Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, 0, 0, 20); Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name
+            Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local ListContainer = Instance.new("Frame", Frame)
+            ListContainer.BackgroundTransparency = 1
+            ListContainer.Size = UDim2.new(1, 0, 1, -20)
+            ListContainer.Position = UDim2.new(0, 0, 0, 20)
+            local ListLayout = Instance.new("UIListLayout", ListContainer)
+            ListLayout.Padding = UDim.new(0, 5)
+
+            local selected = {}
+            for _, optionName in ipairs(list) do
+                selected[optionName] = false
+                local toggled = false
+                
+                local ItemFrame = Instance.new("Frame", ListContainer)
+                ItemFrame.BackgroundTransparency = 1
+                ItemFrame.Size = UDim2.new(1, 0, 0, 25)
+
+                local Checkbox = Instance.new("TextButton", ItemFrame)
+                Checkbox.Size = UDim2.new(0, 20, 0, 20)
+                Checkbox.Position = UDim2.new(0, 0, 0.5, 0)
+                Checkbox.AnchorPoint = Vector2.new(0, 0.5)
+                Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                Checkbox.Text = ""
+                Instance.new("UICorner", Checkbox).CornerRadius = UDim.new(0, 4)
+                
+                local Checkmark = Instance.new("Frame", Checkbox)
+                Checkmark.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+                Checkmark.BorderSizePixel = 0
+                Checkmark.Size = UDim2.new(1, -6, 1, -6)
+                Checkmark.Position = UDim2.fromScale(0.5, 0.5)
+                Checkmark.AnchorPoint = Vector2.new(0.5, 0.5)
+                Checkmark.Visible = false -- Initially unchecked
+                Instance.new("UICorner", Checkmark).CornerRadius = UDim.new(0, 2)
+                
+                local Label = Instance.new("TextLabel", ItemFrame)
+                Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, -30, 1, 0); Label.Position = UDim2.new(0, 30, 0, 0); Label.Font = Enum.Font.Gotham
+                Label.Text = optionName; Label.TextColor3 = Color3.fromRGB(255, 255, 255); Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left
+                
+                Checkbox.MouseButton1Click:Connect(function()
+                    toggled = not toggled
+                    selected[optionName] = toggled
+                    Checkmark.Visible = toggled
+                    pcall(config.Callback, selected)
+                end)
+            end
+            return Frame
+        end
+
+        function ElementMethods:AddDropdown(config)
+            local currentOption = config.Default or config.Options[1]
+            local currentIndex = table.find(config.Options, currentOption) or 1
+            
+            -- This simplified dropdown cycles through options on click.
+            -- A true dropdown that opens a list is significantly more complex.
+            local DropdownButton = ElementMethods:AddButton({
+                Name = config.Name .. ": " .. currentOption,
+                Callback = function()
+                    currentIndex = currentIndex + 1
+                    if currentIndex > #config.Options then currentIndex = 1 end
+                    currentOption = config.Options[currentIndex]
+                    
+                    DropdownButton.Text = config.Name .. ": " .. currentOption
+                    pcall(config.Callback, currentOption)
+                end
+            })
+            return DropdownButton
+        end
+
+        -- ================================================================================= --
+        -- ||                    END OF NEWLY ADDED UI ELEMENTS                           || --
+        -- ================================================================================= --
+
         return ElementMethods
     end
     
@@ -125,143 +307,4 @@ function UILIB:Notify(config)
     end)
 end
 
-function UILIB:AddDivider()
-    local divider = Instance.new("Frame")
-    divider.Parent = self.Container -- Assuming 'self.Container' is the parent frame for the tab
-    divider.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    divider.BorderSizePixel = 0
-    divider.Size = UDim2.new(1, 0, 0, 1) -- Full width, 1 pixel height
-end
-
-function UILIB:AddSection(text)
-    local header = Instance.new("TextLabel")
-    header.Parent = self.Container
-    header.Text = text
-    header.Font = Enum.Font.SourceSansBold
-    header.TextSize = 20
-    header.TextColor3 = Color3.fromRGB(255, 255, 255)
-    header.BackgroundTransparency = 1
-    header.TextXAlignment = Enum.TextXAlignment.Left
-    header.Size = UDim2.new(1, 0, 0, 30)
-end
-
-function UILIB:AddButtonRow(buttons)
-    local rowFrame = Instance.new("Frame")
-    rowFrame.Parent = self.Container
-    rowFrame.BackgroundTransparency = 1
-    rowFrame.Size = UDim2.new(1, 0, 0, 40)
-
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Parent = rowFrame
-    listLayout.FillDirection = Enum.FillDirection.Horizontal
-    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 10)
-
-    for i, buttonInfo in ipairs(buttons) do
-        local button = Instance.new("TextButton")
-        button.Parent = rowFrame
-        button.Text = buttonInfo[1]
-        button.LayoutOrder = i
-        -- Add styling for the button (size, color, etc.)
-        button.Size = UDim2.new(0.3, 0, 1, 0) -- Example size
-
-        button.MouseButton1Click:Connect(buttonInfo[2])
-    end
-end
-
-function UILIB:AddStepper(config)
-    local stepperFrame = Instance.new("Frame")
-    stepperFrame.Parent = self.Container
-    stepperFrame.BackgroundTransparency = 1
-    stepperFrame.Size = UDim2.new(1, 0, 0, 30)
-
-    local currentIndex = 1
-
-    local backButton = Instance.new("TextButton")
-    backButton.Parent = stepperFrame
-    backButton.Text = "<"
-    backButton.Size = UDim2.new(0.2, 0, 1, 0)
-    backButton.Position = UDim2.new(0, 0, 0, 0)
-
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Parent = stepperFrame
-    valueLabel.Text = config.Options[currentIndex]
-    valueLabel.Size = UDim2.new(0.6, 0, 1, 0)
-    valueLabel.Position = UDim2.new(0.2, 0, 0, 0)
-
-    local forwardButton = Instance.new("TextButton")
-    forwardButton.Parent = stepperFrame
-    forwardButton.Text = ">"
-    forwardButton.Size = UDim2.new(0.2, 0, 1, 0)
-    forwardButton.Position = UDim2.new(0.8, 0, 0, 0)
-
-    backButton.MouseButton1Click:Connect(function()
-        currentIndex = currentIndex - 1
-        if currentIndex < 1 then
-            currentIndex = #config.Options
-        end
-        valueLabel.Text = config.Options[currentIndex]
-        config.Callback(config.Options[currentIndex])
-    end)
-
-    forwardButton.MouseButton1Click:Connect(function()
-        currentIndex = currentIndex + 1
-        if currentIndex > #config.Options then
-            currentIndex = 1
-        end
-        valueLabel.Text = config.Options[currentIndex]
-        config.Callback(config.Options[currentIndex])
-    end)
-end
-
-function UILIB:AddCheckbox(config)
-    local checkboxFrame = Instance.new("Frame")
-    checkboxFrame.Parent = self.Container
-    checkboxFrame.BackgroundTransparency = 1
-    checkboxFrame.Size = UDim2.new(1, 0, 0, 150) -- Adjust size as needed
-
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Parent = checkboxFrame
-    listLayout.FillDirection = Enum.FillDirection.Vertical
-    listLayout.Padding = UDim.new(0, 5)
-
-    local selected = {}
-
-    for _, option in ipairs(config.List) do
-        local itemFrame = Instance.new("Frame")
-        itemFrame.Parent = checkboxFrame
-        itemFrame.BackgroundTransparency = 1
-        itemFrame.Size = UDim2.new(1, 0, 0, 30)
-
-        local checkbox = Instance.new("TextButton")
-        checkbox.Parent = itemFrame
-        checkbox.Text = ""
-        checkbox.Size = UDim2.new(0, 30, 0, 30)
-        checkbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        -- Add a UICorner to make it a square
-
-        local label = Instance.new("TextLabel")
-        label.Parent = itemFrame
-        label.Text = option
-        label.Size = UDim2.new(0.8, 0, 1, 0)
-        label.Position = UDim2.new(0.2, 0, 0, 0)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextXAlignment = Enum.TextXAlignment.Left
-
-        local isSelected = false
-        checkbox.MouseButton1Click:Connect(function()
-            isSelected = not isSelected
-            if isSelected then
-                checkbox.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                selected[option] = true
-            else
-                checkbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                selected[option] = nil
-            end
-            config.Callback(selected)
-        end)
-    end
-end
 return UILIB
