@@ -232,78 +232,58 @@ function UILIB:CreateWindow(config)
             local isOpen = config.Open or false
 
             local HeaderButton = Instance.new("TextButton", TabContent)
-            HeaderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- Slightly different from items
+            HeaderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             HeaderButton.Size = UDim2.new(1, 0, 0, 30)
             HeaderButton.Font = Enum.Font.GothamSemibold
             HeaderButton.TextColor3 = Color3.fromRGB(220, 220, 220)
             HeaderButton.TextSize = 16
+            HeaderButton.Text = "" -- <<<<<<<<<< THE FIX: Set the button's own text to empty
             Instance.new("UICorner", HeaderButton).CornerRadius = UDim.new(0, 6)
 
             local Title = Instance.new("TextLabel", HeaderButton)
-            Title.BackgroundTransparency = 1
-            Title.Size = UDim2.new(1, -30, 1, 0)
-            Title.Position = UDim2.new(0, 10, 0, 0)
-            Title.Font = Enum.Font.GothamSemibold
-            Title.Text = config.Name
-            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Title.TextSize = 15
-            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, -30, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left
 
             local Arrow = Instance.new("TextLabel", HeaderButton)
-            Arrow.BackgroundTransparency = 1
-            Arrow.Size = UDim2.new(0, 20, 1, 0)
-            Arrow.Position = UDim2.new(1, -25, 0, 0)
-            Arrow.Font = Enum.Font.GothamBold
-            Arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Arrow.TextSize = 16
+            Arrow.BackgroundTransparency = 1; Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.Position = UDim2.new(1, -25, 0, 0)
+            Arrow.Font = Enum.Font.GothamBold; Arrow.TextColor3 = Color3.fromRGB(255, 255, 255); Arrow.TextSize = 16
             
-            -- This frame holds all the elements that will be toggled
             local ContentFrame = Instance.new("Frame", TabContent)
-            ContentFrame.BackgroundTransparency = 1
-            ContentFrame.Size = UDim2.new(1, 0, 0, 0) -- Starts with 0 height
-            ContentFrame.ClipsDescendants = true
-            ContentFrame.LayoutOrder = HeaderButton.LayoutOrder + 1 -- Ensure it appears right after the header
+            ContentFrame.BackgroundTransparency = 1; ContentFrame.Size = UDim2.new(1, 0, 0, 0); ContentFrame.ClipsDescendants = true
+            ContentFrame.LayoutOrder = HeaderButton.LayoutOrder + 1
             
             local ContentListLayout = Instance.new("UIListLayout", ContentFrame)
             ContentListLayout.Padding = UDim.new(0, 10)
-            ContentListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
+            
             local InnerPadding = Instance.new("UIPadding", ContentFrame)
             InnerPadding.PaddingTop = UDim.new(0, 10)
 
-            local function updateState()
+            local function updateState(isInstant)
                 Arrow.Text = isOpen and "▼" or "▶"
-                ContentFrame.Visible = isOpen
-                if isOpen then
-                    ContentListLayout.Parent = ContentFrame -- Re-enable layout
-                    -- Animate the frame opening
-                    ContentFrame.Size = UDim2.new(1, 0, 0, ContentListLayout.AbsoluteContentSize.Y + 10)
-                else
-                    ContentFrame.Size = UDim2.new(1, 0, 0, 0)
-                    ContentListLayout.Parent = nil -- Disable layout to prevent issues
-                end
+                ContentFrame.Visible = true
+                
+                local tweenInfo = isInstant and TweenInfo.new(0) or TweenInfo.new(0.2)
+                local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y + 10 or 0
+                local sizeTween = TweenService:Create(ContentFrame, tweenInfo, { Size = UDim2.new(1, 0, 0, targetHeight) })
+                sizeTween:Play()
             end
             
-            -- We need a fake tab to pass the element creation methods to the content function
             local fakeTab = {}
             for method, func in pairs(ElementMethods) do
                 fakeTab[method] = function(_, ...)
                     local element = func(ElementMethods, ...)
-                    if element and element.Parent == TabContent then
-                        element.Parent = ContentFrame -- Re-parent to the foldout content
-                    end
+                    if element and element.Parent == TabContent then element.Parent = ContentFrame end
                     task.wait()
-                    updateState() -- Update size after adding element
+                    updateState(true) -- Update instantly when adding new items
                     return element
                 end
             end
 
-            -- Run the user's function to populate the content
             pcall(config.Content, fakeTab)
             
-            -- Set initial state
-            task.wait() -- Wait for layout to calculate
-            updateState()
+            task.wait()
+            updateState(true)
             
             HeaderButton.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
