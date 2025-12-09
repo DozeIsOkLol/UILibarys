@@ -1,6 +1,6 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
-    ║                   StarlightUI v1.0                        ║
+    ║                 StarlightUI v1.1 (Patched)                ║
     ║                A Modern Lua GUI Toolkit                   ║
     ║                  Inspired by BloxHub                      ║
     ╚═══════════════════════════════════════════════════════════╝
@@ -9,18 +9,12 @@
 local StarlightUI = {}
 StarlightUI.__index = StarlightUI
 
--- ┬─┐┌─┐┌┬┐┌─┐┬─┐┌─┐┌─┐
--- ├┬┘│ │ │ │ │├┬┘├┤ └─┐
--- ┴└─└─┘ ┴ └─┘┴└─└─┘└─┘
-
+-- Services
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- ╔═╗┌─┐┌┐┌┌─┐┬ ┬
--- ╚═╗├─┤│││├┤ │││
--- ╚═╝┴ ┴┘└┘└─┘└┴┘
-
+-- Utility function for animations
 local function tween(instance, properties, duration, style, direction)
     local info = TweenInfo.new(
         duration or 0.2,
@@ -32,10 +26,7 @@ local function tween(instance, properties, duration, style, direction)
     return tween
 end
 
--- ╔═╗┬ ┬┌─┐┬  ┌─┐
--- ║ ╦│ │├─┤│  ├┤
--- ╚═╝└─┘┴ ┴┴─┘└─┘
-
+-- Constructor for a new UI instance
 function StarlightUI.new(config)
     local self = setmetatable({}, StarlightUI)
 
@@ -63,7 +54,11 @@ function StarlightUI.new(config)
     return self
 end
 
+-- Main window creation function
 function StarlightUI:createWindow(config)
+    -- Capture the main Starlight object to pass its scope down
+    local starlightInstance = self 
+
     local window = {}
     window.tabs = {}
     window.activeTab = nil
@@ -72,7 +67,7 @@ function StarlightUI:createWindow(config)
     mainFrame.Name = "Window"
     mainFrame.Size = config.size or UDim2.new(0, 500, 0, 380)
     mainFrame.Position = config.position or UDim2.new(0.5, -250, 0.5, -190)
-    mainFrame.BackgroundColor3 = self.theme.Background
+    mainFrame.BackgroundColor3 = starlightInstance.theme.Background
     mainFrame.BorderSizePixel = 0
     mainFrame.ClipsDescendants = true
     mainFrame.Parent = self.screenGui
@@ -84,7 +79,7 @@ function StarlightUI:createWindow(config)
     local header = Instance.new("Frame")
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 40)
-    header.BackgroundColor3 = self.theme.Primary
+    header.BackgroundColor3 = starlightInstance.theme.Primary
     header.Parent = mainFrame
 
     local title = Instance.new("TextLabel")
@@ -95,7 +90,7 @@ function StarlightUI:createWindow(config)
     title.Text = config.title or "StarlightUI"
     title.Font = Enum.Font.GothamBold
     title.TextSize = 16
-    title.TextColor3 = self.theme.Text
+    title.TextColor3 = starlightInstance.theme.Text
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
 
@@ -103,9 +98,13 @@ function StarlightUI:createWindow(config)
     tabContainer.Name = "TabContainer"
     tabContainer.Size = UDim2.new(0, 120, 1, -40)
     tabContainer.Position = UDim2.new(0, 0, 0, 40)
-    tabContainer.BackgroundColor3 = self.theme.Primary
+    tabContainer.BackgroundColor3 = starlightInstance.theme.Primary
     tabContainer.BorderSizePixel = 0
     tabContainer.Parent = mainFrame
+    
+    local tabPadding = Instance.new("UIPadding")
+    tabPadding.PaddingTop = UDim.new(0, 5)
+    tabPadding.Parent = tabContainer
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.Padding = UDim.new(0, 5)
@@ -117,7 +116,7 @@ function StarlightUI:createWindow(config)
     contentContainer.Name = "ContentContainer"
     contentContainer.Size = UDim2.new(1, -120, 1, -40)
     contentContainer.Position = UDim2.new(0, 120, 0, 40)
-    contentContainer.BackgroundColor3 = self.theme.Background
+    contentContainer.BackgroundColor3 = starlightInstance.theme.Background
     contentContainer.BorderSizePixel = 0
     contentContainer.Parent = mainFrame
 
@@ -158,11 +157,11 @@ function StarlightUI:createWindow(config)
         local button = Instance.new("TextButton")
         button.Name = title
         button.Size = UDim2.new(1, -10, 0, 30)
-        button.BackgroundColor3 = self.theme.Secondary
+        button.BackgroundColor3 = starlightInstance.theme.Secondary -- FIXED: Used starlightInstance
         button.Text = title
         button.Font = Enum.Font.GothamSemibold
         button.TextSize = 14
-        button.TextColor3 = self.theme.Text
+        button.TextColor3 = starlightInstance.theme.Text
         button.Parent = tabContainer
 
         local corner = Instance.new("UICorner")
@@ -187,10 +186,10 @@ function StarlightUI:createWindow(config)
         local function activate()
             for _, t in pairs(window.tabs) do
                 t.content.Visible = false
-                tween(t.button, { BackgroundColor3 = self.theme.Secondary }, 0.15)
+                tween(t.button, { BackgroundColor3 = starlightInstance.theme.Secondary }, 0.15) -- FIXED
             end
             content.Visible = true
-            tween(button, { BackgroundColor3 = self.theme.Accent }, 0.15)
+            tween(button, { BackgroundColor3 = starlightInstance.theme.Accent }, 0.15) -- FIXED
             window.activeTab = tab
         end
 
@@ -206,19 +205,19 @@ function StarlightUI:createWindow(config)
             local btn = Instance.new("TextButton")
             btn.Name = text
             btn.Size = UDim2.new(1, 0, 0, 35)
-            btn.BackgroundColor3 = self.theme.Primary
+            btn.BackgroundColor3 = starlightInstance.theme.Primary -- FIXED
             btn.Text = text
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 14
-            btn.TextColor3 = self.theme.Text
+            btn.TextColor3 = starlightInstance.theme.Text
             btn.Parent = content
 
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 4)
-            corner.Parent = btn
+            local c = Instance.new("UICorner")
+            c.CornerRadius = UDim.new(0, 4)
+            c.Parent = btn
 
-            btn.MouseEnter:Connect(function() tween(btn, { BackgroundColor3 = self.theme.Accent }, 0.15) end)
-            btn.MouseLeave:Connect(function() tween(btn, { BackgroundColor3 = self.theme.Primary }, 0.15) end)
+            btn.MouseEnter:Connect(function() tween(btn, { BackgroundColor3 = starlightInstance.theme.Accent }, 0.15) end) -- FIXED
+            btn.MouseLeave:Connect(function() tween(btn, { BackgroundColor3 = starlightInstance.theme.Primary }, 0.15) end) -- FIXED
             if callback then btn.MouseButton1Click:Connect(callback) end
 
             return btn
@@ -230,13 +229,13 @@ function StarlightUI:createWindow(config)
             local container = Instance.new("Frame")
             container.Name = text
             container.Size = UDim2.new(1, 0, 0, 40)
-            container.BackgroundColor3 = self.theme.Primary
+            container.BackgroundColor3 = starlightInstance.theme.Primary -- FIXED
             container.BorderSizePixel = 0
             container.Parent = content
 
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 4)
-            corner.Parent = container
+            local c1 = Instance.new("UICorner")
+            c1.CornerRadius = UDim.new(0, 4)
+            c1.Parent = container
 
             local label = Instance.new("TextLabel")
             label.Name = "Label"
@@ -246,7 +245,7 @@ function StarlightUI:createWindow(config)
             label.Font = Enum.Font.Gotham
             label.Text = text
             label.TextSize = 14
-            label.TextColor3 = self.theme.Text
+            label.TextColor3 = starlightInstance.theme.Text
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Parent = container
 
@@ -254,7 +253,7 @@ function StarlightUI:createWindow(config)
             switch.Name = "Switch"
             switch.Size = UDim2.new(0, 40, 0, 20)
             switch.Position = UDim2.new(1, -45, 0.5, -10)
-            switch.BackgroundColor3 = toggled and self.theme.Accent or self.theme.Secondary
+            switch.BackgroundColor3 = toggled and starlightInstance.theme.Accent or starlightInstance.theme.Secondary -- FIXED
             switch.Text = ""
             switch.Parent = container
 
@@ -276,7 +275,7 @@ function StarlightUI:createWindow(config)
 
             switch.MouseButton1Click:Connect(function()
                 toggled = not toggled
-                tween(switch, { BackgroundColor3 = toggled and self.theme.Accent or self.theme.Secondary }, 0.2)
+                tween(switch, { BackgroundColor3 = toggled and starlightInstance.theme.Accent or starlightInstance.theme.Secondary }, 0.2) -- FIXED
                 tween(knob, { Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8) }, 0.2)
                 if callback then pcall(callback, toggled) end
             end)
@@ -285,7 +284,7 @@ function StarlightUI:createWindow(config)
                 getValue = function() return toggled end,
                 setValue = function(value)
                     toggled = value
-                    tween(switch, { BackgroundColor3 = toggled and self.theme.Accent or self.theme.Secondary }, 0.2)
+                    tween(switch, { BackgroundColor3 = toggled and starlightInstance.theme.Accent or starlightInstance.theme.Secondary }, 0.2) -- FIXED
                     tween(knob, { Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8) }, 0.2)
                 end
             }
