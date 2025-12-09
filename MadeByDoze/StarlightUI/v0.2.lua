@@ -1,8 +1,8 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
-    ║                 StarlightUI v1.1 (Patched)                ║
-    ║                A Modern Lua GUI Toolkit                   ║
-    ║                  Inspired by BloxHub                      ║
+    ║           StarlightUI v0.2                                ║
+    ║           Universal Roblox GUI System                     ║
+    ║           Author: Dozeisoklol                             ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
 
