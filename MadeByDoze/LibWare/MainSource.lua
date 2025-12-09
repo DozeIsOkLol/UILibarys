@@ -31,10 +31,25 @@ end
 -- Creates a dedicated, persistent container for notifications to ensure stability and stacking.
 local function getNotifyContainer()
     if not UILIB_Window.NotifyContainer or not UILIB_Window.NotifyContainer.Parent then
-        local NotifyGui = Instance.new("ScreenGui"); NotifyGui.Name = "UILIB_Notifications"; NotifyGui.ZIndexBehavior = Enum.ZIndexBehavior.Global; NotifyGui.ResetOnSpawn = false
-        local Container = Instance.new("Frame", NotifyGui); Container.Name = "Container"; Container.BackgroundTransparency = 1; Container.Position = UDim2.new(1, -10, 1, -10); Container.AnchorPoint = Vector2.new(1, 1); Container.Size = UDim2.new(0, 250, 1, 0)
-        local ListLayout = Instance.new("UIListLayout", Container); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder; ListLayout.Padding = UDim.new(0, 5); ListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-        UILIB_Window.NotifyContainer = Container; NotifyGui.Parent = game:GetService("CoreGui")
+        local NotifyGui = Instance.new("ScreenGui")
+        NotifyGui.Name = "UILIB_Notifications"
+        NotifyGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+        NotifyGui.ResetOnSpawn = false
+        
+        local Container = Instance.new("Frame", NotifyGui)
+        Container.Name = "Container"
+        Container.BackgroundTransparency = 1
+        Container.Position = UDim2.new(1, -10, 1, -10)
+        Container.AnchorPoint = Vector2.new(1, 1)
+        Container.Size = UDim2.new(0, 250, 1, 0)
+        
+        local ListLayout = Instance.new("UIListLayout", Container)
+        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ListLayout.Padding = UDim.new(0, 5)
+        ListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        
+        UILIB_Window.NotifyContainer = Container
+        NotifyGui.Parent = game:GetService("CoreGui")
     end
     return UILIB_Window.NotifyContainer
 end
@@ -46,6 +61,7 @@ function UILIB:CreateWindow(config)
     local ScreenGui = Instance.new("ScreenGui"); UILIB_Window.ScreenGui = ScreenGui; ScreenGui.Name = "UILIB_Window_" .. math.random(1, 1000); ScreenGui.Parent = game:GetService("CoreGui"); ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global; ScreenGui.ResetOnSpawn = false
     local Main = Instance.new("Frame"); Main.Name = "MainFrame"; Main.Parent = ScreenGui; Main.BackgroundColor3 = UILIB_Window.Theme.Background; Main.BorderColor3 = UILIB_Window.Theme.Border; Main.BorderSizePixel = 1; Main.Position = UDim2.new(0.5, -275, 0.5, -200); Main.Size = UDim2.new(0, 550, 0, 400); local MainCorner = Instance.new("UICorner", Main); MainCorner.CornerRadius = UDim.new(0, 8)
     
+    -- Tooltip Handler --
     local TooltipLabel = Instance.new("TextLabel", ScreenGui); TooltipLabel.Name = "Tooltip"; TooltipLabel.BackgroundColor3 = UILIB_Window.Theme.Primary; TooltipLabel.BackgroundTransparency = 0.2; TooltipLabel.TextColor3 = UILIB_Window.Theme.TextSecondary; TooltipLabel.Font = Enum.Font.Gotham; TooltipLabel.TextSize = 12; TooltipLabel.BorderSizePixel = 0; TooltipLabel.ZIndex = 999; TooltipLabel.Visible = false; TooltipLabel.TextWrapped = true; local TipPad = Instance.new("UIPadding", TooltipLabel); TipPad.PaddingLeft = UDim.new(0,8); TipPad.PaddingRight = UDim.new(0,8); TipPad.PaddingTop = UDim.new(0,4); TipPad.PaddingBottom = UDim.new(0,4); Instance.new("UICorner", TooltipLabel).CornerRadius = UDim.new(0,4)
     local tooltipConnection; local function setupTooltip(element, text) element.MouseEnter:Connect(function() TooltipLabel.Text = text; TooltipLabel.Visible = true; tooltipConnection = RunService.RenderStepped:Connect(function() local mousePos = UserInputService:GetMouseLocation(); TooltipLabel.Position = UDim2.fromOffset(mousePos.X + 15, mousePos.Y + 10); local size = TextService:GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(200, math.huge)); TooltipLabel.Size = UDim2.fromOffset(size.X + 16, size.Y + 8) end) end); element.MouseLeave:Connect(function() TooltipLabel.Visible = false; if tooltipConnection then tooltipConnection:Disconnect() end end) end
 
