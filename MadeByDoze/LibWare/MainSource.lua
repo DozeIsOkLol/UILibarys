@@ -225,94 +225,111 @@ function UILIB:CreateWindow(config)
             end
             return Frame
         end
---new
-        function ElementMethods:AddDropdown(config)
-            local isOpen = false
-            local currentOption = config.Default or config.Options[1]
 
-            -- This is the button the user sees and clicks in the layout.
-            local MainButton = Instance.new("TextButton", TabContent)
-            MainButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-            MainButton.Size = UDim2.new(1, 0, 0, 35)
-            MainButton.Font = Enum.Font.Gotham
-            MainButton.Text = config.Name .. ": " .. currentOption
-            MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            MainButton.TextSize = 14
-            Instance.new("UICorner", MainButton).CornerRadius = UDim.new(0, 6)
+        --NEW
+
+        function ElementMethods:AddFoldout(config)
+            local isOpen = config.Open or false
+
+            local HeaderButton = Instance.new("TextButton", TabContent)
+            HeaderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            HeaderButton.Size = UDim2.new(1, 0, 0, 30)
+            HeaderButton.Font = Enum.Font.GothamSemibold
+            HeaderButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+            HeaderButton.TextSize = 16
+            HeaderButton.Text = "" -- <<<<<<<<<< THE FIX: Set the button's own text to empty
+            Instance.new("UICorner", HeaderButton).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel", HeaderButton)
+            Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, -30, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local Arrow = Instance.new("TextLabel", HeaderButton)
+            Arrow.BackgroundTransparency = 1; Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.Position = UDim2.new(1, -25, 0, 0)
+            Arrow.Font = Enum.Font.GothamBold; Arrow.TextColor3 = Color3.fromRGB(255, 255, 255); Arrow.TextSize = 16
             
-            -- This is the list that will appear. It is NOT parented initially.
-            local OptionsContainer = Instance.new("ScrollingFrame")
-            OptionsContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            OptionsContainer.BorderColor3 = Color3.fromRGB(55, 55, 55)
-            OptionsContainer.Size = UDim2.new(0, 0, 0, 0) -- Starts with zero size
-            OptionsContainer.ScrollBarThickness = 4
-            OptionsContainer.ZIndex = 10 -- High ZIndex to ensure it's on top of everything
-            Instance.new("UICorner", OptionsContainer).CornerRadius = UDim.new(0, 6)
-            local ListLayout = Instance.new("UIListLayout", OptionsContainer)
-            ListLayout.Padding = UDim.new(0, 4)
-            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            local ListPadding = Instance.new("UIPadding", OptionsContainer)
-            ListPadding.PaddingTop = UDim.new(0,4); ListPadding.PaddingBottom = UDim.new(0,4)
-            ListPadding.PaddingLeft = UDim.new(0,4); ListPadding.PaddingRight = UDim.new(0,4)
+            local ContentFrame = Instance.new("Frame", TabContent)
+            ContentFrame.BackgroundTransparency = 1; ContentFrame.Size = UDim2.new(1, 0, 0, 0); ContentFrame.ClipsDescendants = true
+            ContentFrame.LayoutOrder = HeaderButton.LayoutOrder + 1
             
-            local function closeDropdown()
-                if not isOpen then return end
-                isOpen = false
-                TweenService:Create(OptionsContainer, TweenInfo.new(0.2), { Size = UDim2.new(OptionsContainer.Size.X.Scale, OptionsContainer.Size.X.Offset, 0, 0) }):Play()
-                task.wait(0.2)
-                if OptionsContainer.Parent then OptionsContainer.Parent = nil end
+            local ContentListLayout = Instance.new("UIListLayout", ContentFrame)
+            ContentListLayout.Padding = UDim.new(0, 10)
+            
+            local InnerPadding = Instance.new("UIPadding", ContentFrame)
+            InnerPadding.PaddingTop = UDim.new(0, 10)
+
+            local function updateState(isInstant)
+                Arrow.Text = isOpen and "▼" or "▶"
+                ContentFrame.Visible = true
+                
+                local tweenInfo = isInstant and TweenInfo.new(0) or TweenInfo.new(0.2)
+                local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y + 10 or 0
+                local sizeTween = TweenService:Create(ContentFrame, tweenInfo, { Size = UDim2.new(1, 0, 0, targetHeight) })
+                sizeTween:Play()
             end
             
-            local function openDropdown()
-                if isOpen then return end
-                isOpen = true
-                
-                -- Get the main UI Root (the 'Main' frame) to parent the list to.
-                -- This takes it out of the normal layout flow.
-                local MainUI = TabContent.Parent.Parent
-                OptionsContainer.Parent = MainUI
-                
-                -- Position the list directly below the button using absolute coordinates
-                local buttonAbsPos = MainButton.AbsolutePosition
-                local buttonAbsSize = MainButton.AbsoluteSize
-                OptionsContainer.Position = UDim2.fromOffset(buttonAbsPos.X, buttonAbsPos.Y + buttonAbsSize.Y + 5)
-                OptionsContainer.Size = UDim2.fromOffset(buttonAbsSize.X, 0)
-                
-                -- Clear old options
-                for _, child in ipairs(OptionsContainer:GetChildren()) do
-                    if child:IsA("TextButton") then child:Destroy() end
+            local fakeTab = {}
+            for method, func in pairs(ElementMethods) do
+                fakeTab[method] = function(_, ...)
+                    local element = func(ElementMethods, ...)
+                    if element and element.Parent == TabContent then element.Parent = ContentFrame end
+                    task.wait()
+                    updateState(true) -- Update instantly when adding new items
+                    return element
                 end
-
-                -- Create a button for each option
-                for _, optionName in ipairs(config.Options) do
-                    local OptionButton = Instance.new("TextButton")
-                    OptionButton.Parent = OptionsContainer
-                    OptionButton.BackgroundTransparency = 1
-                    OptionButton.Size = UDim2.new(1, -8, 0, 25) -- Use full width minus padding
-                    OptionButton.Font = Enum.Font.Gotham
-                    OptionButton.Text = optionName
-                    OptionButton.TextColor3 = Color3.fromRGB(220, 220, 220)
-                    OptionButton.TextSize = 14
-                    
-                    OptionButton.MouseButton1Click:Connect(function()
-                        currentOption = optionName
-                        MainButton.Text = config.Name .. ": " .. currentOption
-                        pcall(config.Callback, currentOption)
-                        closeDropdown()
-                    end)
-                end
-                
-                -- Animate the list appearing
-                local numOptions = #config.Options
-                local dropdownHeight = math.min(numOptions * 29 + 8, 124) -- Max height of 124px
-                TweenService:Create(OptionsContainer, TweenInfo.new(0.2), { Size = UDim2.fromOffset(buttonAbsSize.X, dropdownHeight) }):Play()
             end
 
-            MainButton.MouseButton1Click:Connect(function()
-                if isOpen then closeDropdown() else openDropdown() end
+            pcall(config.Content, fakeTab)
+            
+            task.wait()
+            updateState(true)
+            
+            HeaderButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                updateState()
             end)
 
-            return MainButton
+            return HeaderButton
+        end
+
+        function ElementMethods:AddProgressBar(config)
+            local Frame = Instance.new("Frame", TabContent)
+            Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Frame.Size = UDim2.new(1, 0, 0, 40)
+            Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+
+            local Track = Instance.new("Frame", Frame)
+            Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Track.Position = UDim2.new(0.5, 0, 0.5, 0)
+            Track.Size = UDim2.new(1, -20, 0, 16)
+            Track.AnchorPoint = Vector2.new(0.5, 0.5)
+            Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0)
+
+            local Progress = Instance.new("Frame", Track)
+            Progress.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+            Progress.Size = UDim2.new((config.Default or 0) / 100, 0, 1, 0)
+            Instance.new("UICorner", Progress).CornerRadius = UDim.new(1, 0)
+
+            local Label = Instance.new("TextLabel", Track)
+            Label.BackgroundTransparency = 1
+            Label.Size = UDim2.new(1, 0, 1, 0)
+            Label.Font = Enum.Font.GothamSemibold
+            Label.Text = config.Name or ""
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 12
+            
+            local methods = {}
+            function methods:Update(percentage, text)
+                percentage = math.clamp(percentage, 0, 100)
+                local newSize = UDim2.new(percentage / 100, 0, 1, 0)
+                TweenService:Create(Progress, TweenInfo.new(0.1), { Size = newSize }):Play()
+                if text then
+                    Label.Text = text
+                end
+            end
+            
+            return methods
         end
 
         -- ================================================================================= --
