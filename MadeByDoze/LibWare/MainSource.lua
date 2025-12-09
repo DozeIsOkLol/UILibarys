@@ -226,18 +226,28 @@ function UILIB:CreateWindow(config)
             return Frame
         end
 
-        --NEW
+        --NEWNEWNEW
 
         function ElementMethods:AddFoldout(config)
             local isOpen = config.Open or false
 
-            local HeaderButton = Instance.new("TextButton", TabContent)
+            -- THE FIX: Create a master container for the entire foldout element.
+            -- This container will hold both the header and its content frame.
+            local FoldoutContainer = Instance.new("Frame", TabContent)
+            FoldoutContainer.BackgroundTransparency = 1
+            FoldoutContainer.Size = UDim2.new(1, 0, 0, 0) -- Use AutomaticSize to let it expand naturally
+            FoldoutContainer.AutomaticSize = Enum.AutomaticSize.Y
+
+            -- This layout will order the Header and the ContentFrame inside the master container
+            local ContainerLayout = Instance.new("UIListLayout", FoldoutContainer)
+            ContainerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ContainerLayout.Padding = UDim.new(0, 10) -- Space between header and its content
+
+            -- Create the header button, but parent it to our new container
+            local HeaderButton = Instance.new("TextButton", FoldoutContainer)
             HeaderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             HeaderButton.Size = UDim2.new(1, 0, 0, 30)
-            HeaderButton.Font = Enum.Font.GothamSemibold
-            HeaderButton.TextColor3 = Color3.fromRGB(220, 220, 220)
-            HeaderButton.TextSize = 16
-            HeaderButton.Text = "" -- <<<<<<<<<< THE FIX: Set the button's own text to empty
+            HeaderButton.Text = "" -- No default text
             Instance.new("UICorner", HeaderButton).CornerRadius = UDim.new(0, 6)
 
             local Title = Instance.new("TextLabel", HeaderButton)
@@ -249,22 +259,28 @@ function UILIB:CreateWindow(config)
             Arrow.BackgroundTransparency = 1; Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.Position = UDim2.new(1, -25, 0, 0)
             Arrow.Font = Enum.Font.GothamBold; Arrow.TextColor3 = Color3.fromRGB(255, 255, 255); Arrow.TextSize = 16
             
-            local ContentFrame = Instance.new("Frame", TabContent)
+            -- Create the content frame, also parented to our new container
+            local ContentFrame = Instance.new("Frame", FoldoutContainer)
             ContentFrame.BackgroundTransparency = 1; ContentFrame.Size = UDim2.new(1, 0, 0, 0); ContentFrame.ClipsDescendants = true
-            ContentFrame.LayoutOrder = HeaderButton.LayoutOrder + 1
             
             local ContentListLayout = Instance.new("UIListLayout", ContentFrame)
             ContentListLayout.Padding = UDim.new(0, 10)
             
             local InnerPadding = Instance.new("UIPadding", ContentFrame)
-            InnerPadding.PaddingTop = UDim.new(0, 10)
+            InnerPadding.PaddingLeft = UDim.new(0, 20) -- Indent the nested items
 
             local function updateState(isInstant)
                 Arrow.Text = isOpen and "▼" or "▶"
-                ContentFrame.Visible = true
                 
+                -- The animation now just tweens the content frame's visibility and size
+                -- The master container will resize automatically
                 local tweenInfo = isInstant and TweenInfo.new(0) or TweenInfo.new(0.2)
-                local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y + 10 or 0
+                local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y or 0
+                
+                if isOpen and targetHeight == 0 then -- If opening but no content, make it have some padding
+                     targetHeight = 10 
+                end
+
                 local sizeTween = TweenService:Create(ContentFrame, tweenInfo, { Size = UDim2.new(1, 0, 0, targetHeight) })
                 sizeTween:Play()
             end
@@ -275,7 +291,7 @@ function UILIB:CreateWindow(config)
                     local element = func(ElementMethods, ...)
                     if element and element.Parent == TabContent then element.Parent = ContentFrame end
                     task.wait()
-                    updateState(true) -- Update instantly when adding new items
+                    updateState(true)
                     return element
                 end
             end
@@ -290,7 +306,7 @@ function UILIB:CreateWindow(config)
                 updateState()
             end)
 
-            return HeaderButton
+            return FoldoutContainer
         end
 
         function ElementMethods:AddProgressBar(config)
