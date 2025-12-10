@@ -176,17 +176,72 @@ end
 
 function UILIB:Toggle() if UILIB_Window.ScreenGui then UILIB_Window.ScreenGui.Enabled = not UILIB_Window.ScreenGui.Enabled end end
 
-function UILIB:Notify(config) task.spawn(function()
-    local container = getNotifyContainer(); local title, message, duration = config.Title or "Notification", config.Text or "", config.Duration or 5
-    local notifyFrame = Instance.new("Frame"); notifyFrame.BackgroundColor3 = UILIB_Window.Theme.Primary; notifyFrame.Size = UDim2.fromOffset(0, 60); notifyFrame.Parent = container
-    local corner = Instance.new("UICorner", notifyFrame); corner.CornerRadius = UDim.new(0, 6); local stroke = Instance.new("UIStroke", notifyFrame); stroke.Color = UILIB_Window.Theme.Border
-    local brandLabel = Instance.new("TextLabel", notifyFrame); brandLabel.BackgroundTransparency = 1; brandLabel.Font = Enum.Font.Gotham; brandLabel.Text = "UILib"; brandLabel.TextColor3 = UILIB_Window.Theme.TextMuted; brandLabel.TextSize = 12; brandLabel.TextXAlignment = Enum.TextXAlignment.Right; brandLabel.Position = UDim2.new(1, -10, 0, 5); brandLabel.Size = UDim2.new(0, 50, 0, 15); brandLabel.AnchorPoint = Vector2.new(1, 0)
-    local titleLabel = Instance.new("TextLabel", notifyFrame); titleLabel.BackgroundTransparency = 1; titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.Text = title; titleLabel.TextColor3 = UILIB_Window.Theme.TextPrimary; titleLabel.TextSize = 16; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Position = UDim2.new(0, 10, 0, 5); titleLabel.Size = UDim2.new(1, -70, 0, 24)
-    local messageLabel = Instance.new("TextLabel", notifyFrame); messageLabel.BackgroundTransparency = 1; messageLabel.Font = Enum.Font.Gotham; messageLabel.Text = message; messageLabel.TextColor3 = UILIB_Window.Theme.TextSecondary; messageLabel.TextSize = 14; messageLabel.TextWrapped = true; messageLabel.TextXAlignment = Enum.TextXAlignment.Left; messageLabel.Position = UDim2.new(0, 10, 0, 28); messageLabel.Size = UDim2.new(1, -15, 0, 24)
-    local bar = Instance.new("Frame", notifyFrame); bar.BackgroundColor3 = UILIB_Window.Theme.Accent; bar.BorderSizePixel = 0; bar.Position = UDim2.new(0, 0, 1, -3); bar.Size = UDim2.new(1, 0, 0, 3)
-    local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out); local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-    local slideIn = TweenService:Create(notifyFrame, tweenInfoIn, { Size = UDim2.fromOffset(250, 60) }); local slideOut = TweenService:Create(notifyFrame, tweenInfoOut, { Size = UDim2.fromOffset(0, 60) }); local barDecay = TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 3) })
-    slideIn:Play(); barDecay:Play(); task.wait(duration); slideOut:Play(); task.wait(0.4); notifyFrame:Destroy()
-end) end
+function UILIB:Notify(config)
+    task.spawn(function()
+        local TweenService = game:GetService("TweenService")
+        local container = getNotifyContainer()
+
+        local title = config.Title or "Notification"
+        local message = config.Text or ""
+        local duration = config.Duration or 5
+        
+        local notifyFrame = Instance.new("Frame")
+        notifyFrame.BackgroundColor3 = UILIB_Window.Theme.Primary
+        notifyFrame.Size = UDim2.fromOffset(0, 60)
+        notifyFrame.Parent = container
+        
+        local corner = Instance.new("UICorner", notifyFrame)
+        corner.CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", notifyFrame)
+        stroke.Color = UILIB_Window.Theme.Border
+
+        local brandLabel = Instance.new("TextLabel", notifyFrame)
+        brandLabel.Name = "BrandLabel"
+        brandLabel.BackgroundTransparency = 1
+        brandLabel.Font = Enum.Font.Gotham
+        brandLabel.Text = "UILib"
+        brandLabel.TextColor3 = UILIB_Window.Theme.TextMuted
+        brandLabel.TextSize = 12
+        brandLabel.TextXAlignment = Enum.TextXAlignment.Right
+        brandLabel.Position = UDim2.new(1, -10, 0, 5)
+        brandLabel.Size = UDim2.new(0, 50, 0, 15)
+        brandLabel.AnchorPoint = Vector2.new(1, 0)
+        
+        local titleLabel = Instance.new("TextLabel", notifyFrame)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Font = Enum.Font.GothamSemibold
+        titleLabel.Text = title
+        titleLabel.TextColor3 = UILIB_Window.Theme.TextPrimary
+        titleLabel.TextSize = 16
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.Position = UDim2.new(0, 10, 0, 5)
+        titleLabel.Size = UDim2.new(1, -70, 0, 24)
+
+        local messageLabel = Instance.new("TextLabel", notifyFrame)
+        messageLabel.BackgroundTransparency = 1
+        messageLabel.Font = Enum.Font.Gotham
+        messageLabel.Text = message
+        messageLabel.TextColor3 = UILIB_Window.Theme.TextSecondary
+        messageLabel.TextSize = 14
+        messageLabel.TextWrapped = true
+        messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+        messageLabel.Position = UDim2.new(0, 10, 0, 28)
+        messageLabel.Size = UDim2.new(1, -15, 0, 24)
+
+        local bar = Instance.new("Frame", notifyFrame)
+        bar.BackgroundColor3 = UILIB_Window.Theme.Accent
+        bar.BorderSizePixel = 0
+        bar.Position = UDim2.new(0, 0, 1, -3)
+        bar.Size = UDim2.new(1, 0, 0, 3)
+
+        local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        local slideIn = TweenService:Create(notifyFrame, tweenInfoIn, { Size = UDim2.fromOffset(250, 60) })
+        local slideOut = TweenService:Create(notifyFrame, tweenInfoOut, { Size = UDim2.fromOffset(0, 60) })
+        local barDecay = TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 3) })
+        
+        slideIn:Play(); barDecay:Play(); task.wait(duration); slideOut:Play(); task.wait(0.4); notifyFrame:Destroy()
+    end)
+end
 
 return UILIB
