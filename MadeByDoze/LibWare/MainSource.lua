@@ -93,7 +93,78 @@ function UILIB:CreateWindow(config)
         function ElementMethods:AddButtonRow(buttons) local RowFrame = Instance.new("Frame", TabContent); RowFrame.BackgroundTransparency = 1; RowFrame.Size = UDim2.new(1, 0, 0, 35); local ListLayout = Instance.new("UIListLayout", RowFrame); ListLayout.FillDirection = Enum.FillDirection.Horizontal; ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ListLayout.Padding = UDim.new(0, 10); local numButtons = #buttons; for _, buttonInfo in ipairs(buttons) do local text, callback = buttonInfo[1], buttonInfo[2]; local Button = Instance.new("TextButton", RowFrame); Button.BackgroundColor3 = UILIB_Window.Theme.Secondary; Button.Size = UDim2.new(1/numButtons, -((numButtons-1)*10)/numButtons, 1, 0); Button.Font = Enum.Font.Gotham; Button.Text = text; Button.TextColor3 = UILIB_Window.Theme.TextPrimary; Button.TextSize = 14; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6); Button.MouseButton1Click:Connect(function() pcall(callback) end) end; return RowFrame end
         function ElementMethods:AddStepper(config) local currentIndex = 1; if config.Default then for i, v in ipairs(config.Options) do if v == config.Default then currentIndex = i break end end end; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = UILIB_Window.Theme.Secondary; Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Label = Instance.new("TextLabel", Frame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(0.5, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = config.Name; Label.TextColor3 = UILIB_Window.Theme.TextPrimary; Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; local ValueLabel = Instance.new("TextLabel", Frame); ValueLabel.BackgroundTransparency = 1; ValueLabel.Size = UDim2.new(0.5, -80, 1, 0); ValueLabel.Position = UDim2.new(0.5, -10, 0, 0); ValueLabel.Font = Enum.Font.GothamBold; ValueLabel.Text = config.Options[currentIndex]; ValueLabel.TextColor3 = UILIB_Window.Theme.TextPrimary; ValueLabel.TextSize = 14; ValueLabel.TextXAlignment = Enum.TextXAlignment.Right; local BackButton = Instance.new("TextButton", Frame); BackButton.BackgroundColor3 = UILIB_Window.Theme.Primary; BackButton.Position = UDim2.new(1, -65, 0.5, 0); BackButton.Size = UDim2.new(0, 25, 0, 25); BackButton.AnchorPoint = Vector2.new(0, 0.5); BackButton.Font = Enum.Font.GothamBold; BackButton.Text = "<"; BackButton.TextColor3 = UILIB_Window.Theme.TextPrimary; BackButton.TextSize = 14; Instance.new("UICorner", BackButton).CornerRadius = UDim.new(0, 4); local ForwardButton = Instance.new("TextButton", Frame); ForwardButton.BackgroundColor3 = UILIB_Window.Theme.Primary; ForwardButton.Position = UDim2.new(1, -35, 0.5, 0); ForwardButton.Size = UDim2.new(0, 25, 0, 25); ForwardButton.AnchorPoint = Vector2.new(0, 0.5); ForwardButton.Font = Enum.Font.GothamBold; ForwardButton.Text = ">"; ForwardButton.TextColor3 = UILIB_Window.Theme.TextPrimary; ForwardButton.TextSize = 14; Instance.new("UICorner", ForwardButton).CornerRadius = UDim.new(0, 4); local function updateValue() ValueLabel.Text = config.Options[currentIndex]; pcall(config.Callback, config.Options[currentIndex]) end; BackButton.MouseButton1Click:Connect(function() currentIndex = currentIndex - 1; if currentIndex < 1 then currentIndex = #config.Options end; updateValue() end); ForwardButton.MouseButton1Click:Connect(function() currentIndex = currentIndex + 1; if currentIndex > #config.Options then currentIndex = 1 end; updateValue() end); if config.Tooltip then setupTooltip(Frame, config.Tooltip) end; return Frame end
         function ElementMethods:AddCheckbox(config) local list = config.List or {}; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundTransparency = 1; Frame.Size = UDim2.new(1, 0, 0, 20 + (#list * 30)); local Title = Instance.new("TextLabel", Frame); Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, 0, 0, 20); Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = UILIB_Window.Theme.TextPrimary; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left; local ListContainer = Instance.new("Frame", Frame); ListContainer.BackgroundTransparency = 1; ListContainer.Size = UDim2.new(1, 0, 1, -20); ListContainer.Position = UDim2.new(0, 0, 0, 20); local ListLayout = Instance.new("UIListLayout", ListContainer); ListLayout.Padding = UDim.new(0, 5); local selected = {}; for _, optionName in ipairs(list) do selected[optionName] = false; local toggled = false; local ItemFrame = Instance.new("Frame", ListContainer); ItemFrame.BackgroundTransparency = 1; ItemFrame.Size = UDim2.new(1, 0, 0, 25); local Checkbox = Instance.new("TextButton", ItemFrame); Checkbox.Size = UDim2.new(0, 20, 0, 20); Checkbox.Position = UDim2.new(0, 0, 0.5, 0); Checkbox.AnchorPoint = Vector2.new(0, 0.5); Checkbox.BackgroundColor3 = UILIB_Window.Theme.Primary; Checkbox.Text = ""; Instance.new("UICorner", Checkbox).CornerRadius = UDim.new(0, 4); local Checkmark = Instance.new("Frame", Checkbox); Checkmark.BackgroundColor3 = UILIB_Window.Theme.Accent; Checkmark.BorderSizePixel = 0; Checkmark.Size = UDim2.new(1, -6, 1, -6); Checkmark.Position = UDim2.fromScale(0.5, 0.5); Checkmark.AnchorPoint = Vector2.new(0.5, 0.5); Checkmark.Visible = false; Instance.new("UICorner", Checkmark).CornerRadius = UDim.new(0, 2); local Label = Instance.new("TextLabel", ItemFrame); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, -30, 1, 0); Label.Position = UDim2.new(0, 30, 0, 0); Label.Font = Enum.Font.Gotham; Label.Text = optionName; Label.TextColor3 = UILIB_Window.Theme.TextPrimary; Label.TextSize = 14; Label.TextXAlignment = Enum.TextXAlignment.Left; Checkbox.MouseButton1Click:Connect(function() toggled = not toggled; selected[optionName] = toggled; Checkmark.Visible = toggled; pcall(config.Callback, selected) end) end; if config.Tooltip then setupTooltip(Frame, config.Tooltip) end; return Frame end
-        function ElementMethods:AddFoldout(config) local isOpen = config.Open or false; local FoldoutContainer = Instance.new("Frame", TabContent); FoldoutContainer.BackgroundTransparency = 1; FoldoutContainer.AutomaticSize = Enum.AutomaticSize.Y; FoldoutContainer.Size = UDim2.new(1, 0, 0, 0); local ContainerLayout = Instance.new("UIListLayout", FoldoutContainer); ContainerLayout.Padding = UDim.new(0, 10); local HeaderButton = Instance.new("TextButton", FoldoutContainer); HeaderButton.BackgroundColor3 = UILIB_Window.Theme.Tertiary; HeaderButton.Size = UDim2.new(1, 0, 0, 30); HeaderButton.Text = ""; Instance.new("UICorner", HeaderButton).CornerRadius = UDim.new(0, 6); local Title = Instance.new("TextLabel", HeaderButton); Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, -30, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0); Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = UILIB_Window.Theme.TextPrimary; Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left; local Arrow = Instance.new("TextLabel", HeaderButton); Arrow.BackgroundTransparency = 1; Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.Position = UDim2.new(1, -25, 0, 0); Arrow.Font = Enum.Font.GothamBold; Arrow.TextColor3 = UILIB_Window.Theme.TextPrimary; Arrow.TextSize = 16; local ContentFrame = Instance.new("Frame", FoldoutContainer); ContentFrame.BackgroundTransparency = 1; ContentFrame.Size = UDim2.new(1, 0, 0, 0); ContentFrame.ClipsDescendants = true; local ContentListLayout = Instance.new("UIListLayout", ContentFrame); ContentListLayout.Padding = UDim.new(0, 10); local InnerPadding = Instance.new("UIPadding", ContentFrame); InnerPadding.PaddingLeft = UDim.new(0, 20); local function updateState(isInstant) Arrow.Text = isOpen and "▼" or "▶"; local tweenInfo = isInstant and TweenInfo.new(0) or TweenInfo.new(0.2); local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y or 0; if isOpen and targetHeight == 0 then targetHeight = 10 end; local sizeTween = TweenService:Create(ContentFrame, tweenInfo, { Size = UDim2.new(1, 0, 0, targetHeight) }); sizeTween:Play() end; local fakeTab = {}; for method, func in pairs(ElementMethods) do fakeTab[method] = function(_, ...) local element = func(ElementMethods, ...); if element and element.Parent == TabContent then element.Parent = ContentFrame end; task.wait(); updateState(true); return element end end; pcall(config.Content, fakeTab); task.wait(); updateState(true); HeaderButton.MouseButton1Click:Connect(function() isOpen = not isOpen; updateState() end); if config.Tooltip then setupTooltip(HeaderButton, config.Tooltip) end; return FoldoutContainer end
+        function ElementMethods:AddFoldout(config)
+            local isOpen = config.Open or false
+
+            local FoldoutContainer = Instance.new("Frame", TabContent)
+            FoldoutContainer.BackgroundTransparency = 1
+            FoldoutContainer.AutomaticSize = Enum.AutomaticSize.Y
+            FoldoutContainer.Size = UDim2.new(1, 0, 0, 0)
+            
+            local ContainerLayout = Instance.new("UIListLayout", FoldoutContainer)
+            ContainerLayout.Padding = UDim.new(0, 10)
+            ContainerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local HeaderButton = Instance.new("TextButton", FoldoutContainer)
+            HeaderButton.BackgroundColor3 = UILIB_Window.Theme.Tertiary
+            HeaderButton.Size = UDim2.new(1, 0, 0, 30)
+            HeaderButton.Text = ""
+            Instance.new("UICorner", HeaderButton).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel", HeaderButton)
+            Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, -30, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0); Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = UILIB_Window.Theme.TextPrimary; Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local Arrow = Instance.new("TextLabel", HeaderButton)
+            Arrow.BackgroundTransparency = 1; Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.Position = UDim2.new(1, -25, 0, 0); Arrow.Font = Enum.Font.GothamBold; Arrow.TextColor3 = UILIB_Window.Theme.TextPrimary; Arrow.TextSize = 16
+            
+            local ContentFrame = Instance.new("Frame", FoldoutContainer)
+            ContentFrame.BackgroundTransparency = 1; ContentFrame.Size = UDim2.new(1, 0, 0, 0); ContentFrame.ClipsDescendants = true
+            
+            local ContentListLayout = Instance.new("UIListLayout", ContentFrame)
+            ContentListLayout.Padding = UDim.new(0, 10)
+            
+            local InnerPadding = Instance.new("UIPadding", ContentFrame)
+            InnerPadding.PaddingLeft = UDim.new(0, 20)
+
+            local function updateState(isInstant)
+                Arrow.Text = isOpen and "▼" or "▶"
+                local tweenInfo = isInstant and TweenInfo.new(0) or TweenInfo.new(0.2)
+                local targetHeight = isOpen and ContentListLayout.AbsoluteContentSize.Y or 0
+                if isOpen and targetHeight == 0 then targetHeight = 10 end
+                TweenService:Create(ContentFrame, tweenInfo, { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+            end
+            
+            -- THE FIX: Use a metatable for robust, dynamic function interception --
+            local fakeTab = setmetatable({}, {
+                __index = function(self, key)
+                    local originalMethod = ElementMethods[key]
+                    if type(originalMethod) == "function" then
+                        return function(_, ...) -- Intercept the call
+                            local element = originalMethod(ElementMethods, ...) -- Call the original function
+                            if element and element.Parent == TabContent then -- Re-parent the new element
+                                element.Parent = ContentFrame
+                            end
+                            task.wait()
+                            updateState(true) -- Update size
+                            return element
+                        end
+                    end
+                end
+            })
+
+            pcall(config.Content, fakeTab)
+            
+            task.wait()
+            updateState(true)
+            
+            HeaderButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                updateState()
+            end)
+
+            if config.Tooltip then setupTooltip(HeaderButton, config.Tooltip) end
+            return FoldoutContainer
+        end
         function ElementMethods:AddProgressBar(config) local Frame = Instance.new("Frame", TabContent); Frame.BackgroundColor3 = UILIB_Window.Theme.Secondary; Frame.Size = UDim2.new(1, 0, 0, 40); Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6); local Track = Instance.new("Frame", Frame); Track.BackgroundColor3 = UILIB_Window.Theme.Primary; Track.Position = UDim2.new(0.5, 0, 0.5, 0); Track.Size = UDim2.new(1, -20, 0, 16); Track.AnchorPoint = Vector2.new(0.5, 0.5); Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0); local Progress = Instance.new("Frame", Track); Progress.BackgroundColor3 = UILIB_Window.Theme.Accent; Progress.Size = UDim2.new((config.Default or 0) / 100, 0, 1, 0); Instance.new("UICorner", Progress).CornerRadius = UDim.new(1, 0); local Label = Instance.new("TextLabel", Track); Label.BackgroundTransparency = 1; Label.Size = UDim2.new(1, 0, 1, 0); Label.Font = Enum.Font.GothamSemibold; Label.Text = config.Name or ""; Label.TextColor3 = UILIB_Window.Theme.TextPrimary; Label.TextSize = 12; local methods = {}; function methods:Update(percentage, text) percentage = math.clamp(percentage, 0, 100); local newSize = UDim2.new(percentage / 100, 0, 1, 0); TweenService:Create(Progress, TweenInfo.new(0.1), { Size = newSize }):Play(); if text then Label.Text = text end end; if config.Tooltip then setupTooltip(Frame, config.Tooltip) end; return methods end
         function ElementMethods:AddSelectionGrid(config) local currentSelection = config.Default or config.Options[1]; local Frame = Instance.new("Frame", TabContent); Frame.BackgroundTransparency = 1; Frame.AutomaticSize = Enum.AutomaticSize.Y; local Title = Instance.new("TextLabel", Frame); Title.BackgroundTransparency = 1; Title.Size = UDim2.new(1, 0, 0, 20); Title.Font = Enum.Font.GothamSemibold; Title.Text = config.Name; Title.TextColor3 = UILIB_Window.Theme.TextPrimary; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left; local GridContainer = Instance.new("Frame", Frame); GridContainer.BackgroundTransparency = 1; GridContainer.AutomaticSize = Enum.AutomaticSize.Y; GridContainer.Size = UDim2.new(1, 0, 0, 0); GridContainer.Position = UDim2.new(0, 0, 0, 25); local Grid = Instance.new("UIGridLayout", GridContainer); Grid.CellPadding = UDim2.fromOffset(8, 8); Grid.CellSize = UDim2.fromOffset(80, 30); Grid.SortOrder = Enum.SortOrder.LayoutOrder; local buttons = {}; local function updateSelection() for _, btn in pairs(buttons) do local isSelected = btn.Text == currentSelection; TweenService:Create(btn:FindFirstChild("UIStroke"), TweenInfo.new(0.2), { Color = isSelected and UILIB_Window.Theme.Accent or UILIB_Window.Theme.Secondary }):Play() end end; for _, option in ipairs(config.Options) do local Button = Instance.new("TextButton", GridContainer); Button.BackgroundColor3 = UILIB_Window.Theme.Secondary; Button.Font = Enum.Font.Gotham; Button.Text = option; Button.TextColor3 = UILIB_Window.Theme.TextPrimary; Button.TextSize = 14; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 4); local Stroke = Instance.new("UIStroke", Button); Stroke.Color = UILIB_Window.Theme.Secondary; table.insert(buttons, Button); Button.MouseButton1Click:Connect(function() currentSelection = option; pcall(config.Callback, currentSelection); updateSelection() end) end; task.wait(); updateSelection(); if config.Tooltip then setupTooltip(Frame, config.Tooltip) end; return Frame end
         
@@ -105,17 +176,72 @@ end
 
 function UILIB:Toggle() if UILIB_Window.ScreenGui then UILIB_Window.ScreenGui.Enabled = not UILIB_Window.ScreenGui.Enabled end end
 
-function UILIB:Notify(config) task.spawn(function()
-    local container = getNotifyContainer(); local title, message, duration = config.Title or "Notification", config.Text or "", config.Duration or 5
-    local notifyFrame = Instance.new("Frame"); notifyFrame.BackgroundColor3 = UILIB_Window.Theme.Primary; notifyFrame.Size = UDim2.fromOffset(0, 60); notifyFrame.Parent = container
-    local corner = Instance.new("UICorner", notifyFrame); corner.CornerRadius = UDim.new(0, 6); local stroke = Instance.new("UIStroke", notifyFrame); stroke.Color = UILIB_Window.Theme.Border
-    local brandLabel = Instance.new("TextLabel", notifyFrame); brandLabel.BackgroundTransparency = 1; brandLabel.Font = Enum.Font.Gotham; brandLabel.Text = "UILib"; brandLabel.TextColor3 = UILIB_Window.Theme.TextMuted; brandLabel.TextSize = 12; brandLabel.TextXAlignment = Enum.TextXAlignment.Right; brandLabel.Position = UDim2.new(1, -10, 0, 5); brandLabel.Size = UDim2.new(0, 50, 0, 15); brandLabel.AnchorPoint = Vector2.new(1, 0)
-    local titleLabel = Instance.new("TextLabel", notifyFrame); titleLabel.BackgroundTransparency = 1; titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.Text = title; titleLabel.TextColor3 = UILIB_Window.Theme.TextPrimary; titleLabel.TextSize = 16; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Position = UDim2.new(0, 10, 0, 5); titleLabel.Size = UDim2.new(1, -70, 0, 24)
-    local messageLabel = Instance.new("TextLabel", notifyFrame); messageLabel.BackgroundTransparency = 1; messageLabel.Font = Enum.Font.Gotham; messageLabel.Text = message; messageLabel.TextColor3 = UILIB_Window.Theme.TextSecondary; messageLabel.TextSize = 14; messageLabel.TextWrapped = true; messageLabel.TextXAlignment = Enum.TextXAlignment.Left; messageLabel.Position = UDim2.new(0, 10, 0, 28); messageLabel.Size = UDim2.new(1, -15, 0, 24)
-    local bar = Instance.new("Frame", notifyFrame); bar.BackgroundColor3 = UILIB_Window.Theme.Accent; bar.BorderSizePixel = 0; bar.Position = UDim2.new(0, 0, 1, -3); bar.Size = UDim2.new(1, 0, 0, 3)
-    local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out); local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-    local slideIn = TweenService:Create(notifyFrame, tweenInfoIn, { Size = UDim2.fromOffset(250, 60) }); local slideOut = TweenService:Create(notifyFrame, tweenInfoOut, { Size = UDim2.fromOffset(0, 60) }); local barDecay = TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 3) })
-    slideIn:Play(); barDecay:Play(); task.wait(duration); slideOut:Play(); task.wait(0.4); notifyFrame:Destroy()
-end) end
+function UILIB:Notify(config)
+    task.spawn(function()
+        local TweenService = game:GetService("TweenService")
+        local container = getNotifyContainer()
+
+        local title = config.Title or "Notification"
+        local message = config.Text or ""
+        local duration = config.Duration or 5
+        
+        local notifyFrame = Instance.new("Frame")
+        notifyFrame.BackgroundColor3 = UILIB_Window.Theme.Primary
+        notifyFrame.Size = UDim2.fromOffset(0, 60)
+        notifyFrame.Parent = container
+        
+        local corner = Instance.new("UICorner", notifyFrame)
+        corner.CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", notifyFrame)
+        stroke.Color = UILIB_Window.Theme.Border
+
+        local brandLabel = Instance.new("TextLabel", notifyFrame)
+        brandLabel.Name = "BrandLabel"
+        brandLabel.BackgroundTransparency = 1
+        brandLabel.Font = Enum.Font.Gotham
+        brandLabel.Text = "UILib"
+        brandLabel.TextColor3 = UILIB_Window.Theme.TextMuted
+        brandLabel.TextSize = 12
+        brandLabel.TextXAlignment = Enum.TextXAlignment.Right
+        brandLabel.Position = UDim2.new(1, -10, 0, 5)
+        brandLabel.Size = UDim2.new(0, 50, 0, 15)
+        brandLabel.AnchorPoint = Vector2.new(1, 0)
+        
+        local titleLabel = Instance.new("TextLabel", notifyFrame)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Font = Enum.Font.GothamSemibold
+        titleLabel.Text = title
+        titleLabel.TextColor3 = UILIB_Window.Theme.TextPrimary
+        titleLabel.TextSize = 16
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.Position = UDim2.new(0, 10, 0, 5)
+        titleLabel.Size = UDim2.new(1, -70, 0, 24)
+
+        local messageLabel = Instance.new("TextLabel", notifyFrame)
+        messageLabel.BackgroundTransparency = 1
+        messageLabel.Font = Enum.Font.Gotham
+        messageLabel.Text = message
+        messageLabel.TextColor3 = UILIB_Window.Theme.TextSecondary
+        messageLabel.TextSize = 14
+        messageLabel.TextWrapped = true
+        messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+        messageLabel.Position = UDim2.new(0, 10, 0, 28)
+        messageLabel.Size = UDim2.new(1, -15, 0, 24)
+
+        local bar = Instance.new("Frame", notifyFrame)
+        bar.BackgroundColor3 = UILIB_Window.Theme.Accent
+        bar.BorderSizePixel = 0
+        bar.Position = UDim2.new(0, 0, 1, -3)
+        bar.Size = UDim2.new(1, 0, 0, 3)
+
+        local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        local slideIn = TweenService:Create(notifyFrame, tweenInfoIn, { Size = UDim2.fromOffset(250, 60) })
+        local slideOut = TweenService:Create(notifyFrame, tweenInfoOut, { Size = UDim2.fromOffset(0, 60) })
+        local barDecay = TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 3) })
+        
+        slideIn:Play(); barDecay:Play(); task.wait(duration); slideOut:Play(); task.wait(0.4); notifyFrame:Destroy()
+    end)
+end
 
 return UILIB
