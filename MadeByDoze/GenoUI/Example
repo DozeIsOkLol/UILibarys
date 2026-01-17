@@ -1,0 +1,179 @@
+--[[
+    Script:         GENO UI Library - Full Example
+    Description:    A complete demonstration of all components available in GENOUI
+    Author:         Callum (or whoever is using it)
+]]
+
+-- 1. Load the GENOUI library
+-- (Replace this line with wherever you're actually storing/loading GENOUI)
+local GENOUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/GenoUI/Source.lua"))()
+
+-- =============================================================================
+--      WINDOW CREATION
+-- =============================================================================
+
+local Window = GENOUI:CreateWindow({
+    Title = "GENO UI",
+    Subtitle = " Callum's cool hub example",
+    Size = UDim2.new(0, 620, 0, 460)
+})
+
+Window:AddBadge("v1.0", Color3.fromRGB(0, 170, 255))     -- nice blue badge
+Window:AddBadge("BETA", Color3.fromRGB(255, 140, 0))     -- orange beta tag
+
+-- =============================================================================
+--      TABS
+-- =============================================================================
+
+local PlayerTab   = Window:AddTab("Player")
+local VisualsTab  = Window:AddTab("Visuals")
+local CombatTab   = Window:AddTab("Combat")
+local MiscTab     = Window:AddTab("Misc")
+local SettingsTab = Window:AddTab("Settings")
+
+-- =============================================================================
+--      PLAYER TAB
+-- =============================================================================
+
+PlayerTab:AddSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 300,
+    Default = 16,
+    Callback = function(value)
+        local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+        if h then h.WalkSpeed = value end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "JumpPower",
+    Min = 50,
+    Max = 400,
+    Default = 50,
+    Callback = function(value)
+        local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+        if h then h.JumpPower = value end
+    end
+})
+
+local noclip = false
+PlayerTab:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(v)
+        noclip = v
+        -- You would usually put the actual noclip loop here
+        print("Noclip:", noclip and "ON" or "OFF")
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Reset Character",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player.Character:BreakJoints()
+        end
+    end
+})
+
+-- =============================================================================
+--      VISUALS TAB
+-- =============================================================================
+
+VisualsTab:AddToggle({
+    Name = "FullBright",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            game.Lighting.Brightness = 3
+            game.Lighting.GlobalShadows = false
+            game.Lighting.FogEnd = 9999
+        else
+            game.Lighting.Brightness = 1
+            game.Lighting.GlobalShadows = true
+            game.Lighting.FogEnd = 100000 -- or whatever default your game uses
+        end
+    end
+})
+
+VisualsTab:AddSlider({
+    Name = "Field of View",
+    Min = 70,
+    Max = 120,
+    Default = 70,
+    Callback = function(value)
+        workspace.CurrentCamera.FieldOfView = value
+    end
+})
+
+-- =============================================================================
+--      COMBAT TAB (example extra tab)
+-- =============================================================================
+
+CombatTab:AddToggle({
+    Name = "Kill Aura",
+    Default = false,
+    Callback = function(state)
+        print("Kill Aura:", state and "enabled" or "disabled")
+        -- add your kill aura logic here
+    end
+})
+
+CombatTab:AddSlider({
+    Name = "Reach",
+    Min = 5,
+    Max = 25,
+    Default = 5,
+    Callback = function(value)
+        print("Reach set to:", value)
+        -- implement reach logic
+    end
+})
+
+-- =============================================================================
+--      MISC TAB
+-- =============================================================================
+
+MiscTab:AddButton({
+    Name = "Hello World",
+    Callback = function()
+        print("Hello from GENO UI! 🚀")
+    end
+})
+
+MiscTab:AddParagraph({
+    Text = "This is a paragraph example.\nYou can use it for credits, rules, instructions, jokes, or long descriptions.\n\nEnjoy the library!"
+})
+
+MiscTab:AddDialogueMessage({
+    Name = "Show Credits",
+    Title = "Credits & Info",
+    Message = "GENO UI created by Callum\nInspired by clean, modern UI libraries\nDiscord: yourtaghere\nEnjoy responsibly!"
+})
+
+-- =============================================================================
+--      SETTINGS TAB
+-- =============================================================================
+
+SettingsTab:AddInformation({
+    Title = "Quick Tip",
+    Message = "You can drag the window by the top bar.\nDouble-click the title bar to maximize/restore."
+})
+
+SettingsTab:AddWarning({
+    Title = "Important",
+    Message = "Some features may be detected by anti-cheats.\nUse at your own risk. No refunds on bans."
+})
+
+SettingsTab:AddDropdown({
+    Name = "Theme",
+    Options = {"Dark", "Midnight", "Neon", "Pastel"},
+    Callback = function(choice)
+        print("Theme changed to:", choice)
+        -- you could implement theme switching logic here
+    end
+})
+
+print("GENO UI Example loaded successfully!")
