@@ -14,7 +14,7 @@ local GENOUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIs
 
 local Window = GENOUI:CreateWindow({
     Title = "GENO UI",
-    Subtitle = " Callum's cool hub example",
+    Subtitle = " GENO cool hub example",
     Size = UDim2.new(0, 620, 0, 460)
 })
 
