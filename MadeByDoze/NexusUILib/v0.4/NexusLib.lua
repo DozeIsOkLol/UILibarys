@@ -1,6 +1,6 @@
 --[[
 ╔══════════════════════════════════════════════════════════════╗
-║                  NexusLib  v0.3                              ║
+║                  NexusLib  v0.4                              ║
 ║  Themes · Sub-Tabs · Config Profiles · Resize Handle         ║
 ║  Context Menus · Scroll-to-Top · Image Elements              ║
 ║  Paragraph/Label · Polished Animations · Clean Code          ║
