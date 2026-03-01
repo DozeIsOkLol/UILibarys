@@ -1,1 +1,14 @@
-
+{
+  "Enabled": true,
+  "Maintenance": false,
+  "Message": "All systems operational",
+  "MinimumVersion": "0.0.1",
+  "ForcedUpdate": false,
+  "UpdateURL": "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/NexusLoader.lua",
+  "Announcement": {
+    "Show": true,
+    "Title": "Welcome to Nexus Loader!",
+    "Message": "Thanks for using our loader. Check out our Discord for support!",
+    "Type": "info"
+  }
+}
