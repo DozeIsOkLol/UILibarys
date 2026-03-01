@@ -1,1 +1,22 @@
+-- Nexus Loader Whitelist
+-- Add user IDs (one per line) to grant access
+-- Very Very Basic Whitelist
 
+-- Example user IDs:
+-- 123456789
+-- 987654321
+
+-- Admins
+1234567890
+
+-- Developers
+9876543210
+
+-- Beta Testers
+1111111111
+2222222222
+
+-- Premium Users
+3333333333
+4444444444
+5555555555
