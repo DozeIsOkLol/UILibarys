@@ -1,8 +1,8 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
-    ║                    NEXUS LOADER v2.0                      ║
+    ║                    NEXUS LOADER v0.0.1                    ║
     ║          Professional Script Management System            ║
-    ║                 Created by: Your Name                     ║
+    ║                 Created by: SouljaWitchSrc                ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
 
@@ -14,17 +14,17 @@ local NexusLoader = {}
 
 local Config = {
     -- Core Settings
-    LoaderVersion = "2.0.0",
+    LoaderVersion = "0.0.1",
     LoaderName = "Nexus Loader",
     
     -- Remote URLs (Replace with your own)
     RemoteConfig = {
-        StatusURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/status.json",
-        ThemeURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/themes.json",
-        WhitelistURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/whitelist.txt",
-        ChangelogURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/changelog.json",
-        ScriptsURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/scripts.json",
-        AnalyticsURL = "https://raw.githubusercontent.com/YourRepo/nexus-loader/main/config/analytics.json"
+        StatusURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/status.json",
+        ThemeURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/themes.json",
+        WhitelistURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/whitelist.txt",
+        ChangelogURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/changelog.json",
+        ScriptsURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/scripts.json",
+        AnalyticsURL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/analytics.json"
     },
     
     -- UI Settings
