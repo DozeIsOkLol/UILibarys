@@ -1,1 +1,95 @@
-
+[
+  {
+    "Version": "2.0.0",
+    "Date": "2024-03-01",
+    "Title": "Major Update - Complete Redesign",
+    "Type": "major",
+    "Changes": [
+      "Complete UI redesign with modern animations",
+      "Added 10 new professional themes",
+      "Implemented advanced error handling with copy-to-clipboard",
+      "Added comprehensive logging system",
+      "Improved script detection and loading",
+      "Added notification system",
+      "Enhanced security features",
+      "Added remote configuration management",
+      "Improved performance and stability",
+      "Added developer mode for debugging"
+    ],
+    "Fixes": [
+      "Fixed theme loading issues",
+      "Fixed script execution errors",
+      "Fixed UI scaling on different resolutions",
+      "Fixed memory leaks in notification system"
+    ]
+  },
+  {
+    "Version": "1.9.5",
+    "Date": "2024-02-25",
+    "Title": "Performance Update",
+    "Type": "minor",
+    "Changes": [
+      "Improved script loading speed by 40%",
+      "Optimized UI rendering",
+      "Added caching for remote configs",
+      "Reduced memory usage"
+    ],
+    "Fixes": [
+      "Fixed whitelist verification bug",
+      "Fixed progress bar animation stuttering",
+      "Fixed rare crash on script execution"
+    ]
+  },
+  {
+    "Version": "1.9.0",
+    "Date": "2024-02-20",
+    "Title": "Feature Update",
+    "Type": "minor",
+    "Changes": [
+      "Added whitelist system",
+      "Added remote theme loading",
+      "Added status check system",
+      "Improved error messages",
+      "Added version checking"
+    ],
+    "Fixes": [
+      "Fixed script database loading",
+      "Fixed UI positioning issues",
+      "Fixed game detection"
+    ]
+  },
+  {
+    "Version": "1.8.0",
+    "Date": "2024-02-15",
+    "Title": "UI Overhaul",
+    "Type": "major",
+    "Changes": [
+      "Complete UI redesign",
+      "Added gradient backgrounds",
+      "Added smooth animations",
+      "Improved readability",
+      "Added progress indicators"
+    ],
+    "Fixes": [
+      "Fixed button click issues",
+      "Fixed text overflow",
+      "Fixed color contrast problems"
+    ]
+  },
+  {
+    "Version": "1.7.5",
+    "Date": "2024-02-10",
+    "Title": "Bug Fixes",
+    "Type": "patch",
+    "Changes": [
+      "Minor performance improvements",
+      "Updated script URLs",
+      "Improved error handling"
+    ],
+    "Fixes": [
+      "Fixed critical crash on startup",
+      "Fixed script loading timeout",
+      "Fixed theme not applying"
+    ]
+  }
+]
