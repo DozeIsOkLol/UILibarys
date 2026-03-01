@@ -1,1 +1,156 @@
-
+[
+  {
+    "Name": "Nexus Hub - Universal",
+    "Description": "Universal script hub that works across all games",
+    "GameId": 0,
+    "PlaceId": 0,
+    "Universal": true,
+    "Version": "0.0.1",
+    "URL": "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/MadeByDoze/Loaders/NexusLoader/universal.lua",
+    "LastUpdated": "2026-3-01",
+    "Author": "Nexus Team",
+    "Features": [
+      "Game ESP",
+      "Player ESP",
+      "Walkspeed Modifier",
+      "Jump Power",
+      "Fly",
+      "Noclip",
+      "Teleport"
+    ]
+  },
+  {
+    "Name": "Blade Ball Script",
+    "Description": "Advanced script for Blade Ball with auto-parry and more",
+    "GameId": 3101667897,
+    "PlaceId": 13772394625,
+    "Universal": false,
+    "Version": "2.5.0",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/bladeball.lua",
+    "LastUpdated": "2024-03-01",
+    "Author": "Nexus Team",
+    "Features": [
+      "Auto Parry",
+      "Manual Parry",
+      "ESP",
+      "Stats Display",
+      "Visual Customization"
+    ]
+  },
+  {
+    "Name": "Arsenal Script",
+    "Description": "Feature-rich Arsenal script with ESP and aimbot",
+    "GameId": 286090429,
+    "PlaceId": 286090429,
+    "Universal": false,
+    "Version": "4.1.2",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/arsenal.lua",
+    "LastUpdated": "2024-03-01",
+    "Author": "Nexus Team",
+    "Features": [
+      "Silent Aim",
+      "ESP",
+      "Kill All",
+      "Speed Hack",
+      "Infinite Jump",
+      "Gun Mods"
+    ]
+  },
+  {
+    "Name": "Adopt Me Script",
+    "Description": "Auto-farm and trading features for Adopt Me",
+    "GameId": 920587237,
+    "PlaceId": 920587237,
+    "Universal": false,
+    "Version": "1.8.5",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/adoptme.lua",
+    "LastUpdated": "2024-02-28",
+    "Author": "Nexus Team",
+    "Features": [
+      "Auto Farm",
+      "Pet Duplicator",
+      "Money Farm",
+      "Trade Scam Protection",
+      "Teleports"
+    ]
+  },
+  {
+    "Name": "Blox Fruits Script",
+    "Description": "Comprehensive Blox Fruits script with auto-farm and more",
+    "GameId": 2753915549,
+    "PlaceId": 2753915549,
+    "Universal": false,
+    "Version": "5.3.1",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/bloxfruits.lua",
+    "LastUpdated": "2024-03-01",
+    "Author": "Nexus Team",
+    "Features": [
+      "Auto Farm Level",
+      "Auto Farm Mastery",
+      "Auto Farm Bones",
+      "Auto Raids",
+      "ESP",
+      "Teleports",
+      "Devil Fruit Sniper"
+    ]
+  },
+  {
+    "Name": "Da Hood Script",
+    "Description": "Advanced Da Hood script with silent aim and more",
+    "GameId": 2788229376,
+    "PlaceId": 2788229376,
+    "Universal": false,
+    "Version": "3.7.2",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/dahood.lua",
+    "LastUpdated": "2024-03-01",
+    "Author": "Nexus Team",
+    "Features": [
+      "Silent Aim",
+      "Aimbot",
+      "ESP",
+      "Cash Farm",
+      "Auto Rob",
+      "Teleports",
+      "Anti-Lock"
+    ]
+  },
+  {
+    "Name": "Jailbreak Script",
+    "Description": "Complete Jailbreak script with auto-farm and ESP",
+    "GameId": 606849621,
+    "PlaceId": 606849621,
+    "Universal": false,
+    "Version": "2.9.4",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/jailbreak.lua",
+    "LastUpdated": "2024-02-29",
+    "Author": "Nexus Team",
+    "Features": [
+      "Auto Rob",
+      "Auto Farm",
+      "ESP",
+      "Vehicle Speed",
+      "Teleports",
+      "Infinite Nitro",
+      "Auto Arrest"
+    ]
+  },
+  {
+    "Name": "Pet Simulator X Script",
+    "Description": "Auto-hatch and farming script for Pet Simulator X",
+    "GameId": 6284583030,
+    "PlaceId": 6284583030,
+    "Universal": false,
+    "Version": "1.5.8",
+    "URL": "https://raw.githubusercontent.com/YourRepo/nexus-scripts/main/petsimx.lua",
+    "LastUpdated": "2024-02-27",
+    "Author": "Nexus Team",
+    "Features": [
+      "Auto Hatch",
+      "Auto Farm",
+      "Auto Collect Coins",
+      "Auto Upgrade Pets",
+      "Teleports",
+      "ESP"
+    ]
+  }
+]
