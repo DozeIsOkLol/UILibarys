@@ -1,4 +1,4 @@
--- Advanced Example Usage of Custom UI Library v2.0
+
 -- This demonstrates all the new features
 
 local Library = loadstring(game:HttpGet("path/to/CustomUILib.lua"))()
