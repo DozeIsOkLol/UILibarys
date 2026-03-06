@@ -1,7 +1,7 @@
 local library = loadstring(game:HttpGet('https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/AtlasLib2/Source.lua'))()
 
 -- // Window \\ --
-local window = library.new('ATLASLIB2', 'DOZE')
+local window = library.new('leadmarker is so hot', 'leadmarker')
 
 -- // Tabs \\ --
 local tab = window.new_tab('rbxassetid://4483345998')
