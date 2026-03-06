@@ -29,7 +29,7 @@ getgenv().color_schemes = {
 getgenv().color_scheme = getgenv().color_schemes.custom
 
 
-local window = loadstring(game:HttpGet("https://raw.githubusercontent.com/deadmopose/Edge-ui-library/main/script.lua"))()
+local window = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/EdgeLib/Source.lua"))()
 
 local tab = window.new_tab("Main")
 
