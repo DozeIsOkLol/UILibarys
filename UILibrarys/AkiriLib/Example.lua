@@ -1,4 +1,4 @@
-local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/Akiri%20Lib/Akiri%20Lib%20Source.lua"))()
+local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/AkiriLib/Source.lua"))()
 local Ui = Library
 --Window1.SendNotification(Type, "Text Here", Duration) -- Types = Warning, Error
 
