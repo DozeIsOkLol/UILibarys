@@ -1,4 +1,4 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/coast%20old"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/CoastingLib/Source.lua"))()
 local test = Library:CreateTab("Title", "Description")
 
 test:CreateButton("Button", function()
