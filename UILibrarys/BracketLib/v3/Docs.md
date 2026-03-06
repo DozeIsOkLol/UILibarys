@@ -11,7 +11,7 @@ local Config = {
 	Keybind = Enum.KeyCode.RightBracket
 }
 
-local Library = loadstring(game:HttpGet("[https://raw.githubusercontent.com/AlexR32/Roblox/main/BracketV3.lua](https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/BracketLib/v3/Source.lua)"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/BracketLib/v3/Source.lua"))()
 local Window = Library:CreateWindow(Config, game:GetService("CoreGui"))
 
 local Tab1 = Window:CreateTab("Example")
