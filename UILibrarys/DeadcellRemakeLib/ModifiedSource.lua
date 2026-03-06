@@ -4,8 +4,8 @@ local settings = {
     default_accent = Color3.fromRGB(61, 100, 227); -- also stupid shit
 };
 
-local drawing = loadstring(game:HttpGet("https://github.com/GhostDuckyy/UI-Libraries/blob/main/DEADCELL%20REMAKE/misc/extension.lua?raw=true"))();
-local tween = loadstring(game:HttpGet("https://raw.githubusercontent.com/vozoid/utility/main/Tween.lua"))()
+local drawing = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/DeadcellRemakeLib/misc/extension.lua"))();
+local tween = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/DeadcellRemakeLib/misc/tween.lua"))()
 local bxor = loadstring(game:HttpGet('https://github.com/GhostDuckyy/GhostDuckyy/blob/main/Tool/bxor.lua?raw=true'))()
 
 -- // UI LIBRARY
@@ -16,10 +16,10 @@ if not isfolder(settings.folder_name) then
 end;
 
 local images = {
-    ['gradient90'] = "https://raw.githubusercontent.com/portallol/luna/main/Gradient.png";
-    ['gradient180'] = "https://raw.githubusercontent.com/portallol/luna/main/Gradient180.png";
-    ['arrow_down'] = "https://i.imgur.com/tVqy0nL.png";
-    ['arrow_up'] = "https://i.imgur.com/SL9cbQp.png";
+    ['gradient90'] = "https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/DeadcellRemakeLib/image/Gradient.png";
+    ['gradient180'] = "https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/DeadcellRemakeLib/image/Gradient180.png";
+    ['arrow_down'] = "https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/DeadcellRemakeLib/image/arrow_down.png";
+    ['arrow_up'] = "https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/DeadcellRemakeLib/image/arrow_up.png";
 }
 for i,v in next, images do
     if not isfile(settings.folder_name..'/assets/'..i..'.ln') then
