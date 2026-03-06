@@ -1,4 +1,4 @@
-local TurtleNotifications = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Notifications/main/source.lua"))()
+local TurtleNotifications = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/Notifications/Turtle/Source.lua"))()
 
 local NotificationLibrary = TurtleNotifications.new(false, 2)
 
