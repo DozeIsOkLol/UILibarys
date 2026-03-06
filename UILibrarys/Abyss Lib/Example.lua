@@ -1,11 +1,11 @@
 --Credit to xz#1111 for source
-local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/Abyss%20Lib/Abyss%20Lib%20Source.lua"))()
+local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/Abyss%20Lib/Source.lua"))()
 local Ui = Library
 
 local LoadTime = tick()
 
 local Loader = Library.CreateLoader(
-    "Title Here", 
+    "Abyss Lib", 
     Vector2.new(300, 300)
 )
 
@@ -101,3 +101,4 @@ Window:AddSettingsTab()
 Window:SwitchTab(Tab1)
 Window.ToggleAnime(false)
 LoadTime = math.floor((tick() - LoadTime) * 1000)
+
