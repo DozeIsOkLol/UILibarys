@@ -1,3 +1,3 @@
 
 ### Preview
-![a](https://github.com/Eazvy/UILibs/blob/main/Notifications/Ritual/unknown%20(1).png?raw=true)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/Notifications/Ritual/Preview.png?raw=true)
