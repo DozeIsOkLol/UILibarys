@@ -2,7 +2,7 @@
 
 A modern, feature-rich Roblox UI library with dropdown tabs, smooth animations, extensive customization options, and advanced features.
 
-## ✨ New in v2.0
+## ✨ New in v0.1.2
 
 🎨 **Color Picker** - RGB color selection with live preview  
 📋 **Dropdown Selector** - Choose from multiple options  
