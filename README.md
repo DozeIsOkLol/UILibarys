@@ -57,3 +57,33 @@ Do **not** claim them as your own.
 
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/AquaLIB/Source.lua"))()
+```
+
+## Credits & Inspirations
+<details>
+<summary>📜 Credits & Inspirations</summary>
+
+This collection wouldn't exist without the hard work of earlier archivists and creators who shared these libraries publicly. Huge thanks to the following repositories that inspired and provided many of the UI libs here (some folders are direct or partial copies from them for preservation):
+
+- **[Eazvy/UILibs](https://github.com/Eazvy/UILibs)**  
+  A massive early collection (~100+ libs) that helped kickstart many archives. Shoutout to oma (Eazvy) for compiling and sharing them freely.
+
+- **[GhostDuckyy/UI-Libraries](https://github.com/GhostDuckyy/UI-Libraries)**  
+  Another huge Roblox UI libs repo (archived now, but influential). Thanks to GhostDuckyy for preserving so many classics — many folders here trace back to this one.
+
+- **[bloodball/UI-Librarys](https://github.com/bloodball/UI-Librarys)**  
+  "I waste my time so you don't have to!" — one of the OG collections with tons of old-school and unique libs. BloodBall/Graveyard Unit's README style and organization inspired parts of mine too. Respect for the manual hunting and bot-sniffing approach!
+
+Many individual libraries come from their original creators (too many to list all), scattered across V3rmillion threads, Discord shares, pastebins, or direct GitHub repos. If a lib is yours and you'd like special credit, removal, or a link update — DM me on Discord (**vampxity.**) or open an issue. No drama, just respect.
+
+This repo is **not** claiming ownership — it's an archive/community backup. Always credit originals when using in your own projects.
+
+Thanks to everyone in the Roblox exploiting/scripting scene who shared these over the years. <3
+
+</details>
+
+Maintained by **Doze** (DozeIsOkLol)  
+Discord: **vampxity.**  
+Last updated: March 06, 2026
+
+**Enjoy the collection** 🚀
