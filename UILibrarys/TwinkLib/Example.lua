@@ -1,4 +1,4 @@
-local UILibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/twink"))()
+local UILibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/TwinkLib/Source.lua"))()
 
 local MainUI = UILibrary.Load("ChibuHub")
 local FirstPage = MainUI.AddPage("Home")
