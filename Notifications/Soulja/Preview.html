@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NotifyLib — Roblox Notification Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d12;
+    --surface: #13131c;
+    --surface2: #1c1c2a;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f2;
+    --muted: #7a7a96;
+    --success: #22c55e;
+    --error: #ef4444;
+    --warning: #eab308;
+    --info: #3b82f6;
+    --custom: #a855f7;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 56px;
+    z-index: 1;
+  }
+
+  .header-pill {
+    display: inline-block;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: #3b82f6;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 99px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: #fff;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, #3b82f6, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin-top: 14px;
+    font-size: 15px;
+    font-weight: 400;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 56px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+
+  .btn:hover::before { opacity: 1; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-success { border-color: rgba(34,197,94,0.35); color: var(--success); }
+  .btn-success::before { background: rgba(34,197,94,0.06); }
+  .btn-success:hover { border-color: rgba(34,197,94,0.7); box-shadow: 0 8px 24px rgba(34,197,94,0.15); }
+
+  .btn-error { border-color: rgba(239,68,68,0.35); color: var(--error); }
+  .btn-error::before { background: rgba(239,68,68,0.06); }
+  .btn-error:hover { border-color: rgba(239,68,68,0.7); box-shadow: 0 8px 24px rgba(239,68,68,0.15); }
+
+  .btn-warning { border-color: rgba(234,179,8,0.35); color: var(--warning); }
+  .btn-warning::before { background: rgba(234,179,8,0.06); }
+  .btn-warning:hover { border-color: rgba(234,179,8,0.7); box-shadow: 0 8px 24px rgba(234,179,8,0.15); }
+
+  .btn-info { border-color: rgba(59,130,246,0.35); color: var(--info); }
+  .btn-info::before { background: rgba(59,130,246,0.06); }
+  .btn-info:hover { border-color: rgba(59,130,246,0.7); box-shadow: 0 8px 24px rgba(59,130,246,0.15); }
+
+  .btn-custom { border-color: rgba(168,85,247,0.35); color: var(--custom); }
+  .btn-custom::before { background: rgba(168,85,247,0.06); }
+  .btn-custom:hover { border-color: rgba(168,85,247,0.7); box-shadow: 0 8px 24px rgba(168,85,247,0.15); }
+
+  .btn-clear { border-color: rgba(255,255,255,0.1); color: var(--muted); }
+  .btn-clear:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Preview area */
+  .preview-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .traffic-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .td-red { background: #ff5f57; }
+  .td-yellow { background: #febc2e; }
+  .td-green { background: #28c840; }
+
+  .preview-title {
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .preview-screen {
+    position: relative;
+    height: 420px;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(168,85,247,0.05) 0%, transparent 60%),
+      #0a0a12;
+    overflow: hidden;
+  }
+
+  /* Fake game UI elements */
+  .fake-hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .fake-health-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 200px;
+  }
+
+  .fake-health-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 5px;
+    letter-spacing: 0.1em;
+  }
+
+  .fake-bar-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .fake-bar-fill {
+    height: 100%;
+    width: 72%;
+    background: linear-gradient(90deg, #22c55e, #86efac);
+    border-radius: 3px;
+  }
+
+  .fake-minimap {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+
+  .fake-minimap::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+  }
+
+  /* Notification container */
+  #notif-container {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 300px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  /* Notification card */
+  .notif-card {
+    width: 300px;
+    background: #13131e;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transform: translateX(320px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  .notif-card.visible {
+    transform: translateX(0);
+  }
+
+  .notif-card.exiting {
+    transform: translateX(340px) !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 1, 1) !important;
+  }
+
+  .notif-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 3px;
+    width: 3px;
+    border-radius: 10px 0 0 0;
+  }
+
+  .notif-inner {
+    padding: 10px 12px 14px 14px;
+  }
+
+  .notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .notif-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-family: 'Sora', sans-serif;
+  }
+
+  .notif-close {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: rgba(255,255,255,0.35);
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .notif-close:hover {
+    background: rgba(239,68,68,0.8);
+    color: #fff;
+  }
+
+  .notif-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+
+  .notif-msg {
+    font-size: 11px;
+    color: rgba(160,160,190,0.9);
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .notif-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .notif-btn {
+    flex: 1;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .notif-progress {
+    height: 3px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .notif-progress-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 0 0 0 10px;
+    transition: width linear;
+  }
+
+  /* Gradient background on card */
+  .notif-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.015) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Code block */
+  .code-section {
+    position: relative;
+    z-index: 1;
+    margin-top: 48px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .code-section h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+
+  .code-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .code-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    gap: 2px;
+  }
+
+  .code-tab {
+    padding: 10px 16px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .code-tab.active {
+    color: #fff;
+    border-bottom-color: #3b82f6;
+  }
+
+  pre {
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9d1d9;
+    overflow-x: auto;
+  }
+
+  .kw { color: #ff7b72; }
+  .fn { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .cm { color: #566573; font-style: italic; }
+  .num { color: #f0883e; }
+  .key { color: #79c0ff; }
+  .bool { color: #56d364; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-pill">🧱 Roblox ModuleScript</div>
+  <h1>Notify<span>Lib</span></h1>
+  <p class="subtitle">A sleek, stacking notification system for Roblox games. Animated, typed, dismissible, with progress timers.</p>
+</div>
+
+<div class="controls">
+  <button class="btn btn-success" onclick="spawnNotif('success')">
+    <span class="dot" style="background:var(--success)"></span> Success
+  </button>
+  <button class="btn btn-error" onclick="spawnNotif('error')">
+    <span class="dot" style="background:var(--error)"></span> Error
+  </button>
+  <button class="btn btn-warning" onclick="spawnNotif('warning')">
+    <span class="dot" style="background:var(--warning)"></span> Warning
+  </button>
+  <button class="btn btn-info" onclick="spawnNotif('info')">
+    <span class="dot" style="background:var(--info)"></span> Info
+  </button>
+  <button class="btn btn-custom" onclick="spawnNotif('custom')">
+    <span class="dot" style="background:var(--custom)"></span> Custom
+  </button>
+  <button class="btn btn-info" onclick="spawnNotif('buttons')">
+    🔘 With Buttons
+  </button>
+  <button class="btn btn-clear" onclick="clearAll()">✕ Clear All</button>
+</div>
+
+<div class="preview-wrap">
+  <div class="preview-bar">
+    <div class="traffic-dot td-red"></div>
+    <div class="traffic-dot td-yellow"></div>
+    <div class="traffic-dot td-green"></div>
+    <span class="preview-title">game.StarterGui.NotifyLib_GUI — Preview</span>
+  </div>
+  <div class="preview-screen">
+    <div class="fake-hud">
+      <div class="fake-minimap"></div>
+      <div class="fake-health-bar">
+        <div class="fake-health-label">HP — 72 / 100</div>
+        <div class="fake-bar-bg"><div class="fake-bar-fill"></div></div>
+      </div>
+    </div>
+    <div id="notif-container"></div>
+  </div>
+</div>
+
+<div class="code-section">
+  <h2>Usage</h2>
+  <div class="code-box">
+    <div class="code-tabs">
+      <div class="code-tab active">Basic</div>
+    </div>
+    <pre><span class="kw">local</span> <span class="key">NotifyLib</span> <span class="kw">=</span> <span class="fn">require</span>(<span class="key">game</span>.<span class="key">ReplicatedStorage</span>.<span class="key">NotifyLib</span>)
+
+<span class="cm">-- Simple typed notification</span>
+<span class="key">NotifyLib</span>:<span class="fn">Notify</span>({
+    <span class="key">Title</span>    <span class="kw">=</span> <span class="str">"Quest Complete!"</span>,
+    <span class="key">Message</span>  <span class="kw">=</span> <span class="str">"You finished: Explore the Forest."</span>,
+    <span class="key">Type</span>     <span class="kw">=</span> <span class="str">"Success"</span>,  <span class="cm">-- Success | Error | Warning | Info | Custom</span>
+    <span class="key">Duration</span> <span class="kw">=</span> <span class="num">5</span>,
+})
+
+<span class="cm">-- With action buttons</span>
+<span class="key">NotifyLib</span>:<span class="fn">Notify</span>({
+    <span class="key">Title</span>    <span class="kw">=</span> <span class="str">"Server Restart"</span>,
+    <span class="key">Message</span>  <span class="kw">=</span> <span class="str">"Server restarting in 60 seconds."</span>,
+    <span class="key">Type</span>     <span class="kw">=</span> <span class="str">"Warning"</span>,
+    <span class="key">Duration</span> <span class="kw">=</span> <span class="num">10</span>,
+    <span class="key">Button1</span>  <span class="kw">=</span> { <span class="key">Text</span> <span class="kw">=</span> <span class="str">"Dismiss"</span>,  <span class="key">Callback</span> <span class="kw">=</span> <span class="kw">function</span>() <span class="kw">end</span> },
+    <span class="key">Button2</span>  <span class="kw">=</span> { <span class="key">Text</span> <span class="kw">=</span> <span class="str">"Leave"</span>,    <span class="key">Callback</span> <span class="kw">=</span> <span class="kw">function</span>() <span class="key">game</span>:<span class="fn">GetService</span>(<span class="str">"TeleportService"</span>):<span class="fn">Teleport</span>(<span class="key">game</span>.<span class="key">PlaceId</span>) <span class="kw">end</span> },
+})
+
+<span class="cm">-- Custom color</span>
+<span class="key">NotifyLib</span>:<span class="fn">Notify</span>({
+    <span class="key">Title</span>   <span class="kw">=</span> <span class="str">"VIP Bonus"</span>,
+    <span class="key">Message</span> <span class="kw">=</span> <span class="str">"You received 500 coins!"</span>,
+    <span class="key">Type</span>    <span class="kw">=</span> <span class="str">"Custom"</span>,
+    <span class="key">Color</span>   <span class="kw">=</span> <span class="fn">Color3.fromRGB</span>(<span class="num">255</span>, <span class="num">170</span>, <span class="num">0</span>),
+    <span class="key">Duration</span> <span class="kw">=</span> <span class="num">6</span>,
+})
+
+<span class="cm">-- Clear all</span>
+<span class="key">NotifyLib</span>:<span class="fn">ClearAll</span>()
+</pre>
+  </div>
+</div>
+
+<script>
+const container = document.getElementById('notif-container');
+const MAX = 5;
+
+const TYPES = {
+  success: { color: '#22c55e', label: 'SUCCESS', badgeBg: 'rgba(34,197,94,0.18)' },
+  error:   { color: '#ef4444', label: 'ERROR',   badgeBg: 'rgba(239,68,68,0.18)' },
+  warning: { color: '#eab308', label: 'WARNING', badgeBg: 'rgba(234,179,8,0.18)' },
+  info:    { color: '#3b82f6', label: 'INFO',     badgeBg: 'rgba(59,130,246,0.18)' },
+  custom:  { color: '#a855f7', label: 'NOTICE',  badgeBg: 'rgba(168,85,247,0.18)' },
+  buttons: { color: '#eab308', label: 'WARNING', badgeBg: 'rgba(234,179,8,0.18)' },
+};
+
+const PRESETS = {
+  success: { title: 'Quest Complete!', msg: 'You finished: Explore the Forest. +250 XP awarded.' },
+  error:   { title: 'Connection Failed', msg: 'Unable to sync data with the server. Retrying...' },
+  warning: { title: 'Server Restart', msg: 'The server will restart in 60 seconds.' },
+  info:    { title: 'Update Available', msg: 'A new game version has been published.' },
+  custom:  { title: 'VIP Bonus 🎉', msg: 'You received 500 coins as a VIP reward!' },
+  buttons: { title: 'Friend Request', msg: 'Player123 wants to join your team.', hasButtons: true },
+};
+
+let activeCards = [];
+let uid = 0;
+
+function spawnNotif(type) {
+  if (activeCards.length >= MAX) {
+    const oldest = activeCards[0];
+    dismiss(oldest.id);
+  }
+
+  const t = TYPES[type] || TYPES.info;
+  const p = PRESETS[type] || PRESETS.info;
+  const duration = 5000;
+  const id = ++uid;
+
+  const card = document.createElement('div');
+  card.className = 'notif-card';
+  card.dataset.id = id;
+  card.style.background = '#13131e';
+
+  card.innerHTML = `
+    <div class="notif-accent" style="background:${t.color}"></div>
+    <div class="notif-inner">
+      <div class="notif-header">
+        <div class="notif-badge" style="background:${t.badgeBg}; color:${t.color}">
+          <span>${t.label}</span>
+        </div>
+        <button class="notif-close" onclick="dismiss(${id})">✕</button>
+      </div>
+      <div class="notif-title">${p.title}</div>
+      <div class="notif-msg">${p.msg}</div>
+      ${p.hasButtons ? `
+      <div class="notif-buttons">
+        <button class="notif-btn" style="color:${t.color};border-color:${t.color}40"
+          onmouseenter="this.style.background='${t.color}';this.style.color='#fff'"
+          onmouseleave="this.style.background='rgba(255,255,255,0.04)';this.style.color='${t.color}'"
+          onclick="dismiss(${id})">Decline</button>
+        <button class="notif-btn" style="color:${t.color};border-color:${t.color}40"
+          onmouseenter="this.style.background='${t.color}';this.style.color='#fff'"
+          onmouseleave="this.style.background='rgba(255,255,255,0.04)';this.style.color='${t.color}'"
+          onclick="dismiss(${id})">Accept</button>
+      </div>` : ''}
+    </div>
+    <div class="notif-progress">
+      <div class="notif-progress-fill" style="background:${t.color};width:100%"></div>
+    </div>
+  `;
+
+  container.prepend(card);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => card.classList.add('visible'));
+  });
+
+  // Progress bar
+  const fill = card.querySelector('.notif-progress-fill');
+  let startTime = null;
+  let paused = false;
+  let elapsed = 0;
+  let rafId;
+
+  function tick(ts) {
+    if (!startTime) startTime = ts;
+    if (!paused) {
+      elapsed = ts - startTime;
+      const pct = Math.max(0, 1 - elapsed / duration);
+      fill.style.width = (pct * 100) + '%';
+      if (elapsed >= duration) {
+        dismiss(id);
+        return;
+      }
+    } else {
+      startTime = ts - elapsed;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  rafId = requestAnimationFrame(tick);
+
+  card.addEventListener('mouseenter', () => { paused = true; });
+  card.addEventListener('mouseleave', () => { paused = false; });
+
+  activeCards.push({ id, card, rafId });
+}
+
+function dismiss(id) {
+  const idx = activeCards.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  const { card, rafId } = activeCards[idx];
+  cancelAnimationFrame(rafId);
+  activeCards.splice(idx, 1);
+
+  card.classList.remove('visible');
+  card.classList.add('exiting');
+  setTimeout(() => card.remove(), 320);
+}
+
+function clearAll() {
+  [...activeCards].forEach(c => dismiss(c.id));
+}
+</script>
+</body>
+</html>
