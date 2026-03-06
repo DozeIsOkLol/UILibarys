@@ -1,4 +1,4 @@
-local GUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Patskorn/GUI/main/Daino.lua"))()
+local GUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/DainoLib/Source.lua"))()
 local idk = GUI:new()
 local win = idk:Tap("Tab 1")
 local tab = idk:Tap("HOOK GUI By Teleport Hub")
