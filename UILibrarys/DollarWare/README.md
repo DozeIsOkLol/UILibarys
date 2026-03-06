@@ -1,2 +1,2 @@
 ### Preview
-![a](https://github.com/Eazvy/UILibs/blob/main/Librarys/Dollarware/screenshot.png?raw=true)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/DollarWare/Preview.png?raw=true)
