@@ -1,4 +1,4 @@
-local Atlas = loadstring(game:HttpGet("NEED_NEW_URL"))()
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/AtlasLib/Source.lua"))()
 
 local test = Atlas.new({
     Name = "Script";
