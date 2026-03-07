@@ -1,2 +1,2 @@
 # Preview 
-![a](https://raw.githubusercontent.com/Eazvy/UILibs/main/Librarys/FriseX/Screenshot%202022-11-29%20132620.png)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/FriseXLib/Preview.png)
