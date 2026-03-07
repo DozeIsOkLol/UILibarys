@@ -75,4 +75,4 @@ print(t)
 end)
 
 helpMe:Clear() -- Completely clears the dropdown, it will lag it until you add an item in it
-``
+
