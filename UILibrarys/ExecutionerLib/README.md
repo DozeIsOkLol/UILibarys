@@ -1,2 +1,2 @@
 # Preview 
-![a](https://raw.githubusercontent.com/Eazvy/UILibs/main/Librarys/Executioner/Screenshot%202022-11-29%20132329.png)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/ExecutionerLib/Preview.png)
