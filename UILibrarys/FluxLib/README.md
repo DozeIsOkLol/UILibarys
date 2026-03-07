@@ -1,2 +1,2 @@
 # Preview 
-![a](https://raw.githubusercontent.com/Eazvy/UILibs/main/Librarys/Flux/FluxPreview.png)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/FluxLib/FluxPreview.png)
