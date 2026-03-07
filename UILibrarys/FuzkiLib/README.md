@@ -1,2 +1,2 @@
 # Preview 
-![a](https://raw.githubusercontent.com/Eazvy/UILibs/main/Librarys/Fuzki/awdawdawdawdawdawdawd.png)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/FuzkiLib/Preview.png)
