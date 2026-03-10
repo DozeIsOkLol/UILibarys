@@ -3,7 +3,7 @@
 > A Roblox UI library that faithfully recreates the classic **Windows XP Luna** desktop aesthetic — raised 3-D borders, blue gradient title bars, Luna tabs, sunken input fields, and all.
 
 <p align="center">
-  <img src="https://i.imgur.com/placeholder.png" alt="WinXP UI preview" width="540"/>
+  <img src="https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/WindowsXPLib/v0.0.2/Preview.png" alt="WinXP UI preview" width="540"/>
 </p>
 
 ---
