@@ -1,2 +1,5 @@
 # Preview 
-![a](https://raw.githubusercontent.com/Eazvy/UILibs/main/Librarys/Jan/JanPreview.png)
+
+Cant Get Working
+
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/JanLib/JanPreview.png)
