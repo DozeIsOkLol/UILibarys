@@ -1,0 +1,500 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="LocalScript" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">true</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">HTCutsceneScript</string>
+			<ProtectedString name="Source">-- HotThoth&apos;s Cutscene Script version 1.0 Beta --
+--     It&apos;s &quot;Beta&quot; so you can&apos;t blame me if it stops working :P
+
+
+-- *****   How to Use   ***** --
+-- Before your place is running:
+-- 1.]  Make a CamTrack model for your cutscene:
+--      a.)  Copy/paste the frame parts when you need more frames; position them how you want your camera to look (yellow stub points &quot;forwards&quot;).
+--      b.)  It will only rotate up to 180-degrees, so just use more frames when you want more rotation than that
+--      c.)  Name each of your frames a number, this number says when your camera will be in this position
+--      d.)  If you want to &quot;Roll&quot; the camera, you need to have a NumberValue object named &quot;Roll&quot; under the camera frame.
+--           The value you use for Roll tells it how many rotations it should have made by the time it gets to that frame.
+--           It&apos;s in radians, so 6.283 is a full 360 from the last frame.
+--      e.)  Make sure all the frames you want for THIS cutscene are inside of a single model, and that nothing else is in that model.
+--           This model is called your CamTrack model.  You will have exactly one for each cutscene.  It&apos;s totally fine to have
+--           more cutscenes and more CamTrack models, just name them different things (and set up the camTrack variable correctly in the script below).
+-- 2.]  Set up your variables in the section below
+-- 3.]  (optional) When you want to see how the camera moves while in Studio, rename the CamTrack you want to preview to just &quot;CamTrack&quot;.
+--                 Then you can go to Tools--&gt;Execute Script, choose CamPreview.txt (See below if you don&apos;t have it yet), and see the camera go through the path.
+--                 After running it once, you can type in the command _G[&quot;CamPreview&quot;](showFrames, accel) with showFrames 
+--                 being either &quot;true&quot; or &quot;false&quot; and accel being the value of &quot;accel&quot; you want to test out (in the variables you set up).
+-- 4.]  (optional) Change the last few lines of this script to alter what happens after your cutscene is over
+
+
+-- When your place is running:
+-- 4.]  Put a copy of this script in one of the following places:
+--      a.)  The Backpack of the Player who should see the cutscene
+--      b.)  The PlayerGui of the Player who should see the cutscene
+--      c.)  The Character of the Player who should see the cutscene
+-- 5.]  When you want this script to run, set its .Disabled property to false
+
+
+-- To be able to preview the Camera in Studio:
+-- 1.]  Make a text file called CamPreview.txt somewhere on your computer.
+-- 2.]  Copy everything exactly from PreviewScript into that text file.
+-- 3.]  Save it.  Now you have the CamPreview.txt script and can do optional step 3 of &quot;How To Use.&quot;
+
+
+-- *****  Variables you should set-up ***** --
+
+-- camTrack must be set to the model where all of your camera frames are kept!
+local camTrack = game.Workspace.CamTrack1
+
+-- accel (recommended values between .01 and 1) determines how much &quot;ease&quot; there is; higher numbers means it goes more straight from one frame to the next
+local accel = .05 
+
+-- ***** Don&apos;t change variables below this line ***** --
+
+
+
+
+local camFrames = camTrack:GetChildren()
+local r = game:GetService(&quot;RunService&quot;)
+
+function frameTime(frame)
+&#9;return tonumber(frame.Name)
+end
+
+-- extract our camera track info [table.sort is just too cool!]
+table.sort(camFrames, function (a, b) return frameTime(a) &lt; frameTime(b) end)
+
+local camRolls = {}
+for i = 1, #camFrames do
+&#9;local newRoll = 0
+&#9;if camFrames[i]:FindFirstChild(&quot;Roll&quot;) then
+&#9;&#9;newRoll = camFrames[i].Roll.Value
+&#9;end
+&#9;table.insert(camRolls, newRoll)
+end
+
+-- make frames invisible (if they weren&apos;t already)
+for i = 1, #camFrames do camFrames[i].Transparency = 1 end
+
+-- set up the initial camera configuration and store the old one
+local LookFrame = camFrames[1].CFrame + camFrames[1].CFrame.lookVector * 20
+local camera = game.Workspace.CurrentCamera
+
+local oldCameraType = camera.CameraType
+local oldCameraSubject = camera.CameraSubject
+local oldCameraFocus = camera.Focus
+local oldCameraCFrame = camera.CoordinateFrame
+
+camera.CameraType = &quot;Scriptable&quot;
+camera.CoordinateFrame = CFrame.new(camFrames[1].CFrame.p, LookFrame.p)
+camera:SetRoll(camRolls[1])
+
+-- set up movement system
+local keepMovementThreadAlive = true
+local camVelocity = Vector3.new(0, 0, 0)
+local camPartVelocity = Vector3.new(0, 0, 0)
+local camRollVelocity = 0
+
+local camPartTargetVelocity = Vector3.new(0,0,0)
+local camTargetVelocity = Vector3.new(0, 0, 0)
+
+function movementThread ()
+&#9;local lastTime = r.Stepped:wait()
+&#9;while keepMovementThreadAlive do
+&#9;&#9;local newTime = r.Stepped:wait()
+&#9;&#9;local deltaT = newTime - lastTime
+&#9;&#9;camVelocity = camVelocity * (1 - accel) + camTargetVelocity * accel
+&#9;&#9;camPartVelocity = camPartVelocity * (1 - accel) + camPartTargetVelocity * accel
+
+&#9;&#9;lastTime = newTime
+&#9;&#9;LookFrame = LookFrame + deltaT * camPartVelocity
+&#9;&#9;camera.CoordinateFrame = CFrame.new( (camera.CoordinateFrame + deltaT * camVelocity).p, LookFrame.p)
+&#9;&#9;camera:SetRoll(camera:GetRoll() + deltaT * camRollVelocity)
+&#9;end
+end
+
+function toSingleCircle(angle)
+&#9;while angle &gt; math.pi do angle = angle - math.pi*2 end
+&#9;while angle &lt; -math.pi do angle = angle + math.pi*2 end
+&#9;return angle
+end
+
+local movementSystem = coroutine.create(movementThread)
+coroutine.resume(movementSystem)
+
+-- go through our camTrack now
+for i = 1, #camFrames-1 do
+&#9;local dT = frameTime(camFrames[i+1]) - frameTime(camFrames[i])
+&#9;camTargetVelocity = (camFrames[i+1].Position - camera.CoordinateFrame.p) / dT
+&#9;camPartTargetVelocity = ((camFrames[i+1].CFrame.p + camFrames[i+1].CFrame.lookVector * 20) - (camera.CoordinateFrame.p + camera.CoordinateFrame.lookVector * 20)) / dT
+&#9;camRollVelocity = (camRolls[i+1] - toSingleCircle(camRolls[i])) / dT
+&#9;camera:SetRoll(toSingleCircle(camRolls[i]))
+&#9;wait(dT)
+end
+
+-- stop movement when done
+keepMovementThreadAlive = false
+
+
+
+-- *****    Cutscene Over Function    ***** --
+-- Default end behavior: wait for 3 seconds, then return camera to what it was before
+--  Edit the lines below to change what happens AFTER your cutscene ends!
+wait(3)
+camera.CameraSubject = oldCameraSubject
+camera.CameraType = oldCameraType
+camera.CoordinateFrame = oldCameraCFrame
+camera.Focus = oldCameraFocus
+
+-- *****    End of cutscene over function ***** --
+</ProtectedString>
+		</Properties>
+	</Item>
+	<Item class="LocalScript" referent="RBX1">
+		<Properties>
+			<bool name="Disabled">true</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">PreviewScript</string>
+			<ProtectedString name="Source">_G[&quot;CamPreview&quot;] = function (showFrames, ease)
+local camFrames = game.Workspace.CamTrack:GetChildren()
+
+function frameTime(frame)
+&#9;return tonumber(frame.Name)
+end
+
+local accel
+if not ease then accel = 1 else accel = ease end
+
+table.sort(camFrames, function (a, b) return frameTime(a) &lt; frameTime(b) end)
+
+local camRolls = {}
+for i = 1, #camFrames do
+&#9;local newRoll = 0
+&#9;if camFrames[i]:FindFirstChild(&quot;Roll&quot;) then
+&#9;&#9;newRoll = camFrames[i].Roll.Value
+&#9;end
+&#9;table.insert(camRolls, newRoll)
+end
+
+-- make frames invisible
+if not showFrames then for i = 1, #camFrames do camFrames[i].Transparency = 1 end end
+
+local LookFrame = camFrames[1].CFrame + camFrames[1].CFrame.lookVector * 20
+local camera = Instance.new(&quot;Part&quot;)
+camera.Name = &quot;CamPart&quot;
+camera.Anchored = false
+camera.CanCollide = false
+camera.FrontSurface = &quot;Hinge&quot;
+camera.Transparency = 0
+camera.Parent = game.Workspace
+
+local cameraRoll = 0
+
+function setRoll(rollValue)
+&#9;local oldCamPos = camera.CFrame.p
+&#9;camera.CFrame = camera.CFrame * CFrame.Angles(0, 0, rollValue)
+&#9;camera.CFrame = camera.CFrame - camera.CFrame.p + oldCamPos
+&#9;cameraRoll = rollValue
+end
+
+camera.CFrame = CFrame.new(camFrames[1].CFrame.p, LookFrame.p)
+setRoll(camRolls[1])
+
+-- set up movement system
+local keepMovementThreadAlive = true
+local camVelocity = Vector3.new(0, 0, 0)
+local camPartVelocity = Vector3.new(0, 0, 0)
+local camRollVelocity = 0
+
+local camPartTargetVelocity = Vector3.new(0, 0, 0)
+local camTargetVelocity = Vector3.new(0, 0, 0)
+
+function movementThread ()
+&#9;while keepMovementThreadAlive do
+&#9;&#9;local deltaT = wait()
+
+&#9;&#9;camPartVelocity = (1-accel)*camPartVelocity + accel*camPartTargetVelocity
+&#9;&#9;camVelocity = (1-accel)*camVelocity + accel*camTargetVelocity
+
+&#9;&#9;LookFrame = LookFrame + deltaT * camPartVelocity
+&#9;&#9;camera.CFrame = CFrame.new( (camera.CFrame + deltaT * camVelocity).p, LookFrame.p)
+&#9;&#9;setRoll(cameraRoll + deltaT * camRollVelocity)
+&#9;end
+end
+
+function toSingleCircle(angle)
+&#9;while angle &gt; math.pi do angle = angle - math.pi*2 end
+&#9;while angle &lt; -math.pi do angle = angle + math.pi*2 end
+&#9;return angle
+end
+
+local movementSystem = coroutine.create(movementThread)
+coroutine.resume(movementSystem)
+
+-- go through our camTrack now
+-- works for just y-rotations...  need to check other axes and axis combinations too
+
+print(&quot;going through the frames&quot;)
+
+for i = 1, #camFrames-1 do
+&#9;print(i)
+&#9;local dT = frameTime(camFrames[i+1]) - frameTime(camFrames[i])
+&#9;camTargetVelocity = (camFrames[i+1].Position - camera.CFrame.p) / dT
+&#9;camPartTargetVelocity = ((camFrames[i+1].CFrame.p + camFrames[i+1].CFrame.lookVector * 20) - (camera.CFrame.p + camera.CFrame.lookVector * 20)) / dT
+&#9;--camRollVelocity = (camRolls[i+1] - camRolls[i]) / dT
+&#9;camRollVelocity = (camRolls[i+1] - toSingleCircle(camRolls[i])) / dT
+&#9;setRoll(toSingleCircle(camRolls[i]))
+&#9;wait(dT)
+end
+
+-- stop movement once done
+keepMovementThreadAlive = false
+
+wait(3)
+for i = 1, #camFrames do camFrames[i].Transparency = 0 end
+
+camera:Remove()
+
+end
+
+_G[&quot;CamPreview&quot;](true)
+</ProtectedString>
+		</Properties>
+	</Item>
+	<Item class="Model" referent="RBX2">
+		<Properties>
+			<CoordinateFrame name="ModelInPrimary">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">CamTrack1</string>
+			<Ref name="PrimaryPart">null</Ref>
+		</Properties>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<bool name="Anchored">true</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>851.200012</X>
+					<Y>99.0997772</Y>
+					<Z>-930.800049</Z>
+					<R00>-0.707106709</R00>
+					<R01>0</R01>
+					<R02>0.707106709</R02>
+					<R10>0.49999994</R10>
+					<R11>0.707106709</R11>
+					<R12>0.49999994</R12>
+					<R20>-0.49999994</R20>
+					<R21>0.707106709</R21>
+					<R22>-0.49999994</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">6</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">0</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.5</X>
+					<Y>0.5</Y>
+					<Z>0.5</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX4">
+			<Properties>
+				<bool name="Anchored">true</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>840.200012</X>
+					<Y>94.7000046</Y>
+					<Z>-935.799988</Z>
+					<R00>-0.707106709</R00>
+					<R01>0</R01>
+					<R02>0.707106709</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>-0.707106709</R20>
+					<R21>0</R21>
+					<R22>-0.707106709</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">6</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">5</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.5</X>
+					<Y>0.5</Y>
+					<Z>0.5</Z>
+				</Vector3>
+			</Properties>
+			<Item class="NumberValue" referent="RBX5">
+				<Properties>
+					<string name="Name">Roll</string>
+					<double name="Value">6.2830000000000004</double>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX6">
+			<Properties>
+				<bool name="Anchored">true</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>856.199951</X>
+					<Y>109.900032</Y>
+					<Z>-945</Z>
+					<R00>0</R00>
+					<R01>0.824072421</R01>
+					<R02>0.566484809</R02>
+					<R10>0.999835134</R10>
+					<R11>0.0102812974</R11>
+					<R12>-0.0149563262</R12>
+					<R20>-0.018149294</R20>
+					<R21>0.56639123</R21>
+					<R22>-0.823936224</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">6</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">10</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">3</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>0.5</X>
+					<Y>0.5</Y>
+					<Z>0.5</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>

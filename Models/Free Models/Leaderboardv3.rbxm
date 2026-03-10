@@ -1,0 +1,139 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Script" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">false</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">LeaderboardV3</string>
+			<ProtectedString name="Source">print(&quot;Leaderboard script version 3.00 loaded&quot;)
+
+
+function onPlayerEntered(newPlayer)
+
+
+	local stats = Instance.new(&quot;IntValue&quot;)
+	stats.Name = &quot;leaderstats&quot;
+
+	local kills = Instance.new(&quot;IntValue&quot;)
+	kills.Name = &quot;KOs&quot;
+	kills.Value = 0
+
+	local deaths = Instance.new(&quot;IntValue&quot;)
+	deaths.Name = &quot;Wipeouts&quot;
+	deaths.Value = 0
+
+	kills.Parent = stats
+	deaths.Parent = stats
+
+	-- VERY UGLY HACK
+	-- Will this leak threads?
+	-- Is the problem even what I think it is (player arrived before character)?
+	while true do
+		if newPlayer.Character ~= nil then break end
+		wait(5)
+	end
+
+	local humanoid = newPlayer.Character.Humanoid
+
+	humanoid.Died:connect(function() onHumanoidDied(humanoid, newPlayer) end )
+
+	-- start to listen for new humanoid
+	newPlayer.Changed:connect(function(property) onPlayerRespawn(property, newPlayer) end )
+
+
+	stats.Parent = newPlayer
+
+end
+
+function Send_DB_Event_Died(victim, killer)
+	-- killer may be nil
+	local killername = &quot;no one&quot;
+	if killer ~= nil then killername = killer.Name end
+	print(&quot;DIED EVENT: &quot;, victim.Name, &quot; KILLED by &quot;, killername)
+
+	if shared[&quot;deaths&quot;] ~= nil then 
+		shared[&quot;deaths&quot;](victim, killer)
+		print(&quot;SENT DB DEATH EVENT&quot;)
+	end
+end
+
+function Send_DB_Event_Kill(killer, victim)
+	print(&quot;KILL EVENT. &quot;, killer.Name, &quot; BLOXXED &quot;, victim.Name)
+	if shared[&quot;kills&quot;] ~= nil then 
+		shared[&quot;kills&quot;](killer, victim)
+		print(&quot;SENT DB KILL EVENT&quot;)
+	end
+end
+
+
+
+function onHumanoidDied(humanoid, player)
+	local stats = player:findFirstChild(&quot;leaderstats&quot;)
+	if stats ~= nil then
+		local deaths = stats:findFirstChild(&quot;Wipeouts&quot;)
+		deaths.Value = deaths.Value + 1
+
+		-- do short dance to try and find the killer
+
+		local killer = getKillerOfHumanoidIfStillInGame(humanoid)
+
+
+		Send_DB_Event_Died(player, killer)
+		handleKillCount(humanoid, player)
+	end
+end
+
+function onPlayerRespawn(property, player)
+	-- need to connect to new humanoid
+	
+	if property == &quot;Character&quot; and player.Character ~= nil then
+		local humanoid = player.Character.Humanoid
+			local p = player
+			local h = humanoid
+			humanoid.Died:connect(function() onHumanoidDied(h, p) end )
+	end
+end
+
+function getKillerOfHumanoidIfStillInGame(humanoid)
+	-- returns the player object that killed this humanoid
+	-- returns nil if the killer is no longer in the game
+
+	-- check for kill tag on humanoid - may be more than one - todo: deal with this
+	local tag = humanoid:findFirstChild(&quot;creator&quot;)
+
+	-- find player with name on tag
+	if tag ~= nil then
+		
+		local killer = tag.Value
+		if killer.Parent ~= nil then -- killer still in game
+			return killer
+		end
+	end
+
+	return nil
+end
+
+function handleKillCount(humanoid, player)
+	local killer = getKillerOfHumanoidIfStillInGame(humanoid)
+	if killer ~= nil then
+		local stats = killer:findFirstChild(&quot;leaderstats&quot;)
+		if stats ~= nil then
+			local kills = stats:findFirstChild(&quot;KOs&quot;)
+			if killer ~= player then
+				kills.Value = kills.Value + 1
+				
+			else
+				kills.Value = kills.Value - 1
+				
+			end
+			Send_DB_Event_Kill(killer, player)
+		end
+	end
+end
+
+game.Players.ChildAdded:connect(onPlayerEntered)</ProtectedString>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+</roblox>
