@@ -1,0 +1,477 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Model" referent="RBX0">
+		<Properties>
+			<CoordinateFrame name="ModelInPrimary">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">Help Area</string>
+			<Ref name="PrimaryPart">null</Ref>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="Humanoid" referent="RBX1">
+			<Properties>
+				<float name="Health">0</float>
+				<float name="MaxHealth">0</float>
+				<string name="Name">Humanoid</string>
+				<float name="WalkSpeed">0</float>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">4</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">37</int>
+				<CoordinateFrame name="CFrame">
+					<X>22.5</X>
+					<Y>1</Y>
+					<Z>0.5</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">true</bool>
+				<bool name="DraggingV1">false</bool>
+				<float name="Elasticity">0.5</float>
+				<token name="FormFactor">1</token>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">false</bool>
+				<token name="Material">256</token>
+				<string name="Name">Head</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">3</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<bool name="archivable">true</bool>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1</X>
+					<Y>1.20000005</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+			<Item class="Dialog" referent="RBX3">
+				<Properties>
+					<float name="ConversationDistance">25</float>
+					<string name="InitialPrompt">Hello. I&apos;m a frendly helper brick if julialy is not here. </string>
+					<string name="Name">Dialog</string>
+					<token name="Purpose">1</token>
+					<token name="Tone">1</token>
+					<bool name="archivable">true</bool>
+				</Properties>
+				<Item class="DialogChoice" referent="RBX4">
+					<Properties>
+						<string name="Name">Choice1</string>
+						<string name="ResponseDialog">Julialy&apos;s Ultimate Build</string>
+						<string name="UserDialog">Where am I?</string>
+						<bool name="archivable">true</bool>
+					</Properties>
+				</Item>
+				<Item class="DialogChoice" referent="RBX5">
+					<Properties>
+						<string name="Name">Choice2</string>
+						<string name="ResponseDialog">Please choose one.</string>
+						<string name="UserDialog">Help!</string>
+						<bool name="archivable">true</bool>
+					</Properties>
+					<Item class="DialogChoice" referent="RBX6">
+						<Properties>
+							<string name="Name">Choice1</string>
+							<string name="ResponseDialog">Say regen. Please don&apos;t spam regen or you can be kicked.</string>
+							<string name="UserDialog">I need to regen.</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+					<Item class="DialogChoice" referent="RBX7">
+						<Properties>
+							<string name="Name">Choice2</string>
+							<string name="ResponseDialog">You are a noob. Noobs don&apos;t know how to build.</string>
+							<string name="UserDialog">How do you build?</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+					<Item class="DialogChoice" referent="RBX8">
+						<Properties>
+							<string name="Name">Choice3</string>
+							<string name="ResponseDialog">You script using commands. Please choose a command type.</string>
+							<string name="UserDialog">How do you script?</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+						<Item class="DialogChoice" referent="RBX9">
+							<Properties>
+								<string name="Name">Choice1</string>
+								<string name="ResponseDialog">Here is the command list. Click on one to see more infomation.</string>
+								<string name="UserDialog">Main</string>
+								<bool name="archivable">true</bool>
+							</Properties>
+							<Item class="DialogChoice" referent="RBX10">
+								<Properties>
+									<string name="Name">Choice1</string>
+									<string name="ResponseDialog">&quot;create/(name)/local&quot; Creates a new script named (name). Adding &quot;/local&quot; after creates a LocalScript instead.</string>
+									<string name="UserDialog">create</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX11">
+								<Properties>
+									<string name="Name">Choice2</string>
+									<string name="ResponseDialog">&quot;edit/(name)&quot; Enters edit mode with (name). Anything chatted (except commands) will be added to the script&apos;s source.</string>
+									<string name="UserDialog">edit</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX12">
+								<Properties>
+									<string name="Name">Choice3</string>
+									<string name="ResponseDialog">&quot;run/(name)&quot; Puts (name) in the workspace so that it runs.</string>
+									<string name="UserDialog">run</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX13">
+								<Properties>
+									<string name="Name">Choice4</string>
+									<string name="ResponseDialog">&quot;stop/(name)&quot; Removes (name) from the workspace.</string>
+									<string name="UserDialog">stop</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX14">
+								<Properties>
+									<string name="Name">Choice5</string>
+									<string name="ResponseDialog">&quot;remove/(name)&quot; Deletes (name) from your list of scripts.</string>
+									<string name="UserDialog">remove</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX15">
+								<Properties>
+									<string name="Name">Choice6</string>
+									<string name="ResponseDialog">&quot;help/(command)&quot; Displays help for (command).</string>
+									<string name="UserDialog">help</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX16">
+								<Properties>
+									<string name="Name">Choice7</string>
+									<string name="ResponseDialog">&quot;gui/&quot; Toggles the visibility of your SB GUI. This will also protect it from being modified.</string>
+									<string name="UserDialog">gui</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+						</Item>
+						<Item class="DialogChoice" referent="RBX17">
+							<Properties>
+								<string name="Name">Choice2</string>
+								<string name="ResponseDialog">Here is the command list. Click on one to see more infomation.</string>
+								<string name="UserDialog">Edit</string>
+								<bool name="archivable">true</bool>
+							</Properties>
+							<Item class="DialogChoice" referent="RBX18">
+								<Properties>
+									<string name="Name">Choice1</string>
+									<string name="ResponseDialog">&quot;append/(text)&quot; Adds (text) to the script&apos;s source.</string>
+									<string name="UserDialog">append</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX19">
+								<Properties>
+									<string name="Name">Choice2</string>
+									<string name="ResponseDialog">&quot;insert/(line)/(text)&quot; Inserts (text) at the (line)th line.</string>
+									<string name="UserDialog">insert</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX20">
+								<Properties>
+									<string name="Name">Choice3</string>
+									<string name="ResponseDialog">&quot;replace/(line)/(text)&quot; Replaces the (line)th line with (text).</string>
+									<string name="UserDialog">replace</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX21">
+								<Properties>
+									<string name="Name">Choice4</string>
+									<string name="ResponseDialog">&quot;remove/(line)&quot; Removes the (line)th line.</string>
+									<string name="UserDialog">remove</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX22">
+								<Properties>
+									<string name="Name">Choice5</string>
+									<string name="ResponseDialog">&quot;recall/(line)&quot; Displays the (line)th line.</string>
+									<string name="UserDialog">recall</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX23">
+								<Properties>
+									<string name="Name">Choice6</string>
+									<string name="ResponseDialog">&quot;clear/&quot; Clears the script&apos;s source.</string>
+									<string name="UserDialog">clear</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX24">
+								<Properties>
+									<string name="Name">Choice7</string>
+									<string name="ResponseDialog">&quot;exit/&quot; Exits edit mode.</string>
+									<string name="UserDialog">exit</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+							<Item class="DialogChoice" referent="RBX25">
+								<Properties>
+									<string name="Name">Choice8</string>
+									<string name="ResponseDialog">&quot;help/(command)&quot; Displays help for (command).</string>
+									<string name="UserDialog">help</string>
+									<bool name="archivable">true</bool>
+								</Properties>
+							</Item>
+						</Item>
+					</Item>
+				</Item>
+				<Item class="DialogChoice" referent="RBX26">
+					<Properties>
+						<string name="Name">Choice3</string>
+						<string name="ResponseDialog">V0.1a</string>
+						<string name="UserDialog">Server version</string>
+						<bool name="archivable">true</bool>
+					</Properties>
+				</Item>
+				<Item class="DialogChoice" referent="RBX27">
+					<Properties>
+						<string name="Name">Choice4</string>
+						<string name="ResponseDialog">Please choose one.</string>
+						<string name="UserDialog">Is there VIP/Super VIP/ADMIN/Friend VIP in this </string>
+						<bool name="archivable">true</bool>
+					</Properties>
+					<Item class="DialogChoice" referent="RBX28">
+						<Properties>
+							<string name="Name">Choice1</string>
+							<string name="ResponseDialog">No</string>
+							<string name="UserDialog">VIP</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+					<Item class="DialogChoice" referent="RBX29">
+						<Properties>
+							<string name="Name">Choice2</string>
+							<string name="ResponseDialog">No</string>
+							<string name="UserDialog">Super VIP</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+					<Item class="DialogChoice" referent="RBX30">
+						<Properties>
+							<string name="Name">Choice3</string>
+							<string name="ResponseDialog">Commands ONLY</string>
+							<string name="UserDialog">ADMIN</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+					<Item class="DialogChoice" referent="RBX31">
+						<Properties>
+							<string name="Name">Choice4</string>
+							<string name="ResponseDialog">No</string>
+							<string name="UserDialog">Friend VIP</string>
+							<bool name="archivable">true</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="DialogChoice" referent="RBX32">
+					<Properties>
+						<string name="Name">Choice5</string>
+						<string name="ResponseDialog">Please PM julialy.</string>
+						<string name="UserDialog">There&apos;s a bug or problem.</string>
+						<bool name="archivable">true</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Model" referent="RBX33">
+			<Properties>
+				<CoordinateFrame name="ModelInPrimary">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">Hint and Message Script</string>
+				<Ref name="PrimaryPart">null</Ref>
+				<bool name="archivable">true</bool>
+			</Properties>
+			<Item class="Script" referent="RBX34">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Hint Script</string>
+					<ProtectedString name="Source">local hint = Instance.new(&quot;Hint&quot;)
+
+while true do
+hint.Parent = game.Workspace
+hint.Text= &quot;Welcome to julialy&apos;s game!&quot;
+wait(10)
+hint:Remove()
+hint.Parent = game.Workspace
+hint.Text= &quot;If you add me, you might get robux!&quot;
+wait(10)
+hint:Remove()
+hint.Parent = game.Workspace
+hint.Text= &quot;You can find me when it&apos;s 3:30 CST Weekdays, 4:50 CST Thirsday, or I go on early on weekends.&quot;
+wait(10)
+hint:Remove()
+hint.Parent = game.Workspace
+hint.Text= &quot;Have fun at my place!&quot;
+wait(10)
+
+
+
+</ProtectedString>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+			<Item class="Script" referent="RBX35">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Message script</string>
+					<ProtectedString name="Source">local m =instance.new(&quot;message&quot;)
+m.parent = game.workspace
+m.text = &quot;This is not WHOLE finished, almost finished.&quot;
+wait(3)
+m.text = &quot;---&quot;
+wait(3)
+m.text = &quot;---&quot;
+wait(3.1)
+m:remove()
+end </ProtectedString>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="GuiMain" referent="RBX36">
+			<Properties>
+				<string name="Name">Welcome Gui</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+			<Item class="TextButton" referent="RBX37">
+				<Properties>
+					<bool name="Active">true</bool>
+					<bool name="AutoButtonColor">true</bool>
+					<Color3 name="BackgroundColor3">4294953984</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">4294953984</Color3>
+					<int name="BorderSizePixel">1</int>
+					<token name="Font">0</token>
+					<token name="FontSize">0</token>
+					<string name="Name">TextButton</string>
+					<UDim2 name="Position">
+						<XS>0.00999999978</XS>
+						<XO>0</XO>
+						<YS>0.160000011</YS>
+						<YO>0</YO>
+					</UDim2>
+					<bool name="Selected">false</bool>
+					<UDim2 name="Size">
+						<XS>0.100000001</XS>
+						<XO>0</XO>
+						<YS>0.100000001</YS>
+						<YO>0</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<token name="Style">0</token>
+					<string name="Text">Welcome!</string>
+					<Color3 name="TextColor3">4278190080</Color3>
+					<float name="TextTransparency">0</float>
+					<bool name="TextWrap">false</bool>
+					<token name="TextXAlignment">2</token>
+					<token name="TextYAlignment">1</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+					<bool name="archivable">true</bool>
+				</Properties>
+				<Item class="Script" referent="RBX38">
+					<Properties>
+						<bool name="Disabled">false</bool>
+						<Content name="LinkedSource"><null></null></Content>
+						<string name="Name">Script</string>
+						<ProtectedString name="Source">function die()
+local p = Instance.new(&quot;Hint&quot;)
+p.Parent = game.workspace
+p.Text = &quot;Welcome!&quot;
+wait(5)
+p:Remove ()
+end
+
+script.Parent.MouseButton1Down:connect(die)
+</ProtectedString>
+						<bool name="archivable">true</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+	</Item>
+</roblox>

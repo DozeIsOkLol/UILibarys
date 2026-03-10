@@ -1,0 +1,57 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Script" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">false</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">StopSpawnCampingNoobs</string>
+			<ProtectedString name="Source">print(&quot;Random spawn script loaded&quot;)
+
+function onPlayerEntered(newPlayer)
+
+	
+	
+	
+	-- start to listen for new humanoid
+	newPlayer.Changed:connect(function(property) onPlayerPropChanged(property, newPlayer) end )
+
+	onPlayerRespawn(newPlayer)
+
+end
+
+
+function onPlayerPropChanged(property, player)
+	if property == &quot;Character&quot; then
+		onPlayerRespawn(player)
+	end
+end
+
+
+function onPlayerRespawn(player)
+	
+	
+	local x = math.random(-80, 80)
+	local z = math.random(-80, 80)
+	local y = 90 + math.random(0, 20)
+
+	local char = player.Character.Head
+
+	local cf = char.CFrame
+
+	local lx = 0
+	local ly = y
+	local lz = 0
+
+	char.CFrame = CFrame.new(Vector3.new(x,y,z), Vector3.new(lx,ly,lz))
+
+
+	
+end
+
+
+game.Players.ChildAdded:connect(onPlayerEntered)</ProtectedString>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+</roblox>
