@@ -1,0 +1,43 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Script" referent="RBX0">
+		<Properties>
+			<bool name="Disabled">false</bool>
+			<Content name="LinkedSource"><null></null></Content>
+			<string name="Name">Random Hill Maker</string>
+			<string name="Source">dep = 0
+grad = 5
+maxdep = 22
+for i = 1,100 do -- length of hill
+	if dep == 0 then
+		dep = 2
+	end
+	for u = 1,10 do -- height of hill
+		randomiser = math.random(1)
+		p = Instance.new(&quot;Part&quot;)
+		p.Anchored = true
+		p.BrickColor = BrickColor.new(&quot;Camo&quot;)
+		p.formFactor = &quot;Symmetric&quot;
+		p.Size = Vector3.new(maxdep + 1, (maxdep+1)/4, maxdep + 1)
+		p.Position = Vector3.new(i * p.Size.x,u * p.Size.y,dep + u^randomiser*grad)
+		p.Parent = workspace
+		p.Material = &quot;Slate&quot;
+		p.TopSurface = 0
+		wait()
+	end
+	dep = dep + math.random(-1,1)
+	if dep &gt;= maxdep then
+		dep = maxdep - 1
+	end
+	grad = grad + math.sin(math.random(-0.8,0.8))
+	if grad &lt; 1 then
+		grad = 1 
+	end
+end
+
+		</string>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+</roblox>

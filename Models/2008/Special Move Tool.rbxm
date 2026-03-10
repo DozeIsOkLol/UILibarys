@@ -1,0 +1,604 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="HopperBin" referent="RBX0">
+		<Properties>
+			<token name="BinType">0</token>
+			<string name="Name">Move</string>
+			<Content name="TextureId"><null></null></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="LocalScript" referent="RBX1">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">LocalScript</string>
+				<string name="Source">med = false
+
+function _restoreproperties() 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Holder = player.Character 
+	Torso = Holder:FindFirstChild(&quot;Torso&quot;) 
+	RightS = Torso:FindFirstChild(&quot;Right Shoulder&quot;) 
+	LeftS = Torso:FindFirstChild(&quot;Left Shoulder&quot;) 
+	RightH = Torso:FindFirstChild(&quot;Right Hip&quot;) 
+	LeftH = Torso:FindFirstChild(&quot;Left Hip&quot;) 
+	RightS.MaxVelocity = .15 
+	LeftS.MaxVelocity = .15 
+	RightH.MaxVelocity = .1 
+	LeftH.MaxVelocity = .1 
+	RightS.DesiredAngle = 0 
+	LeftS.DesiredAngle = 0 
+	LeftH.DesiredAngle = 0 
+	RightH.DesiredAngle = 0 
+end 
+
+function ManageAnimation(value) 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Holder = player.Character 
+	Player = player 
+	if value == &quot;no anim&quot; then 
+		Anim = Holder:FindFirstChild(&quot;Animate&quot;) 
+		if Anim~=nil then 
+			Anim.Disabled = true 
+			Anim.Parent = Player 
+		end 
+	elseif value == &quot;re-anim&quot; then 
+		Anim = Player:FindFirstChild(&quot;Animate&quot;) 
+		if Anim~=nil then 
+			Anim.Disabled = false 
+			Anim.Parent = Holder 
+		end 
+	end 
+end 
+
+function Stance() 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Char = player.Character 
+	L = Char.Torso:FindFirstChild(&quot;Left Shoulder&quot;) 
+	R = Char.Torso:FindFirstChild(&quot;Right Shoulder&quot;) 
+	if L~=nil then 
+		L.DesiredAngle = 3.2 
+		L.MaxVelocity = 3 
+	end 
+	if R~=nil then 
+		R.DesiredAngle = 3.2 
+		R.MaxVelocity = 3 
+	end 
+	L = Char.Torso:FindFirstChild(&quot;Left Hip&quot;) 
+	R = Char.Torso:FindFirstChild(&quot;Right Hip&quot;) 
+	if L~=nil then 
+		L.DesiredAngle = 0 
+		L.MaxVelocity = 3 
+	end 
+	if R~=nil then 
+		R.DesiredAngle = 0 
+		R.MaxVelocity = 3 
+	end 
+end 
+
+function Down(ml) 
+	for i=1, ml.velocity.y/3 do 
+		ml.velocity = ml.velocity+Vector3.new(0,-4.25,0) 
+		wait() 
+	end 
+	ml:Remove() 
+end 
+
+function FrontFlip() 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Char = player.Character 
+	Human = Char.Humanoid 
+	Torso = Char.Torso 
+	CF = Torso.CFrame 
+	ManageAnimation(&quot;re anim&quot;) 
+	Stance() 
+	Human.Jump = true
+	VelUp = Instance.new(&quot;BodyVelocity&quot;) 
+	VelUp.velocity = Vector3.new(0,72.5,0)+Torso.CFrame.lookVector*30 
+	VelUp.P = VelUp.P*2 
+	VelUp.maxForce = Vector3.new(10000,10000,10000)*999 
+	VelUp.Parent = Torso 
+	coroutine.resume(coroutine.create(Down),VelUp) 
+	Gyro = Instance.new(&quot;BodyGyro&quot;) 
+	Gyro.P = Gyro.P*10 
+	Gyro.maxTorque = Vector3.new(100000,100000,100000)*999 
+	Gyro.cframe = CF 
+	Gyro.Parent = Torso 
+	for i=1, 32 do 
+		Gyro.cframe = Gyro.cframe*CFrame.fromEulerAnglesXYZ(math.pi/-16,0,0) 
+		wait() 
+	end 
+	Gyro.cframe = CF 
+	game:GetService(&quot;Debris&quot;):AddItem(Gyro,2) 
+	ManageAnimation(&quot;re-anim&quot;) 
+	_restoreproperties() 
+end 
+
+function Meditate() 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Char = player.Character 
+	Human = Char.Humanoid 
+	Torso = Char.Torso 
+	CP = Torso.Position 
+	if med == false then
+		Human.Sit = true
+		up = Instance.new(&quot;BodyPosition&quot;) 
+		up.position = CP
+		up.maxForce = Vector3.new(100000,100000,100000)
+		up.Parent = Torso
+		Gyro = Instance.new(&quot;BodyGyro&quot;) 
+		Gyro.P = Gyro.P*10 
+		Gyro.maxTorque = Vector3.new(100000,100000,100000)*999 
+		Gyro.cframe = Torso.CFrame
+		Gyro.Parent = Torso 
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.4, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0) * CFrame.fromEulerAnglesXYZ(0,0,0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0) * CFrame.fromEulerAnglesXYZ(0,0,0)
+		wait(0.05)
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.4, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0) * CFrame.fromEulerAnglesXYZ(-math.pi/16,0,0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0) * CFrame.fromEulerAnglesXYZ(-math.pi/16,0,0)
+		wait(0.05)
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.4, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0) * CFrame.fromEulerAnglesXYZ(-math.pi/8,0,0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0) * CFrame.fromEulerAnglesXYZ(-math.pi/8,0,0)
+		wait(0.05)
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.4, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0) * CFrame.fromEulerAnglesXYZ(-math.pi/6,0,0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0) * CFrame.fromEulerAnglesXYZ(-math.pi/6,0,0)
+		wait(0.05)
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.4, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0) * CFrame.fromEulerAnglesXYZ(-math.pi/3.5,0,0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0) * CFrame.fromEulerAnglesXYZ(-math.pi/3.5,0,0)
+		med = true
+	elseif med == true then
+		Human.Jump = true
+		Torso.BodyPosition:Remove()
+		Torso.BodyGyro:Remove()
+		Torso[&quot;Left Shoulder&quot;].C1 = CFrame.new(0.5, 0.5, 0, -0, -0, -1, 0, 1, 0, 1, 0, 0)
+		Torso[&quot;Right Shoulder&quot;].C1 = CFrame.new(-0.5, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, -0, -0)
+		med = false
+	end
+end 
+
+function BackFlip() 
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	Char = player.Character 
+	Human = Char.Humanoid 
+	Torso = Char.Torso 
+	CF = Torso.CFrame 
+	ManageAnimation(&quot;re anim&quot;) 
+	Stance() 
+	Human.Jump = true
+	VelUp = Instance.new(&quot;BodyVelocity&quot;) 
+	VelUp.velocity = Vector3.new(0,72.5,0)-Torso.CFrame.lookVector*30 
+	VelUp.P = VelUp.P*2 
+	VelUp.maxForce = Vector3.new(10000,10000,10000)*999 
+	VelUp.Parent = Torso 
+	coroutine.resume(coroutine.create(Down),VelUp) 
+	Gyro = Instance.new(&quot;BodyGyro&quot;) 
+	Gyro.P = Gyro.P*10 
+	Gyro.maxTorque = Vector3.new(100000,100000,100000)*999 
+	Gyro.cframe = CF 
+	Gyro.Parent = Torso 
+	for i=1, 32 do 
+		Gyro.cframe = Gyro.cframe*CFrame.fromEulerAnglesXYZ(math.pi/16,0,0) 
+		wait() 
+	end 
+	Gyro.cframe = CF 
+	game:GetService(&quot;Debris&quot;):AddItem(Gyro,2) 
+	ManageAnimation(&quot;re-anim&quot;) 
+	_restoreproperties() 
+end 
+
+bin = script.Parent
+enabled = true
+
+function onSelected(mouse)
+	local Message = Instance.new(&quot;Hint&quot;)
+	Message.Parent = bin.Parent.Parent
+	Message.Text = &quot;q - Front Flip, e - Back Flip, r - Reset, z - Fast Walk, x - Normal Walk, c - Stealth Walk, f - Meditate&quot;
+	mouse.Icon = &quot;rbxasset://textures\\ArrowCursor.png&quot;
+	mouse.KeyDown:connect(onKeyDown) 
+end
+
+function onKeyDown(key) 
+	if (key~=nil) then 
+	local key = key:lower() 
+		if (key==&quot;e&quot;) then 
+			BackFlip()
+		end
+		if (key==&quot;q&quot;) then 
+			FrontFlip()
+		end
+		if (key==&quot;f&quot;) then 
+			Meditate()
+		end
+		if (key==&quot;z&quot;) then 
+			bin.Parent.Parent.Character.Humanoid.WalkSpeed = 32
+			play = bin.Parent.Parent.Character:getChildren()
+			for i = 1, #play do
+				if play[i].className == &quot;Part&quot; then
+					play[i].Transparency = 0
+				elseif play[i].className == &quot;Model&quot; then
+					pla = play[i]:getChildren()
+					for i = 1, #pla do
+						if pla[i].className == &quot;Part&quot; then
+							if pla[i].Name == &quot;P1&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P2&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P3&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P4&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P5&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P6&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P7&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P8&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P9&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P20&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P21&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P22&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P23&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P24&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P25&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P26&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P30&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P31&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P32&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P40&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P41&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P42&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P50&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P51&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P52&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P60&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P61&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P62&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							end
+						end
+					end
+				end
+			end
+		end
+		if (key==&quot;x&quot;) then 
+			bin.Parent.Parent.Character.Humanoid.WalkSpeed = 16
+			play = bin.Parent.Parent.Character:getChildren()
+			for i = 1, #play do
+				if play[i].className == &quot;Part&quot; then
+					play[i].Transparency = 0
+				elseif play[i].className == &quot;Model&quot; then
+					pla = play[i]:getChildren()
+					for i = 1, #pla do
+						if pla[i].className == &quot;Part&quot; then
+							if pla[i].Name == &quot;P1&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P2&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P3&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P4&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P5&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P6&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P7&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P8&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P9&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P20&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P21&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P22&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P23&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P24&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P25&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P26&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P30&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P31&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P32&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P40&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P41&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P42&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P50&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P51&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P52&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P60&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0.1
+							elseif pla[i].Name == &quot;P61&quot; then
+								pla[i].Transparency = 0
+								pla[i].Reflectance = 0
+							elseif pla[i].Name == &quot;P62&quot; then
+								pla[i].Transparency = 0.9
+								pla[i].Reflectance = 0
+							end
+						end
+					end
+				end
+			end
+		end
+		if (key==&quot;c&quot;) then 
+			bin.Parent.Parent.Character.Humanoid.WalkSpeed = 8
+			play = bin.Parent.Parent.Character:getChildren()
+			for i = 1, #play do
+				if play[i].className == &quot;Part&quot; then
+					if play[i].Name == &quot;Head&quot; then
+						play[i].Transparency = 1
+					else
+						play[i].Transparency = 0.9
+					end
+				elseif play[i].className == &quot;Model&quot; then
+					pla = play[i]:getChildren()
+					for i = 1, #pla do
+						if pla[i].className == &quot;Part&quot; then
+							pla[i].Transparency = 0.9
+							pla[i].Reflectance = 0
+						end
+					end
+				end
+			end
+		end
+		if (key==&quot;r&quot;) then 
+			bin.Parent.Parent.Character.Head:Remove()
+		end
+	end
+end
+
+bin.Selected:connect(onSelected)
+
+function onDeS(mouse) 
+	look = bin.Parent.Parent:getChildren()
+	for i = 1, #look do
+		if look[i].className == &quot;Hint&quot; then
+			look[i]:Remove()
+		end
+	end
+end 
+
+bin.Deselected:connect(onDeS)
+
+</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">TeleportScript</string>
+				<string name="Source">--- SonOfSevenless
+bin = script.Parent
+
+function findNearestTorso(mouse, pos)
+	local torso = nil
+	dist = 100
+	temp = mouse.Hit
+	if (temp ~= nil) then
+		if (temp.p - pos).magnitude &lt; dist then
+			torso = mouse.Hit.p
+			dist = (temp.p - pos).magnitude
+		end
+	end
+	return torso
+end
+
+function teleportPlayer(pos)
+
+	local player = game.Players.LocalPlayer
+	if player == nil or player.Character == nil then return end
+
+	local char = player.Character.Torso
+
+	char.CFrame = CFrame.new(Vector3.new(pos.x, pos.y + 4, pos.z))
+
+end
+
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	local target = findNearestTorso(mouse, player.Character.Torso.Position)
+	if target ~= nil then
+		enabled = false
+		local cf = mouse.Hit
+		spin = Instance.new(&quot;BodyAngularVelocity&quot;)
+		spin.maxTorque = Vector3.new(0,9e+009,0)
+		spin.angularvelocity = Vector3.new(0,250,0)
+		spin.Parent = player.Character.Torso
+		player.Character.Humanoid.WalkSpeed = 0
+		wait(0.2)
+		smoke = game.Lighting.Smoke:Clone()
+		smoke.Parent = player.Character
+		smoke.CFrame = player.Character.Torso.CFrame
+		wait(0.04)
+		smoke.Transparency = 0.8
+		wait(0.04)
+		smoke.Transparency = 0.6
+		wait(0.04)
+		smoke.Transparency = 0.4
+		wait(0.04)
+		smoke.Transparency = 0.2
+		wait(0.04)
+		smoke.Transparency = 0
+		wait(0.04)
+		smoke.Transparency = 0.2
+		wait(0.04)
+		smoke.Transparency = 0.4
+		wait(0.04)
+		smoke.Transparency = 0.6
+		wait(0.04)
+		smoke.Transparency = 0.8
+		wait(0.04)
+		spin:Remove()
+		smoke:Remove()
+		teleportPlayer(cf.p)
+		spin = Instance.new(&quot;BodyAngularVelocity&quot;)
+		spin.maxTorque = Vector3.new(0,9e+009,0)
+		spin.angularvelocity = Vector3.new(0,250,0)
+		spin.Parent = player.Character.Torso
+		smoke = game.Lighting.Smoke:Clone()
+		smoke.Parent = player.Character
+		smoke.CFrame = player.Character.Torso.CFrame
+		wait(0.04)
+		smoke.Transparency = 0.8
+		wait(0.04)
+		smoke.Transparency = 0.6
+		wait(0.04)
+		smoke.Transparency = 0.4
+		wait(0.04)
+		smoke.Transparency = 0.2
+		wait(0.04)
+		smoke.Transparency = 0
+		wait(0.04)
+		smoke.Transparency = 0.2
+		wait(0.04)
+		smoke.Transparency = 0.4
+		wait(0.04)
+		smoke.Transparency = 0.6
+		wait(0.04)
+		smoke.Transparency = 0.8
+		wait(0.04)
+		smoke:Remove()
+		wait(0.2)
+		player.Character.Humanoid.WalkSpeed = 16
+		spin:remove()
+	end
+	enabled = true
+end
+
+function onSelected(mouse)
+	mouse.Icon = &quot;rbxasset://textures\\ArrowCursor.png&quot;
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+bin.Selected:connect(onSelected)
+
+function onUnselected(mouse)
+	local player = game.Players.LocalPlayer
+	if player == nil then return end
+	smo = player.Character:getChildren()
+	for i = 1, #smo do
+		if smo[i].Name == &quot;Smoke&quot; then
+			smo[i]:Remove()
+		elseif smo[i].Name == &quot;Torso&quot; then
+			if smo[i]:findFirstChild(&quot;BodyAngularVelocity&quot;) ~= nil then
+				smo[i].BodyAngularVelocity:Remove()
+			end
+		end
+	end
+	script:Clone().Parent = script.Parent
+	script:Remove()
+end
+
+bin.Deselected:connect(onUnselected)
+
+</string>
+				<bool name="archivable">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
