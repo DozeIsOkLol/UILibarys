@@ -1,2 +1,2 @@
 # Preview 
-![a](https://github.com/Eazvy/UILibs/blob/main/Librarys/LinoriaRewrite/LinoraRewritePreview.png?raw=true)
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/LinoriaLib/Main/LinoraRewritePreview.png)
