@@ -1,2 +1,2 @@
-# Preview 
-![a](https://github.com/Eazvy/UILibs/blob/main/Librarys/Kavo/KavoPreview.jpg?raw=true)
+### Preview 
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/KavoLib/Preview.png)
