@@ -1,48 +1,38 @@
 local MangoLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/MangoLib/Source.lua"))()
 
-spawn(function()
-MangoLib:Notify("System", "Setting Script Up!")
+local win = MangoLib:Window("Mango Lib")
+MangoLib:Notify("Notification!", "UI LOADED!")
+
+local TabFarm = win:Tab("Autofarm")
+
+TabFarm:Label("This is A Label")
+
+TabFarm:Button("print hi", function()
+    print("Hi!")
 end)
 
-local TabFarm = MangoLib:Tab("Autofarm")
-
-TabFarm:Button("Print Hi", function()
-print("Hi")
+TabFarm:Toggle("Print True / False", function(Bool)
+    print(tostring(Bool))
 end)
 
-TabFarm:Slider("Walk Speed", 16, 500, 40, function(v)
-    WalkSpeedValue = v
+TabFarm:Dropdown("Select Enemies", {"Bandit", "Crook", "Marine"}, function(EnemyName)
+    print(EnemyName)
 end)
 
-TabFarm:Toggle("Toggle WalkSpeed", function(v) -- v = Value
-    State = t
-    if State then
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = WalkSpeedValue
-    end
+TabFarm:Slider("Walk Speed", 16, 500, 50, function(Value)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
 end)
 
-TabFarm:Dropdown("Select Enemy", {"Bandit", "Marine"}, function(t)
-    print(t)
-end)
-
-TabFarm:TextBox("Type in Key", function(t)
-    if t == "Mango" then
-        print("Correct Key")
+TabFarm:TextBox("Type Hi", function(Value)
+    if Value == "Hi" then
+        print("Correct Text")
     else
-        print("Incorrect Key")
+        print("Incorrect Text")
     end
 end)
 
-TabFarm:KeyBind("Start Attacking", Enum.KeyCode.V, function(t)
-    StartAttacking = t
-end)
-
-spawn(function()
-    while task.wait() do
-        if StartAttacking then
-            pcall(function()
-                print("Attacking")
-            end)
-        end
+TabFarm:KeyBind("Spam Hi", Enum.KeyCode.B, function(Value)
+    while Value do task.wait()
+        print("Hi")
     end
-end) 
+end)
