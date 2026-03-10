@@ -1,2 +1,3 @@
-# Preview 
-![a](https://github.com/Eazvy/UILibs/blob/main/Librarys/Ligma/ubwEvOw-3783179139.png?raw=true)
+### Preview 
+Cant Get Working
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/LigmaLib/Preview.png?raw=true)
