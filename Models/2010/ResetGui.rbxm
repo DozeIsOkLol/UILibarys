@@ -1,0 +1,61 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="ScreenGui" referent="RBX0">
+		<Properties>
+			<string name="Name">Reset</string>
+			<bool name="archivable">true</bool>
+		</Properties>
+		<Item class="TextButton" referent="RBX1">
+			<Properties>
+				<bool name="Active">true</bool>
+				<bool name="AutoButtonColor">true</bool>
+				<Color3 name="BackgroundColor3">4294901760</Color3>
+				<float name="BackgroundTransparency">0.300000012</float>
+				<Color3 name="BorderColor3">4279970357</Color3>
+				<int name="BorderSizePixel">0</int>
+				<string name="Name">ResetButton</string>
+				<UDim2 name="Position">
+					<XS>0</XS>
+					<XO>500</XO>
+					<YS>0</YS>
+					<YO>-20</YO>
+				</UDim2>
+				<bool name="Selected">false</bool>
+				<UDim2 name="Size">
+					<XS>0</XS>
+					<XO>100</XO>
+					<YS>0</YS>
+					<YO>20</YO>
+				</UDim2>
+				<token name="SizeConstraint">0</token>
+				<string name="Text">Reset</string>
+				<Color3 name="TextColor3">4279970357</Color3>
+				<float name="TextTransparency">0</float>
+				<bool name="TextWrap">false</bool>
+				<token name="TextXAlignment">2</token>
+				<token name="TextYAlignment">1</token>
+				<bool name="Visible">true</bool>
+				<int name="ZIndex">1</int>
+				<bool name="archivable">true</bool>
+			</Properties>
+			<Item class="LocalScript" referent="RBX2">
+				<Properties>
+					<bool name="Disabled">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">LocalScript</string>
+					<ProtectedString name="Source">script.Parent.MouseButton1Down:connect(function()
+	game.Workspace.CurrentCamera:remove()
+	wait(.1)
+	game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+	game.Workspace.CurrentCamera.CameraType = &quot;Custom&quot;
+	game.Players.LocalPlayer.Character:BreakJoints()
+end)
+
+--By Daviidi :P</ProtectedString>
+					<bool name="archivable">true</bool>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>

@@ -1,0 +1,30 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Pants" referent="RBX0">
+		<Properties>
+			<string name="Name">Pants</string>
+			<Content name="PantsTemplate"><url>http://www.roblox.com/asset/?id=33716182</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+	<Item class="BodyColors" referent="RBX1">
+		<Properties>
+			<int name="HeadColor">1030</int>
+			<int name="LeftArmColor">26</int>
+			<int name="LeftLegColor">1030</int>
+			<string name="Name">Body Colors</string>
+			<int name="RightArmColor">26</int>
+			<int name="RightLegColor">1030</int>
+			<int name="TorsoColor">199</int>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+	<Item class="Shirt" referent="RBX2">
+		<Properties>
+			<string name="Name">Shirt</string>
+			<Content name="ShirtTemplate"><url>http://www.roblox.com/asset/?id=28199013</url></Content>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+</roblox>
