@@ -6,6 +6,7 @@ Updated by Doze
 ## ChangeLog
 
 v0.0.1 Updated with:
+
       - 3-Section Title Bar  (Hub Name | Game Name | Version)
       - Player Avatar + Username panel
 
