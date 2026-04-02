@@ -6,17 +6,14 @@
     <title>DozeIsOkLol • Roblox UI Libraries</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
-        
-        :root {
-            --tw-color-primary: #00f0ff;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
         
         body {
             font-family: 'Inter', system_ui, sans-serif;
         }
-        
         .title-font {
             font-family: 'Space Grotesk', sans-serif;
         }
@@ -24,54 +21,57 @@
         .card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
         .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 240 255 / 0.1), 
-                        0 8px 10px -6px rgb(0 240 255 / 0.1);
+            transform: translateY(-6px);
+            box-shadow: 0 25px 50px -12px rgb(0 240 255 / 0.15);
         }
 
         .modal {
-            animation: modalPop 0.3s ease;
+            animation: modalPop 0.3s ease forwards;
         }
-
         @keyframes modalPop {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .code-container {
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        pre {
+            background: #0f0f0f !important;
+            padding: 1.5rem;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body class="bg-[#0a0a0a] text-white">
+
     <!-- HEADER -->
     <header class="border-b border-white/10 bg-black/80 backdrop-blur-lg sticky top-0 z-50">
         <div class="max-w-screen-2xl mx-auto px-8 py-6 flex items-center justify-between">
             <div class="flex items-center gap-x-4">
-                <div class="w-10 h-10 bg-[#00f0ff] rounded-2xl flex items-center justify-center text-black font-bold text-2xl shadow-[0_0_20px_#00f0ff]">D</div>
+                <div class="w-10 h-10 bg-[#00f0ff] rounded-2xl flex items-center justify-center text-black font-bold text-2xl">D</div>
                 <div>
                     <h1 class="title-font text-3xl tracking-tighter">UILIBRARIES</h1>
-                    <p class="text-xs text-white/50 -mt-1">by DozeIsOkLol • 60+ Roblox UI Libraries</p>
+                    <p class="text-xs text-white/50 -mt-1">by DozeIsOkLol</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-x-8">
-                <a href="https://github.com/DozeIsOkLol/UILibarys" target="_blank"
-                   class="flex items-center gap-x-2 text-white/70 hover:text-white transition-colors">
+                <a href="https://github.com/DozeIsOkLol/UILibarys" target="_blank" class="flex items-center gap-x-2 text-white/70 hover:text-white">
                     <i class="fa-brands fa-github text-xl"></i>
                     <span class="font-medium">GitHub Repo</span>
                 </a>
                 
-                <!-- Search -->
                 <div class="relative w-80">
-                    <input 
-                        id="searchInput"
-                        type="text" 
-                        placeholder="Search libraries... (e.g. Aqua, Kavo, Flux)"
-                        class="w-full bg-white/5 border border-white/10 focus:border-[#00f0ff] rounded-3xl px-6 py-4 text-sm outline-none placeholder:text-white/40">
+                    <input id="searchInput" type="text" 
+                           placeholder="Search libraries..." 
+                           class="w-full bg-white/5 border border-white/10 focus:border-[#00f0ff] rounded-3xl px-6 py-4 text-sm outline-none placeholder:text-white/40">
                     <i class="fa-solid fa-magnifying-glass absolute right-6 top-1/2 -translate-y-1/2 text-white/40"></i>
                 </div>
             </div>
@@ -80,214 +80,170 @@
 
     <main class="max-w-screen-2xl mx-auto px-8 py-12">
         <div class="mb-12">
-            <h2 class="text-5xl title-font tracking-tighter mb-2">All UI Libraries</h2>
-            <p class="text-white/60 max-w-md">Browse 60+ preserved Roblox UI libraries. Click an image to preview, then use the buttons below each card.</p>
+            <h2 class="text-5xl title-font tracking-tighter mb-2">Roblox UI Libraries</h2>
+            <p class="text-white/60">Browse all libraries • Click "View Source" or "View Example" to see the full script right here.</p>
         </div>
 
-        <!-- LIBRARY GRID -->
         <div id="libraryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            <!-- Populated by JavaScript -->
+            <!-- Populated by JS -->
         </div>
     </main>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-white/10 bg-black/80 py-8 text-center text-white/40 text-sm">
-        <div class="max-w-screen-2xl mx-auto px-8">
-            Standalone website • All libraries from <a href="https://github.com/DozeIsOkLol/UILibarys" target="_blank" class="underline hover:text-[#00f0ff]">DozeIsOkLol/UILibarys</a><br>
-            Images &amp; scripts load directly from GitHub • You can host this file anywhere (GitHub Pages, Netlify, etc.)
+    <!-- MODAL -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-6">
+        <div class="modal bg-[#111] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between p-6 border-b border-white/10">
+                <div class="flex items-center gap-x-3">
+                    <span id="modalTitle" class="text-2xl font-semibold title-font"></span>
+                </div>
+                <button onclick="closeModal()" class="text-white/60 hover:text-white text-3xl leading-none">×</button>
+            </div>
+            
+            <div class="flex-1 p-6 overflow-hidden flex flex-col">
+                <div class="flex justify-between mb-4">
+                    <div id="modalType" class="text-sm uppercase tracking-widest text-[#00f0ff]"></div>
+                    <button onclick="copyModalCode()" 
+                            class="flex items-center gap-x-2 bg-white/10 hover:bg-white/20 px-5 py-2 rounded-2xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+                
+                <div class="code-container flex-1 bg-black rounded-2xl overflow-hidden">
+                    <pre><code id="modalCode" class="language-lua"></code></pre>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <footer class="border-t border-white/10 bg-black/80 py-8 text-center text-white/40 text-sm">
+        Standalone website • Scripts load directly from GitHub • Made for DozeIsOkLol
     </footer>
 
     <script>
-        // Tailwind script already loaded
-        function initTailwind() {
-            tailwind.config = {
-                content: [],
-                theme: {
-                    extend: {}
-                }
-            }
-        }
-
-        // FULL LIST OF LIBRARIES (from your repo as of April 2026)
         const libraries = [
-            { folder: "0x37" },
-            { folder: "Abyss Lib" },
-            { folder: "AkiriLib" },
-            { folder: "AppleLib" },
-            { folder: "AquaLIB" },
-            { folder: "AriesLib" },
-            { folder: "AtlasLib" },
-            { folder: "AtlasLib2" },
-            { folder: "AzureLib" },
-            { folder: "BaconLib" },
-            { folder: "BitchBotLib" },
-            { folder: "BlekLib" },
-            { folder: "BracketLib" },
-            { folder: "CFAHubLib" },
-            { folder: "CenterLib" },
-            { folder: "CerberusLib" },
-            { folder: "CoastingLib" },
-            { folder: "CoastingLib2" },
-            { folder: "CriminalityLib" },
-            { folder: "DainoLib" },
-            { folder: "DeadcellRemakeLib" },
-            { folder: "DiscordLib" },
-            { folder: "DollarWare" },
-            { folder: "DrawingUILib" },
-            { folder: "EdgeLib" },
-            { folder: "ElasticLib" },
-            { folder: "Elerium" },
-            { folder: "EngoLib" },
-            { folder: "ExecutionerLib" },
-            { folder: "ExodusLib" },
-            { folder: "FatalityLib" },
-            { folder: "FinityLib" },
-            { folder: "FluxLib" },
-            { folder: "FriseXLib" },
-            { folder: "FrostyLib" },
-            { folder: "FuzkiLib" },
-            { folder: "GameSneezeLib" },
-            { folder: "GeradLib" },
-            { folder: "HattoriV4Lib" },
-            { folder: "HydraLib" },
-            { folder: "ImpactLib" },
-            { folder: "Informant.wtfLib" },
-            { folder: "IreXionLib" },
-            { folder: "IsotopiaLib" },
-            { folder: "JanLib" },
-            { folder: "KavoLib" },
-            { folder: "KinxLib" },
-            { folder: "KronosLib" },
-            { folder: "LigmaLib" },
-            { folder: "LinoriaLib" },
-            { folder: "LuminosityLib" },
-            { folder: "LuxwareLib" },
-            { folder: "M7Lib" },
-            { folder: "MangoLib" },
-            { folder: "MaterialLib" },
-            { folder: "MercuryLib" },
-            { folder: "OxBloodLib" },
-            { folder: "TwinkLib" },
-            { folder: "TwinkLibV2" },
-            { folder: "WetLib" }
-            // Add any missing folders here in the same format
+            "0x37", "Abyss Lib", "AkiriLib", "AppleLib", "AquaLIB", "AriesLib", "AtlasLib", "AtlasLib2",
+            "AzureLib", "BaconLib", "BitchBotLib", "BlekLib", "BracketLib", "CFAHubLib", "CenterLib",
+            "CerberusLib", "CoastingLib", "CoastingLib2", "CriminalityLib", "DainoLib", "DeadcellRemakeLib",
+            "DiscordLib", "DollarWare", "DrawingUILib", "EdgeLib", "ElasticLib", "Elerium", "EngoLib",
+            "ExecutionerLib", "ExodusLib", "FatalityLib", "FinityLib", "FluxLib", "FriseXLib", "FrostyLib",
+            "FuzkiLib", "GameSneezeLib", "GeradLib", "HattoriV4Lib", "HydraLib", "ImpactLib", "Informant.wtfLib",
+            "IreXionLib", "IsotopiaLib", "JanLib", "KavoLib", "KinxLib", "KronosLib", "LigmaLib", "LinoriaLib",
+            "LuminosityLib", "LuxwareLib", "M7Lib", "MangoLib", "MaterialLib", "MercuryLib", "OxBloodLib",
+            "TwinkLib", "TwinkLibV2", "WetLib", "WindowsXPLib", "XanLib"
+            // Add any new folders here if you have more
         ]
 
-        // Render all cards
+        let currentCode = ''
+
         function renderLibraries(filteredLibs) {
             const grid = document.getElementById('libraryGrid')
             grid.innerHTML = ''
 
             if (filteredLibs.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full text-center py-20">
-                        <i class="fa-solid fa-magnifying-glass text-6xl text-white/20 mb-6"></i>
-                        <p class="text-2xl text-white/50">No libraries found</p>
-                    </div>
-                `
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-white/50">No libraries found</div>`
                 return
             }
 
             filteredLibs.forEach(lib => {
-                const displayName = lib.folder
-                const imageUrl = `https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/${encodeURIComponent(lib.folder)}/image.png`
-                const sourceUrl = `https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/${encodeURIComponent(lib.folder)}/Source.lua`
-                const exampleUrl = `https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/${encodeURIComponent(lib.folder)}/Example.lua`
+                const encoded = encodeURIComponent(lib)
+                const imageUrl = `https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/${encoded}/image.png`
                 
-                const cardHTML = `
-                <div class="card bg-[#111] border border-white/10 rounded-3xl overflow-hidden group">
-                    <!-- Image Preview -->
+                const card = document.createElement('div')
+                card.className = `card bg-[#111] border border-white/10 rounded-3xl overflow-hidden`
+                card.innerHTML = `
                     <div class="relative h-56 bg-black flex items-center justify-center overflow-hidden">
                         <img src="${imageUrl}" 
-                             alt="${displayName}"
-                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400/111111/00f0ff?text=${encodeURIComponent(displayName)}';this.classList.add('opacity-80')">
-                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
-                        
-                        <!-- Overlay label -->
-                        <div class="absolute bottom-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded-2xl flex items-center gap-x-1 backdrop-blur">
-                            <i class="fa-solid fa-eye"></i>
-                            PREVIEW
-                        </div>
+                             alt="${lib}"
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                             onerror="this.src='https://via.placeholder.com/600x400/1a1a1a/00f0ff?text=${encodeURIComponent(lib)}'">
+                        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-2xl text-xs">PREVIEW</div>
                     </div>
-
-                    <!-- Content -->
                     <div class="p-6">
-                        <h3 class="text-2xl font-semibold title-font tracking-tighter mb-4">${displayName}</h3>
+                        <h3 class="text-2xl font-semibold title-font tracking-tight mb-6">${lib}</h3>
                         
-                        <div class="flex flex-col gap-y-3">
-                            <!-- View Source -->
-                            <a href="${sourceUrl}" target="_blank"
-                               class="flex items-center justify-center gap-x-3 bg-white/10 hover:bg-white/20 transition-colors text-white font-medium py-4 px-6 rounded-2xl">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="showScript('${lib}', 'source')" 
+                                    class="bg-white/10 hover:bg-white/20 py-4 rounded-2xl font-medium transition-all flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-code"></i>
-                                <span>View Source</span>
-                            </a>
-                            
-                            <!-- View Example -->
-                            <a href="${exampleUrl}" target="_blank"
-                               class="flex items-center justify-center gap-x-3 bg-[#00f0ff] hover:bg-[#00d4e0] transition-colors text-black font-semibold py-4 px-6 rounded-2xl">
+                                <span>Source</span>
+                            </button>
+                            <button onclick="showScript('${lib}', 'example')" 
+                                    class="bg-[#00f0ff] hover:bg-[#00d4e0] text-black py-4 rounded-2xl font-semibold transition-all flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-play"></i>
-                                <span>View Example</span>
-                            </a>
-                            
-                            <!-- Bonus: Copy Loadstring -->
-                            <button onclick="copyLoadstring('${lib.folder}')"
-                                    class="flex items-center justify-center gap-x-3 border border-white/20 hover:border-[#00f0ff] transition-colors text-white/80 hover:text-white font-medium py-4 px-6 rounded-2xl text-sm">
-                                <i class="fa-solid fa-copy"></i>
-                                COPY LOADSTRING
+                                <span>Example</span>
                             </button>
                         </div>
                     </div>
-                </div>`
-                
-                grid.innerHTML += cardHTML
+                `
+                grid.appendChild(card)
             })
         }
 
-        // Copy loadstring to clipboard
-        window.copyLoadstring = function(folder) {
-            const loadstring = `loadstring(game:HttpGet("https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/${encodeURIComponent(folder)}/Source.lua"))()`
-            navigator.clipboard.writeText(loadstring).then(() => {
-                const btns = document.querySelectorAll('button')
-                const originalText = btns[btns.length-1] ? btns[btns.length-1].innerHTML : ''
-                
-                // Simple toast
-                const toast = document.createElement('div')
-                toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#00f0ff; color:black; padding:12px 24px; border-radius:9999px; font-weight:600; box-shadow:0 0 20px #00f0ff;'
-                toast.textContent = '✅ Loadstring copied!'
-                document.body.appendChild(toast)
-                
-                setTimeout(() => toast.remove(), 2500)
-            })
-        }
-
-        // Search functionality
-        function setupSearch() {
-            const input = document.getElementById('searchInput')
-            input.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase().trim()
-                
-                const filtered = libraries.filter(lib => 
-                    lib.folder.toLowerCase().includes(term)
-                )
-                
-                renderLibraries(filtered)
-            })
-        }
-
-        // Initialize everything
-        function initialize() {
-            initTailwind()
-            renderLibraries(libraries)
-            setupSearch()
+        async function showScript(libName, type) {
+            const modal = document.getElementById('modal')
+            const title = document.getElementById('modalTitle')
+            const typeLabel = document.getElementById('modalType')
+            const codeEl = document.getElementById('modalCode')
             
-            console.log('%c✅ Roblox UI Library Website Ready!', 'color:#00f0ff; font-size:18px; font-weight:600')
-            console.log('You have ' + libraries.length + ' libraries loaded. Add more in the libraries array if needed.')
+            const fileName = type === 'source' ? 'Source.lua' : 'Example.lua'
+            const url = `https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/${encodeURIComponent(libName)}/${fileName}`
+            
+            title.textContent = libName
+            typeLabel.textContent = type === 'source' ? 'SOURCE.LUA' : 'EXAMPLE.LUA'
+            
+            try {
+                const res = await fetch(url)
+                if (!res.ok) throw new Error('File not found')
+                currentCode = await res.text()
+            } catch (e) {
+                currentCode = '-- File not found or not available in the repository.\n-- Make sure the file exists on GitHub.'
+            }
+            
+            codeEl.textContent = currentCode
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+            
+            // Trigger highlight.js
+            setTimeout(() => {
+                hljs.highlightElement(codeEl)
+            }, 50)
         }
 
-        // Run on load
-        window.onload = initialize
+        function closeModal() {
+            const modal = document.getElementById('modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+        }
+
+        function copyModalCode() {
+            if (!currentCode) return
+            navigator.clipboard.writeText(currentCode).then(() => {
+                const orig = event.currentTarget.innerHTML
+                event.currentTarget.innerHTML = `<i class="fa-solid fa-check"></i> Copied!`
+                setTimeout(() => {
+                    event.currentTarget.innerHTML = orig
+                }, 2000)
+            })
+        }
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase()
+            const filtered = libraries.filter(lib => lib.toLowerCase().includes(term))
+            renderLibraries(filtered)
+        })
+
+        // Close modal when clicking outside
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal')) closeModal()
+        })
+
+        // Initialize
+        window.onload = () => {
+            renderLibraries(libraries)
+            console.log('%c✅ Roblox UI Library Website Ready! (Modal version)', 'color:#00f0ff; font-weight:600')
+        }
     </script>
 </body>
 </html>
