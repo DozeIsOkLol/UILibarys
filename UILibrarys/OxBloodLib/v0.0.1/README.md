@@ -2,6 +2,10 @@
 
 A sleek, dark Roblox UI library with a blood-red accent theme. Fully featured with notifications, keybinds, inputs, and more.
 
+### Preview
+![a](https://github.com/DozeIsOkLol/UILibarys/blob/main/UILibrarys/OxBloodLib/v0.0.1/Preview.png?raw=true)
+
+
 ## 🩸 What Changed from Twink UI
 
 ### Visual Theme
