@@ -9,8 +9,8 @@
   <style>
     body { font-family: 'Segoe UI', system-ui, sans-serif; }
     .library-card { transition: all 0.3s ease; }
-    .library-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0, 180, 255, 0.3); }
-    .preview-img { height: 180px; object-fit: cover; border-radius: 16px; }
+    .library-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 180, 255, 0.25); }
+    .preview-img { height: 160px; object-fit: cover; border-radius: 12px; }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -32,16 +32,16 @@
   </nav>
 
   <div class="max-w-7xl mx-auto px-6 py-12">
-    <input id="search" type="text" placeholder="Search any library..." 
+    <input id="search" type="text" placeholder="Search libraries..." 
            class="w-full bg-zinc-900 border border-zinc-700 focus:border-blue-500 rounded-3xl px-8 py-5 text-lg outline-none mb-12">
 
-    <!-- MadeByDoze Section -->
+    <!-- MadeByDoze -->
     <section class="mb-16">
       <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span class="text-yellow-400">★</span> MadeByDoze</h2>
       <div id="madebydoze-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </section>
 
-    <!-- UILibrarys Section -->
+    <!-- UILibrarys -->
     <section class="mb-16">
       <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span class="text-blue-400">📚</span> UILibrarys</h2>
       <div id="uilibrarys-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -61,7 +61,7 @@
   </div>
 
   <footer class="bg-black py-10 text-center text-zinc-500 border-t border-zinc-800">
-    <p>Made with ❤️ by DozeIsOkLol • For the Roblox community</p>
+    <p>Made with ❤️ by DozeIsOkLol • Roblox UI Archive</p>
   </footer>
 
   <script>
@@ -69,21 +69,23 @@
     const REPO = "UILibarys";
 
     const sections = [
-      { id: "madebydoze-grid", path: "MadeByDoze" },
-      { id: "uilibrarys-grid", path: "UILibrarys" },
-      { id: "notifications-grid", path: "Notifications" },
-      { id: "utilities-grid", path: "Utilities" }
+      { id: "madebydoze-grid",   path: "MadeByDoze",   emoji: "★" },
+      { id: "uilibrarys-grid",   path: "UILibrarys",   emoji: "📚" },
+      { id: "notifications-grid", path: "Notifications", emoji: "🛎️" },
+      { id: "utilities-grid",    path: "Utilities",    emoji: "🛠️" }
     ];
 
     async function loadSection(section) {
       const grid = document.getElementById(section.id);
-      grid.innerHTML = `<p class="col-span-full text-center text-zinc-400 py-8">Loading ${section.path}...</p>`;
+      grid.innerHTML = `<p class="col-span-full text-center text-zinc-400 py-12">Loading ${section.path}...</p>`;
 
       try {
         const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${section.path}`);
-        if (!res.ok) throw new Error("Failed");
+        if (!res.ok) {
+          if (res.status === 403) throw new Error("Rate limit");
+          throw new Error("Failed");
+        }
         const items = await res.json();
-
         const folders = items.filter(item => item.type === "dir");
 
         grid.innerHTML = "";
@@ -91,87 +93,90 @@
         for (const folder of folders) {
           const name = folder.name;
           const baseUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${section.path}/${name}`;
+          const githubUrl = folder.html_url;
 
           const loadstring = `loadstring(game:HttpGet("${baseUrl}/Source.lua"))()`;
-          
-          // Try to get Example.lua for copy example
+
           let exampleCode = `print("No Example.lua found for ${name}")`;
           try {
             const exRes = await fetch(`${baseUrl}/Example.lua`);
-            if (exRes.ok) {
-              exampleCode = await exRes.text();
-            }
+            if (exRes.ok) exampleCode = await exRes.text();
           } catch(e) {}
 
-          const card = document.createElement("div");
-          card.className = "library-card bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden group";
-
-          card.innerHTML = `
-            <div class="relative">
-              <img src="${baseUrl}/image.png" onerror="this.style.display='none'" 
-                   class="preview-img w-full bg-zinc-800" alt="${name} Preview">
-              <div class="absolute top-3 right-3 bg-black/70 text-xs px-3 py-1 rounded-full">
-                ${section.path}
+          const cardHTML = `
+            <div class="library-card bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+              <div class="relative">
+                <img src="${baseUrl}/Preview.png" 
+                     onerror="this.src='${baseUrl}/image.png'; this.onerror=null;" 
+                     class="preview-img w-full bg-zinc-800" alt="${name}">
+                <div class="absolute top-3 right-3 bg-black/70 text-xs px-3 py-1 rounded-full">${section.path}</div>
               </div>
-            </div>
-            
-            <div class="p-6">
-              <h3 class="text-2xl font-bold mb-4">${name}</h3>
               
-              <div class="flex flex-col gap-3">
-                <button onclick="copyToClipboard('${loadstring}', this)" 
-                        class="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition">
-                  <i class="fas fa-copy"></i> Copy Loadstring
-                </button>
+              <div class="p-6">
+                <h3 class="text-2xl font-bold mb-5 line-clamp-1">${name}</h3>
                 
-                <button onclick="copyExample('${btoa(exampleCode)}', this)" 
-                        class="bg-emerald-600 hover:bg-emerald-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition">
-                  <i class="fas fa-file-code"></i> Copy Example Script
-                </button>
-              </div>
+                <div class="space-y-3">
+                  <button onclick="copyToClipboard('${loadstring.replace(/'/g, "\\'")}', this)" 
+                          class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition">
+                    <i class="fas fa-copy"></i> Copy Loadstring
+                  </button>
+                  
+                  <button onclick="copyExample('${btoa(exampleCode)}', this)" 
+                          class="w-full bg-emerald-600 hover:bg-emerald-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition">
+                    <i class="fas fa-file-code"></i> Copy Example Script
+                  </button>
+                </div>
 
-              <a href="${folder.html_url}" target="_blank" 
-                 class="block text-center mt-4 text-zinc-400 hover:text-white text-sm flex items-center justify-center gap-2">
-                <i class="fab fa-github"></i> Open Folder on GitHub
-              </a>
+                <div class="flex gap-3 mt-5 text-sm">
+                  <a href="${githubUrl}" target="_blank" 
+                     class="flex-1 text-center py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl flex items-center justify-center gap-2">
+                    <i class="fab fa-github"></i> Folder
+                  </a>
+                  <a href="${baseUrl}/Preview.png" target="_blank" 
+                     class="flex-1 text-center py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-blue-400">
+                    View Preview
+                  </a>
+                </div>
+              </div>
             </div>
           `;
 
-          grid.appendChild(card);
+          grid.innerHTML += cardHTML;
         }
+
       } catch (err) {
-        grid.innerHTML = `<p class="col-span-full text-red-400 text-center py-8">Failed to load ${section.path}</p>`;
+        let msg = "Failed to load";
+        if (err.message.includes("Rate limit")) msg = "Rate limit reached — wait a few minutes and refresh";
+        grid.innerHTML = `<p class="col-span-full text-red-400 text-center py-12">${msg}</p>`;
       }
     }
 
     function copyToClipboard(text, btn) {
       navigator.clipboard.writeText(text);
-      const original = btn.innerHTML;
+      const orig = btn.innerHTML;
       btn.innerHTML = `<i class="fas fa-check"></i> Copied!`;
-      setTimeout(() => btn.innerHTML = original, 2000);
+      setTimeout(() => btn.innerHTML = orig, 1800);
     }
 
     function copyExample(encoded, btn) {
       const text = atob(encoded);
       navigator.clipboard.writeText(text);
-      const original = btn.innerHTML;
-      btn.innerHTML = `<i class="fas fa-check"></i> Copied Example!`;
-      setTimeout(() => btn.innerHTML = original, 2000);
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<i class="fas fa-check"></i> Example Copied!`;
+      setTimeout(() => btn.innerHTML = orig, 1800);
     }
 
-    // Search across all cards
+    // Global search
     document.getElementById("search").addEventListener("input", (e) => {
-      const term = e.target.value.toLowerCase();
+      const term = e.target.value.toLowerCase().trim();
       document.querySelectorAll('.library-card').forEach(card => {
         const title = card.querySelector('h3').textContent.toLowerCase();
-        card.style.display = title.includes(term) ? '' : 'none';
+        card.style.display = term === "" || title.includes(term) ? '' : 'none';
       });
     });
 
-    // Load all sections
-    window.onload = () => {
-      sections.forEach(section => loadSection(section));
-    };
+    // Load everything
+    window.onload = () => sections.forEach(s => loadSection(s));
   </script>
 </body>
 </html>
