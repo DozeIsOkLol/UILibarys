@@ -57,7 +57,7 @@
     <main class="max-w-screen-2xl mx-auto px-8 py-12">
         <div class="mb-12">
             <h2 class="text-5xl title-font tracking-tighter mb-2">Roblox UI Libraries</h2>
-            <p class="text-white/60">Some libraries have multiple versions/subfolders. Click Source or Example to choose the folder.</p>
+            <p class="text-white/60">Click Source or Example → choose the version/folder you want to view.</p>
         </div>
 
         <div id="libraryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
@@ -107,7 +107,7 @@
     </div>
 
     <footer class="border-t border-white/10 bg-black/80 py-8 text-center text-white/40 text-sm">
-        Supports nested folders & multiple versions • Choose when needed
+        Supports multiple versions • Choose the correct folder
     </footer>
 
     <script>
@@ -169,11 +169,11 @@
             { name: "MangoLib", possibleSubs: [] },
             { name: "MaterialLib", possibleSubs: [] },
             { name: "MercuryLib", possibleSubs: [] },
-            { name: "OxBloodLib", possibleSubs: ["v0.0.1", "v0.0.2"," v0.0.3"] },
+            { name: "OxBloodLib", possibleSubs: ["v0.0.1", "v0.0.2", "v0.0.3"] },
             { name: "TwinkLib", possibleSubs: [] },
-            { name: "TwinkLibV2", possibleSubs: ["v0.0.1", "v0.0.2"," v0.0.3" ,"v0.0.4"] },
+            { name: "TwinkLibV2", possibleSubs: ["v0.0.1", "v0.0.2", "v0.0.3", "v0.0.4"] },
             { name: "WetLib", possibleSubs: [] },
-            { name: "WindowsXPLib", possibleSubs: ["v0.0.1", "v0.0.2"," v0.0.3" ,"v0.0.4"] },
+            { name: "WindowsXPLib", possibleSubs: ["v0.0.1", "v0.0.2", "v0.0.3", "v0.0.4"] },
             { name: "XanLib", possibleSubs: [] }
         ];
 
@@ -194,7 +194,6 @@
             const encoded = encodeURIComponent(lib.name);
             const base = `https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/main/UILibrarys/${encoded}/`;
             const attempts = [`Preview.png`, `Preview1.png`, `image.png`];
-
             const subsToTry = [...(lib.possibleSubs || []), ...commonSubs, ""];
 
             for (let sub of subsToTry) {
@@ -266,19 +265,19 @@
 
             let foundFolders = [];
 
-            // Root
+            // Check root
             if (await fileExists(`${base}${fileName}`)) {
                 foundFolders.push({ name: "Root (main folder)", path: "" });
             }
 
-            // Known possibleSubs
+            // Check known possibleSubs (this is where v0.0.3 was failing due to spaces)
             for (let sub of (currentLib.possibleSubs || [])) {
                 if (await fileExists(`${base}${sub}/${fileName}`)) {
                     foundFolders.push({ name: sub, path: sub });
                 }
             }
 
-            // Common guesses
+            // Check common guesses
             for (let sub of commonSubs) {
                 if (!foundFolders.some(f => f.path === sub) && await fileExists(`${base}${sub}/${fileName}`)) {
                     foundFolders.push({ name: sub, path: sub });
@@ -308,7 +307,7 @@
             folders.forEach(folder => {
                 const btn = document.createElement('button');
                 btn.className = "w-full text-left px-6 py-4 hover:bg-white/10 rounded-2xl transition-colors mb-2 flex justify-between items-center";
-                btn.innerHTML = `<span>${folder.name}</span><i class="fa-solid fa-chevron-right text-white/40"></i>`;
+                btn.innerHTML = `<span class="font-medium">${folder.name}</span><i class="fa-solid fa-chevron-right text-white/40"></i>`;
                 btn.onclick = () => {
                     closeFolderModal();
                     loadAndShowScript(folder.path);
@@ -335,8 +334,8 @@
             try {
                 const res = await fetch(fullUrl);
                 currentCode = res.ok ? await res.text() : `-- ${fileName} not found in the selected folder.`;
-            } catch {
-                currentCode = `-- Failed to load ${fileName}`;
+            } catch (e) {
+                currentCode = `-- Failed to load ${fileName}\n\nError: ${e.message}`;
             }
 
             showScriptContent(currentLib.name, subPath || "Root", currentCode);
@@ -371,12 +370,14 @@
             });
         }
 
+        // Search
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase().trim();
             const filtered = libraries.filter(lib => lib.name.toLowerCase().includes(term));
             renderLibraries(filtered);
         });
 
+        // Close modals on background click
         document.getElementById('folderModal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('folderModal')) closeFolderModal();
         });
