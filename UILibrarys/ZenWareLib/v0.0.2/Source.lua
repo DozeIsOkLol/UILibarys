@@ -747,30 +747,32 @@ function UILibrary.Load(Title, GameName, Version, Options)
         end
         
         -- ── TAB SWITCHING ───────────────────────────────────────
-        TabBtn.MouseButton1Click:Connect(function()
-            -- Hide all pages
-            for _, page in ipairs(TabLibrary.Pages) do
-                PageFrame.Visible = true
-if PageSearchFrame then
-    PageSearchFrame.Visible = true
-end
-                
-                -- Reset tab appearance
-                Tween(page.TabBG, {ImageTransparency = 1}, FastTweenInfo)
-                Tween(page.TabLabel, {TextColor3 = CurrentTheme.TextDim}, FastTweenInfo)
-                Tween(page.ActiveStrip, {BackgroundTransparency = 1}, FastTweenInfo)
-            end
-            
-            -- Show this page
-            PageFrame.Visible = true
-            if PageFrame.SearchFrame then
-                PageFrame.SearchFrame.Visible = true
-            end
-            
-            Tween(TabBG, {ImageTransparency = 0, ImageColor3 = CurrentTheme.Card}, GlobalTweenInfo)
-            Tween(TabLabel, {TextColor3 = CurrentTheme.Text}, GlobalTweenInfo)
-            Tween(ActiveStrip, {BackgroundTransparency = 0}, GlobalTweenInfo)
-        end)
+       -- Corrected Tab Switching Logic
+TabBtn.MouseButton1Click:Connect(function()
+    -- First, hide all pages and their search frames
+    for _, page in ipairs(TabLibrary.Pages) do
+        page.Frame.Visible = false
+        if page.SearchFrame then
+            page.SearchFrame.Visible = false
+        end
+        
+        -- Reset the appearance of all tab buttons
+        Tween(page.TabBG, {ImageTransparency = 1}, FastTweenInfo)
+        Tween(page.TabLabel, {TextColor3 = CurrentTheme.TextDim}, FastTweenInfo)
+        Tween(page.ActiveStrip, {BackgroundTransparency = 1}, FastTweenInfo)
+    end
+    
+    -- Now, show only the currently selected page and its search frame
+    PageFrame.Visible = true
+    if PageSearchFrame then
+        PageSearchFrame.Visible = true
+    end
+    
+    -- Finally, update the appearance of the active tab button
+    Tween(TabBG, {ImageTransparency = 0, ImageColor3 = CurrentTheme.Card}, GlobalTweenInfo)
+    Tween(TabLabel, {TextColor3 = CurrentTheme.Text}, GlobalTweenInfo)
+    Tween(ActiveStrip, {BackgroundTransparency = 0}, GlobalTweenInfo)
+end)
         
         -- Store page data
         table.insert(TabLibrary.Pages, {
