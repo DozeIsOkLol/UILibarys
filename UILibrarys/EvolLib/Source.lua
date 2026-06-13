@@ -1,6 +1,6 @@
 --[[
 	EvolUI — Minimal UI Library
-	By EvolEzod | v1.2.1
+	By EvolEzod | v1.2.2
 
 	Usage (GitHub):
 		local EVOLUI_URL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/EvolLib/Source.lua"
@@ -14,7 +14,7 @@
 ]]
 
 local EvolUI = {}
-EvolUI.Version = "1.2.1"
+EvolUI.Version = "1.2.2"
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -371,16 +371,19 @@ function EvolUI.Load(config)
 	Footer.TextTransparency = 0.1
 	Footer.ZIndex = 2
 
-	local NotifyHolder = Instance.new("Frame", ScreenGui)
+	local NotifyHolder = Instance.new("Frame", MainFrame)
 	NotifyHolder.Name = "Notifications"
-	NotifyHolder.Size = UDim2.new(0, 260, 1, 0)
-	NotifyHolder.Position = UDim2.new(1, -280, 0, 20)
+	NotifyHolder.AnchorPoint = Vector2.new(0.5, 1)
+	NotifyHolder.Position = UDim2.new(0.5, 0, 1, -(FOOTER_H + 8))
+	NotifyHolder.Size = UDim2.new(1, -24, 0, 0)
+	NotifyHolder.AutomaticSize = Enum.AutomaticSize.Y
 	NotifyHolder.BackgroundTransparency = 1
+	NotifyHolder.ZIndex = 50
 
 	local NotifyLayout = Instance.new("UIListLayout", NotifyHolder)
 	NotifyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	NotifyLayout.Padding = UDim.new(0, 8)
-	NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	NotifyLayout.Padding = UDim.new(0, 6)
+	NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
 
 	local fullHeight = height
 	local dragging, dragStart, startPos
@@ -993,15 +996,22 @@ function EvolUI.Load(config)
 		options = options or {}
 		local open = false
 		local selected = options.Default or (options.Options and options.Options[1]) or ""
+		local optionList = options.Options or {}
+		local optionCount = #optionList
 
 		local holder = Instance.new("Frame", ScrollFrame)
 		holder.Size = UDim2.new(1, 0, 0, 40)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
-		holder.ClipsDescendants = false
+		holder.ClipsDescendants = true
 		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
-		local label = Instance.new("TextLabel", holder)
+		local topRow = Instance.new("Frame", holder)
+		topRow.Size = UDim2.new(1, 0, 0, 40)
+		topRow.BackgroundTransparency = 1
+		topRow.ZIndex = 2
+
+		local label = Instance.new("TextLabel", topRow)
 		label.Size = UDim2.new(0.45, 0, 1, 0)
 		label.Position = UDim2.new(0, 14, 0, 0)
 		label.BackgroundTransparency = 1
@@ -1010,71 +1020,110 @@ function EvolUI.Load(config)
 		label.Font = Enum.Font.GothamMedium
 		label.TextSize = 12
 		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextYAlignment = Enum.TextYAlignment.Center
 
-		local display = Instance.new("TextButton", holder)
+		local display = Instance.new("TextButton", topRow)
 		display.AnchorPoint = Vector2.new(1, 0.5)
-		display.Size = UDim2.new(0, 120, 0, 26)
+		display.Size = UDim2.new(0, 120, 0, 28)
 		display.Position = UDim2.new(1, -12, 0.5, 0)
 		display.BackgroundColor3 = Theme.Elevated
 		display.Text = tostring(selected) .. "  ▾"
-		display.TextColor3 = Theme.Muted
-		display.Font = Enum.Font.Gotham
+		display.TextColor3 = Theme.Text
+		display.Font = Enum.Font.GothamMedium
 		display.TextSize = 11
 		display.AutoButtonColor = false
+		display.ZIndex = 3
 		Instance.new("UICorner", display).CornerRadius = UDim.new(0, 8)
 
+		local displayStroke = Instance.new("UIStroke", display)
+		displayStroke.Color = Theme.Border
+		displayStroke.Thickness = 1
+		displayStroke.Transparency = 0.45
+
+		local divider = Instance.new("Frame", holder)
+		divider.Size = UDim2.new(1, -16, 0, 1)
+		divider.Position = UDim2.new(0, 8, 0, 40)
+		divider.BackgroundColor3 = Theme.Border
+		divider.BackgroundTransparency = 0.5
+		divider.BorderSizePixel = 0
+		divider.Visible = false
+		divider.ZIndex = 2
+
 		local list = Instance.new("Frame", holder)
-		list.Size = UDim2.new(0, 120, 0, 0)
-		list.AnchorPoint = Vector2.new(1, 0)
-		list.Position = UDim2.new(1, -12, 1, 4)
-		list.BackgroundColor3 = Theme.Elevated
+		list.Size = UDim2.new(1, -16, 0, 0)
+		list.Position = UDim2.new(0, 8, 0, 41)
+		list.BackgroundTransparency = 1
 		list.Visible = false
-		list.ZIndex = 20
-		Instance.new("UICorner", list).CornerRadius = UDim.new(0, 8)
-		Instance.new("UIStroke", list).Color = Theme.Border
+		list.ClipsDescendants = true
+		list.ZIndex = 2
 
 		local listLayout = Instance.new("UIListLayout", list)
 		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Padding = UDim.new(0, 2)
+		listLayout.Padding = UDim.new(0, 4)
 
 		local listPad = Instance.new("UIPadding", list)
 		listPad.PaddingTop = UDim.new(0, 4)
-		listPad.PaddingBottom = UDim.new(0, 4)
+		listPad.PaddingBottom = UDim.new(0, 6)
 
-		for _, option in ipairs(options.Options or {}) do
+		local function getListHeight()
+			if optionCount == 0 then return 0 end
+			return optionCount * 32 + (optionCount - 1) * 4 + 10
+		end
+
+		local function setOpen(state)
+			open = state
+			local listHeight = open and getListHeight() or 0
+			list.Visible = open and listHeight > 0
+			divider.Visible = list.Visible
+			display.Text = tostring(selected) .. (open and "  ▴" or "  ▾")
+			TweenPlay(list, { Size = UDim2.new(1, -16, 0, listHeight) }, 0.2, Enum.EasingStyle.Quint)
+			TweenPlay(holder, { Size = UDim2.new(1, 0, 0, 40 + listHeight) }, 0.2, Enum.EasingStyle.Quint)
+		end
+
+		for i, option in ipairs(optionList) do
 			local optBtn = Instance.new("TextButton", list)
-			optBtn.Size = UDim2.new(1, -8, 0, 24)
-			optBtn.BackgroundTransparency = 1
-			optBtn.Text = "  " .. tostring(option)
+			optBtn.Size = UDim2.new(1, 0, 0, 32)
+			optBtn.BackgroundColor3 = Theme.Elevated
+			optBtn.Text = tostring(option)
 			optBtn.TextColor3 = Theme.Text
-			optBtn.Font = Enum.Font.Gotham
+			optBtn.Font = Enum.Font.GothamMedium
 			optBtn.TextSize = 11
-			optBtn.TextXAlignment = Enum.TextXAlignment.Left
 			optBtn.AutoButtonColor = false
+			optBtn.LayoutOrder = i
+			Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 8)
+
+			local optStroke = Instance.new("UIStroke", optBtn)
+			optStroke.Color = Theme.Border
+			optStroke.Thickness = 1
+			optStroke.Transparency = 0.55
+
 			optBtn.MouseEnter:Connect(function()
-				TweenPlay(optBtn, { BackgroundTransparency = 0.85, BackgroundColor3 = Theme.SurfaceHover })
+				TweenPlay(optBtn, { BackgroundColor3 = Theme.SurfaceHover })
+				TweenPlay(optStroke, { Color = Theme.Accent, Transparency = 0.25 })
 			end)
 			optBtn.MouseLeave:Connect(function()
-				TweenPlay(optBtn, { BackgroundTransparency = 1 })
+				TweenPlay(optBtn, { BackgroundColor3 = Theme.Elevated })
+				TweenPlay(optStroke, { Color = Theme.Border, Transparency = 0.55 })
 			end)
 			optBtn.MouseButton1Click:Connect(function()
 				selected = option
 				display.Text = tostring(selected) .. "  ▾"
-				open = false
-				list.Visible = false
-				TweenPlay(holder, { Size = UDim2.new(1, 0, 0, 40) }, 0.2, Enum.EasingStyle.Quint)
+				setOpen(false)
 				if options.Callback then
 					options.Callback(selected)
 				end
 			end)
 		end
 
+		display.MouseEnter:Connect(function()
+			TweenPlay(display, { BackgroundColor3 = Theme.SurfaceHover })
+		end)
+		display.MouseLeave:Connect(function()
+			TweenPlay(display, { BackgroundColor3 = Theme.Elevated })
+		end)
 		display.MouseButton1Click:Connect(function()
-			open = not open
-			list.Visible = open
-			local count = #(options.Options or {})
-			TweenPlay(holder, { Size = UDim2.new(1, 0, 0, open and (40 + count * 26 + 12) or 40) }, 0.2, Enum.EasingStyle.Quint)
-			list.Size = UDim2.new(0, 120, 0, count * 26 + 8)
+			if optionCount == 0 then return end
+			setOpen(not open)
 		end)
 
 		return {
@@ -1083,7 +1132,10 @@ function EvolUI.Load(config)
 			end,
 			Set = function(value)
 				selected = value
-				display.Text = tostring(selected) .. "  ▾"
+				display.Text = tostring(selected) .. (open and "  ▴" or "  ▾")
+			end,
+			Close = function()
+				setOpen(false)
 			end,
 		}
 	end
@@ -1203,54 +1255,108 @@ function EvolUI.Load(config)
 	function UI:Notify(options)
 		options = options or {}
 		local notifyType = options.Type or "Info"
-		local colors = {
-			Success = Theme.Success,
-			Error = Theme.Danger,
-			Warning = Theme.Warning,
-			Info = Theme.Info,
+		local duration = options.Duration or 3
+
+		local palette = {
+			Success = { accent = Theme.Success, bg = Color3.fromRGB(22, 36, 30), icon = "✓", title = "Success" },
+			Error = { accent = Theme.Danger, bg = Color3.fromRGB(38, 22, 24), icon = "✕", title = "Error" },
+			Warning = { accent = Theme.Warning, bg = Color3.fromRGB(38, 32, 20), icon = "!", title = "Warning" },
+			Info = { accent = Theme.Info, bg = Color3.fromRGB(22, 28, 38), icon = "i", title = "Info" },
 		}
+		local style = palette[notifyType] or palette.Info
+		local titleText = options.Title or style.title
+		local bodyText = options.Text or options.Description or "Notification"
 
 		local toast = Instance.new("Frame", NotifyHolder)
 		toast.Size = UDim2.new(1, 0, 0, 0)
 		toast.AutomaticSize = Enum.AutomaticSize.Y
-		toast.BackgroundColor3 = Theme.Surface
+		toast.BackgroundColor3 = style.bg
 		toast.BackgroundTransparency = 1
-		toast.LayoutOrder = tick()
+		toast.LayoutOrder = math.floor(tick() * 1000)
 		Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 10)
-		Instance.new("UIStroke", toast).Color = colors[notifyType] or Theme.Info
+
+		local toastStroke = Instance.new("UIStroke", toast)
+		toastStroke.Color = style.accent
+		toastStroke.Thickness = 1
+		toastStroke.Transparency = 0.55
 
 		local accent = Instance.new("Frame", toast)
-		accent.Size = UDim2.new(0, 3, 1, 0)
-		accent.BackgroundColor3 = colors[notifyType] or Theme.Info
+		accent.Size = UDim2.new(0, 4, 1, -8)
+		accent.Position = UDim2.new(0, 0, 0, 4)
+		accent.BackgroundColor3 = style.accent
 		accent.BorderSizePixel = 0
 		Instance.new("UICorner", accent).CornerRadius = UDim.new(0, 2)
 
+		local icon = Instance.new("TextLabel", toast)
+		icon.Size = UDim2.new(0, 22, 0, 22)
+		icon.Position = UDim2.new(0, 12, 0, 10)
+		icon.BackgroundColor3 = style.accent
+		icon.BackgroundTransparency = 0.82
+		icon.Text = style.icon
+		icon.TextColor3 = style.accent
+		icon.Font = Enum.Font.GothamBold
+		icon.TextSize = 12
+		Instance.new("UICorner", icon).CornerRadius = UDim.new(1, 0)
+
+		local title = Instance.new("TextLabel", toast)
+		title.Size = UDim2.new(1, -52, 0, 16)
+		title.Position = UDim2.new(0, 40, 0, 8)
+		title.BackgroundTransparency = 1
+		title.Text = titleText
+		title.TextColor3 = Theme.Text
+		title.TextTransparency = 1
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 12
+		title.TextXAlignment = Enum.TextXAlignment.Left
+
 		local text = Instance.new("TextLabel", toast)
-		text.Size = UDim2.new(1, -20, 0, 0)
-		text.Position = UDim2.new(0, 12, 0, 8)
+		text.Size = UDim2.new(1, -52, 0, 0)
+		text.Position = UDim2.new(0, 40, 0, 24)
 		text.AutomaticSize = Enum.AutomaticSize.Y
 		text.BackgroundTransparency = 1
-		text.Text = options.Text or "Notification"
-		text.TextColor3 = Theme.Text
+		text.Text = bodyText
+		text.TextColor3 = Theme.Muted
 		text.TextTransparency = 1
-		text.Font = Enum.Font.GothamMedium
-		text.TextSize = 12
+		text.Font = Enum.Font.Gotham
+		text.TextSize = 11
 		text.TextWrapped = true
 		text.TextXAlignment = Enum.TextXAlignment.Left
 
+		local progressTrack = Instance.new("Frame", toast)
+		progressTrack.AnchorPoint = Vector2.new(0, 1)
+		progressTrack.Size = UDim2.new(1, -12, 0, 2)
+		progressTrack.Position = UDim2.new(0, 6, 1, -4)
+		progressTrack.BackgroundColor3 = Theme.Elevated
+		progressTrack.BackgroundTransparency = 0.35
+		progressTrack.BorderSizePixel = 0
+		Instance.new("UICorner", progressTrack).CornerRadius = UDim.new(1, 0)
+
+		local progressFill = Instance.new("Frame", progressTrack)
+		progressFill.Size = UDim2.new(1, 0, 1, 0)
+		progressFill.BackgroundColor3 = style.accent
+		progressFill.BorderSizePixel = 0
+		Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+
 		local pad = Instance.new("UIPadding", toast)
 		pad.PaddingTop = UDim.new(0, 8)
-		pad.PaddingBottom = UDim.new(0, 8)
+		pad.PaddingBottom = UDim.new(0, 12)
 		pad.PaddingRight = UDim.new(0, 10)
 
-		toast.Position = UDim2.new(0, 30, 0, 0)
-		TweenPlay(toast, { Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0 }, 0.3, Enum.EasingStyle.Quint)
-		TweenPlay(text, { TextTransparency = 0 }, 0.3, Enum.EasingStyle.Quint)
+		local toastScale = Instance.new("UIScale", toast)
+		toastScale.Scale = 0.92
 
-		task.delay(options.Duration or 3, function()
-			TweenPlay(toast, { Position = UDim2.new(0, 20, 0, 0), BackgroundTransparency = 1 }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-			TweenPlay(text, { TextTransparency = 1 }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-			task.wait(0.25)
+		TweenPlay(toastScale, { Scale = 1 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(toast, { BackgroundTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(title, { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(text, { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(progressFill, { Size = UDim2.new(0, 0, 1, 0) }, duration, Enum.EasingStyle.Linear)
+
+		task.delay(duration, function()
+			TweenPlay(toastScale, { Scale = 0.94 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			TweenPlay(toast, { BackgroundTransparency = 1 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			TweenPlay(title, { TextTransparency = 1 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			TweenPlay(text, { TextTransparency = 1 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			task.wait(0.22)
 			toast:Destroy()
 		end)
 	end
