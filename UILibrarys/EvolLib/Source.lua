@@ -1,6 +1,6 @@
 --[[
 	EvolUI — Minimal UI Library
-	By EvolEzod | v1.2.0
+	By EvolEzod | v1.2.1
 
 	Usage (GitHub):
 		local EVOLUI_URL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/EvolLib/Source.lua"
@@ -14,7 +14,7 @@
 ]]
 
 local EvolUI = {}
-EvolUI.Version = "1.2.0"
+EvolUI.Version = "1.2.1"
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -210,28 +210,7 @@ function EvolUI.Load(config)
 	local MainStroke = Instance.new("UIStroke", MainFrame)
 	MainStroke.Color = Theme.Border
 	MainStroke.Thickness = 1
-	MainStroke.Transparency = 0.25
-
-	local Glow = Instance.new("UIStroke", MainFrame)
-	Glow.Color = Theme.Accent
-	Glow.Thickness = 1
-	Glow.Transparency = 0.78
-
-	local LeftStripe = Instance.new("Frame", MainFrame)
-	LeftStripe.Size = UDim2.new(0, 3, 1, -10)
-	LeftStripe.Position = UDim2.new(0, 0, 0, 5)
-	LeftStripe.BackgroundColor3 = Theme.Accent
-	LeftStripe.BorderSizePixel = 0
-	LeftStripe.ZIndex = 3
-	Instance.new("UICorner", LeftStripe).CornerRadius = UDim.new(0, 2)
-
-	local StripeGradient = Instance.new("UIGradient", LeftStripe)
-	StripeGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.Accent),
-		ColorSequenceKeypoint.new(0.5, Theme.AccentLight),
-		ColorSequenceKeypoint.new(1, Theme.AccentDim),
-	})
-	StripeGradient.Rotation = 90
+	MainStroke.Transparency = 0.2
 
 	local HeaderBg = Instance.new("Frame", MainFrame)
 	HeaderBg.Size = UDim2.new(1, 0, 0, HEADER_H)
@@ -249,20 +228,21 @@ function EvolUI.Load(config)
 
 	local HeaderFrame = Instance.new("Frame", HeaderBg)
 	HeaderFrame.Size = UDim2.new(1, -(PAD * 2), 1, 0)
-	HeaderFrame.Position = UDim2.new(0, PAD + 4, 0, 0)
+	HeaderFrame.Position = UDim2.new(0, PAD, 0, 0)
 	HeaderFrame.BackgroundTransparency = 1
 	HeaderFrame.ZIndex = 2
 
 	local TitleDot = Instance.new("Frame", HeaderFrame)
-	TitleDot.Size = UDim2.new(0, 7, 0, 7)
-	TitleDot.Position = UDim2.new(0, 0, 0, 14)
+	TitleDot.Size = UDim2.new(0, 6, 0, 6)
+	TitleDot.Position = UDim2.new(0, 0, 0, 15)
 	TitleDot.BackgroundColor3 = Theme.Accent
+	TitleDot.BackgroundTransparency = 0.15
 	TitleDot.BorderSizePixel = 0
 	Instance.new("UICorner", TitleDot).CornerRadius = UDim.new(1, 0)
 
 	local Title = Instance.new("TextLabel", HeaderFrame)
 	Title.Size = UDim2.new(0.58, 0, 0, 20)
-	Title.Position = UDim2.new(0, 12, 0, 8)
+	Title.Position = UDim2.new(0, 10, 0, 8)
 	Title.BackgroundTransparency = 1
 	Title.Text = config.Name or "EvolUI"
 	Title.TextColor3 = Theme.Text
@@ -272,9 +252,9 @@ function EvolUI.Load(config)
 
 	local TitleUnderline = Instance.new("Frame", HeaderFrame)
 	TitleUnderline.Size = UDim2.new(0, 0, 0, 2)
-	TitleUnderline.Position = UDim2.new(0, 12, 0, 28)
+	TitleUnderline.Position = UDim2.new(0, 10, 0, 28)
 	TitleUnderline.BackgroundColor3 = Theme.Accent
-	TitleUnderline.BackgroundTransparency = 0
+	TitleUnderline.BackgroundTransparency = 0.55
 	TitleUnderline.BorderSizePixel = 0
 	Instance.new("UICorner", TitleUnderline).CornerRadius = UDim.new(1, 0)
 
@@ -282,7 +262,7 @@ function EvolUI.Load(config)
 
 	local Subtitle = Instance.new("TextLabel", HeaderFrame)
 	Subtitle.Size = UDim2.new(0.58, 0, 0, 14)
-	Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Position = UDim2.new(0, 10, 0, 34)
 	Subtitle.BackgroundTransparency = 1
 	Subtitle.Text = config.Subtitle or ""
 	Subtitle.TextColor3 = Theme.Muted
@@ -454,12 +434,10 @@ function EvolUI.Load(config)
 			MainFrame.BackgroundTransparency = 1
 			TweenPlay(WindowScale, { Scale = 1 }, 0.3, Enum.EasingStyle.Quint)
 			TweenPlay(MainFrame, { BackgroundTransparency = FRAME_TRANSPARENCY }, 0.3, Enum.EasingStyle.Quint)
-			TweenPlay(Glow, { Transparency = 0.78 }, 0.3, Enum.EasingStyle.Quint)
 		else
 			visible = false
 			TweenPlay(WindowScale, { Scale = 0.94 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
 			TweenPlay(MainFrame, { BackgroundTransparency = 1 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-			TweenPlay(Glow, { Transparency = 1 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
 			task.delay(0.22, function()
 				if not visible then
 					MainFrame.Visible = false
@@ -538,10 +516,10 @@ function EvolUI.Load(config)
 	-- Title dot pulse
 	task.spawn(function()
 		while TitleDot.Parent do
-			TweenPlay(TitleDot, { BackgroundColor3 = Theme.AccentLight, Size = UDim2.new(0, 8, 0, 8) }, 1.2, Enum.EasingStyle.Sine)
-			task.wait(1.2)
-			TweenPlay(TitleDot, { BackgroundColor3 = Theme.Accent, Size = UDim2.new(0, 7, 0, 7) }, 1.2, Enum.EasingStyle.Sine)
-			task.wait(1.2)
+			TweenPlay(TitleDot, { BackgroundTransparency = 0 }, 1.4, Enum.EasingStyle.Sine)
+			task.wait(1.4)
+			TweenPlay(TitleDot, { BackgroundTransparency = 0.35 }, 1.4, Enum.EasingStyle.Sine)
+			task.wait(1.4)
 		end
 	end)
 
@@ -562,8 +540,8 @@ function EvolUI.Load(config)
 		local accent = Instance.new("Frame", holder)
 		accent.Size = UDim2.new(0, 2, 0, 10)
 		accent.Position = UDim2.new(0, 0, 1, -12)
-		accent.BackgroundColor3 = Theme.Accent
-		accent.BackgroundTransparency = 0.35
+		accent.BackgroundColor3 = Theme.Border
+		accent.BackgroundTransparency = 0.3
 		accent.BorderSizePixel = 0
 		Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
 
@@ -631,47 +609,52 @@ function EvolUI.Load(config)
 		options = options or {}
 		local style = options.Style or "Secondary"
 		local btnHeight = options.Height or (style == "Primary" and 40 or 38)
+		local isPrimary = style == "Primary"
 
 		local btn = Instance.new("TextButton", ScrollFrame)
 		btn.Size = UDim2.new(1, 0, 0, btnHeight)
-		btn.BackgroundColor3 = style == "Primary" and Theme.Accent or Theme.Surface
+		btn.BackgroundColor3 = isPrimary and Theme.Accent or Theme.Surface
 		btn.Text = options.Text or "Button"
-		btn.TextColor3 = Theme.Text
-		btn.Font = style == "Primary" and Enum.Font.GothamBold or Enum.Font.GothamMedium
+		btn.TextColor3 = isPrimary and Color3.fromRGB(255, 255, 255) or Theme.Text
+		btn.Font = isPrimary and Enum.Font.GothamBold or Enum.Font.GothamMedium
 		btn.TextSize = 12
 		btn.LayoutOrder = nextOrder()
 		btn.AutoButtonColor = false
 		btn.TextYAlignment = Enum.TextYAlignment.Center
 		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
-		if style == "Primary" then
-			local shine = Instance.new("UIGradient", btn)
-			shine.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-			})
-			shine.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 0.92),
-				NumberSequenceKeypoint.new(0.5, 0.97),
-				NumberSequenceKeypoint.new(1, 0.92),
-			})
-			shine.Rotation = 25
+		local btnStroke
+		if isPrimary then
+			btnStroke = Instance.new("UIStroke", btn)
+			btnStroke.Color = Theme.AccentLight
+			btnStroke.Thickness = 1
+			btnStroke.Transparency = 0.45
+		else
+			btnStroke = Instance.new("UIStroke", btn)
+			btnStroke.Color = Theme.Border
+			btnStroke.Thickness = 1
+			btnStroke.Transparency = 0.55
 		end
 
 		local defaultColor = btn.BackgroundColor3
 		btn.MouseEnter:Connect(function()
-			if style == "Primary" then
+			if isPrimary then
 				TweenPlay(btn, { BackgroundColor3 = Theme.AccentLight })
+				TweenPlay(btnStroke, { Transparency = 0.2 })
 			elseif btn.BackgroundColor3 == Theme.Surface then
 				TweenPlay(btn, { BackgroundColor3 = Theme.SurfaceHover })
+				TweenPlay(btnStroke, { Transparency = 0.35 })
 			end
 		end)
 		btn.MouseLeave:Connect(function()
-			if btn.BackgroundColor3 == Theme.SurfaceHover or btn.BackgroundColor3 == Theme.AccentLight then
+			if isPrimary then
 				if btn.BackgroundColor3 ~= Theme.Success and btn.BackgroundColor3 ~= Theme.Warning and btn.BackgroundColor3 ~= Theme.Danger then
 					TweenPlay(btn, { BackgroundColor3 = defaultColor })
+					TweenPlay(btnStroke, { Transparency = 0.45 })
 				end
+			elseif btn.BackgroundColor3 == Theme.SurfaceHover then
+				TweenPlay(btn, { BackgroundColor3 = Theme.Surface })
+				TweenPlay(btnStroke, { Transparency = 0.55 })
 			end
 		end)
 
