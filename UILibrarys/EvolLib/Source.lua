@@ -1,15 +1,20 @@
 --[[
 	EvolUI — Minimal UI Library
-	By EvolEzod | v1.1.0
+	By EvolEzod | v1.2.0
 
 	Usage (GitHub):
 		local EVOLUI_URL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/EvolLib/Source.lua"
 		local EvolUI = loadstring(game:HttpGet(EVOLUI_URL))()
-		local UI = EvolUI.Load({ Name = "My Script", Subtitle = "v1", ToggleKey = Enum.KeyCode.RightShift })
+		local UI = EvolUI.Load({
+			Name = "My Script",
+			Version = "v1.0",
+			Badges = { "Dev", "Beta" },
+			ToggleKey = Enum.KeyCode.RightShift,
+		})
 ]]
 
 local EvolUI = {}
-EvolUI.Version = "1.1.0"
+EvolUI.Version = "1.2.0"
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -40,23 +45,53 @@ local MODIFIER_KEYS = {
 }
 
 local DefaultTheme = {
-	Background = Color3.fromRGB(10, 10, 12),
-	Surface = Color3.fromRGB(20, 20, 24),
-	SurfaceHover = Color3.fromRGB(30, 30, 36),
-	Elevated = Color3.fromRGB(26, 26, 32),
-	HeaderTop = Color3.fromRGB(16, 16, 20),
+	Background = Color3.fromRGB(14, 14, 17),
+	Surface = Color3.fromRGB(24, 24, 29),
+	SurfaceHover = Color3.fromRGB(34, 34, 40),
+	Elevated = Color3.fromRGB(30, 30, 36),
+	HeaderTop = Color3.fromRGB(18, 18, 22),
 	Accent = Color3.fromRGB(130, 114, 245),
 	AccentLight = Color3.fromRGB(148, 134, 255),
 	AccentDim = Color3.fromRGB(90, 78, 180),
-	Text = Color3.fromRGB(240, 240, 244),
-	Muted = Color3.fromRGB(105, 105, 118),
-	Border = Color3.fromRGB(38, 38, 46),
+	Text = Color3.fromRGB(242, 242, 246),
+	Muted = Color3.fromRGB(118, 118, 130),
+	Border = Color3.fromRGB(46, 46, 54),
 	Success = Color3.fromRGB(68, 210, 148),
 	Danger = Color3.fromRGB(240, 90, 90),
 	Warning = Color3.fromRGB(248, 178, 60),
-	ActiveRow = Color3.fromRGB(26, 40, 34),
+	ActiveRow = Color3.fromRGB(28, 42, 36),
 	Info = Color3.fromRGB(96, 165, 250),
 }
+
+local BADGE_STYLES = {
+	Dev = {
+		Background = Color3.fromRGB(46, 36, 22),
+		Color = Color3.fromRGB(248, 178, 60),
+		Stroke = Color3.fromRGB(248, 178, 60),
+	},
+	Beta = {
+		Background = Color3.fromRGB(30, 28, 50),
+		Color = Color3.fromRGB(148, 134, 255),
+		Stroke = Color3.fromRGB(130, 114, 245),
+	},
+	Tester = {
+		Background = Color3.fromRGB(24, 42, 36),
+		Color = Color3.fromRGB(68, 210, 148),
+		Stroke = Color3.fromRGB(68, 210, 148),
+	},
+	Stable = {
+		Background = Color3.fromRGB(26, 30, 26),
+		Color = Color3.fromRGB(130, 200, 160),
+		Stroke = Color3.fromRGB(72, 180, 120),
+	},
+	Premium = {
+		Background = Color3.fromRGB(42, 30, 50),
+		Color = Color3.fromRGB(210, 170, 255),
+		Stroke = Color3.fromRGB(180, 130, 245),
+	},
+}
+
+local FRAME_TRANSPARENCY = 0
 
 local function Tween(obj, props, duration, style, direction)
 	return TweenService:Create(
@@ -81,6 +116,54 @@ local function MergeTheme(overrides)
 		end
 	end
 	return theme
+end
+
+local function CreateBadge(parent, badgeConfig, theme, layoutOrder)
+	local text, customBg, customColor, customStroke
+
+	if typeof(badgeConfig) == "string" then
+		text = badgeConfig
+	else
+		text = badgeConfig.Text or "Badge"
+		customBg = badgeConfig.Background
+		customColor = badgeConfig.Color
+		customStroke = badgeConfig.Stroke
+	end
+
+	local preset = BADGE_STYLES[text] or {}
+	local bg = customBg or preset.Background or theme.Surface
+	local color = customColor or preset.Color or theme.Muted
+	local stroke = customStroke or preset.Stroke or theme.Border
+
+	if not preset.Background and text:match("^v[%d%.]") then
+		bg = theme.Elevated
+		color = theme.Muted
+		stroke = theme.Border
+	end
+
+	local badge = Instance.new("TextLabel", parent)
+	badge.Size = UDim2.new(0, 0, 0, 20)
+	badge.AutomaticSize = Enum.AutomaticSize.X
+	badge.BackgroundColor3 = bg
+	badge.BackgroundTransparency = 0
+	badge.Text = text
+	badge.TextColor3 = color
+	badge.Font = Enum.Font.GothamBold
+	badge.TextSize = 9
+	badge.LayoutOrder = layoutOrder
+
+	Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 6)
+
+	local strokeObj = Instance.new("UIStroke", badge)
+	strokeObj.Color = stroke
+	strokeObj.Thickness = 1
+	strokeObj.Transparency = 0.55
+
+	local pad = Instance.new("UIPadding", badge)
+	pad.PaddingLeft = UDim.new(0, 7)
+	pad.PaddingRight = UDim.new(0, 7)
+
+	return badge
 end
 
 function EvolUI.Load(config)
@@ -114,7 +197,7 @@ function EvolUI.Load(config)
 	MainFrame.Size = UDim2.new(0, width, 0, height)
 	MainFrame.Position = config.Position or UDim2.new(0.5, -width / 2, 0.5, -height / 2)
 	MainFrame.BackgroundColor3 = Theme.Background
-	MainFrame.BackgroundTransparency = 0.04
+	MainFrame.BackgroundTransparency = FRAME_TRANSPARENCY
 	MainFrame.Active = true
 	MainFrame.ClipsDescendants = true
 	MainFrame.Parent = ScreenGui
@@ -127,12 +210,12 @@ function EvolUI.Load(config)
 	local MainStroke = Instance.new("UIStroke", MainFrame)
 	MainStroke.Color = Theme.Border
 	MainStroke.Thickness = 1
-	MainStroke.Transparency = 0.5
+	MainStroke.Transparency = 0.25
 
 	local Glow = Instance.new("UIStroke", MainFrame)
 	Glow.Color = Theme.Accent
 	Glow.Thickness = 1
-	Glow.Transparency = 0.88
+	Glow.Transparency = 0.78
 
 	local LeftStripe = Instance.new("Frame", MainFrame)
 	LeftStripe.Size = UDim2.new(0, 3, 1, -10)
@@ -153,6 +236,7 @@ function EvolUI.Load(config)
 	local HeaderBg = Instance.new("Frame", MainFrame)
 	HeaderBg.Size = UDim2.new(1, 0, 0, HEADER_H)
 	HeaderBg.BackgroundColor3 = Theme.HeaderTop
+	HeaderBg.BackgroundTransparency = 0
 	HeaderBg.BorderSizePixel = 0
 	HeaderBg.ZIndex = 1
 
@@ -177,7 +261,7 @@ function EvolUI.Load(config)
 	Instance.new("UICorner", TitleDot).CornerRadius = UDim.new(1, 0)
 
 	local Title = Instance.new("TextLabel", HeaderFrame)
-	Title.Size = UDim2.new(1, -70, 0, 20)
+	Title.Size = UDim2.new(0.58, 0, 0, 20)
 	Title.Position = UDim2.new(0, 12, 0, 8)
 	Title.BackgroundTransparency = 1
 	Title.Text = config.Name or "EvolUI"
@@ -190,14 +274,14 @@ function EvolUI.Load(config)
 	TitleUnderline.Size = UDim2.new(0, 0, 0, 2)
 	TitleUnderline.Position = UDim2.new(0, 12, 0, 28)
 	TitleUnderline.BackgroundColor3 = Theme.Accent
-	TitleUnderline.BackgroundTransparency = 0.2
+	TitleUnderline.BackgroundTransparency = 0
 	TitleUnderline.BorderSizePixel = 0
 	Instance.new("UICorner", TitleUnderline).CornerRadius = UDim.new(1, 0)
 
 	TweenPlay(TitleUnderline, { Size = UDim2.new(0, 46, 0, 2) }, 0.5, Enum.EasingStyle.Quint)
 
 	local Subtitle = Instance.new("TextLabel", HeaderFrame)
-	Subtitle.Size = UDim2.new(1, -70, 0, 14)
+	Subtitle.Size = UDim2.new(0.58, 0, 0, 14)
 	Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1
 	Subtitle.Text = config.Subtitle or ""
@@ -206,32 +290,38 @@ function EvolUI.Load(config)
 	Subtitle.TextSize = 11
 	Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 
-	local VersionBadge
-	if config.Version then
-		VersionBadge = Instance.new("TextLabel", HeaderFrame)
-		VersionBadge.AnchorPoint = Vector2.new(1, 0.5)
-		VersionBadge.Size = UDim2.new(0, 48, 0, 22)
-		VersionBadge.Position = UDim2.new(1, 0, 0.5, 0)
-		VersionBadge.BackgroundColor3 = Theme.Surface
-		VersionBadge.Text = config.Version
-		VersionBadge.TextColor3 = Theme.Muted
-		VersionBadge.Font = Enum.Font.GothamMedium
-		VersionBadge.TextSize = 10
-		Instance.new("UICorner", VersionBadge).CornerRadius = UDim.new(0, 6)
+	local HeaderControls = Instance.new("Frame", HeaderFrame)
+	HeaderControls.AnchorPoint = Vector2.new(1, 0.5)
+	HeaderControls.Position = UDim2.new(1, 0, 0.5, 0)
+	HeaderControls.Size = UDim2.new(0, 0, 0, 24)
+	HeaderControls.AutomaticSize = Enum.AutomaticSize.X
+	HeaderControls.BackgroundTransparency = 1
+
+	local controlsLayout = Instance.new("UIListLayout", HeaderControls)
+	controlsLayout.FillDirection = Enum.FillDirection.Horizontal
+	controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	controlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	controlsLayout.Padding = UDim.new(0, 4)
+	controlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local badgeOrder = 0
+	local function nextBadgeOrder()
+		badgeOrder += 1
+		return badgeOrder
 	end
 
 	local CollapseBtn
 	if config.Collapsible ~= false then
-		CollapseBtn = Instance.new("TextButton", HeaderFrame)
-		CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
+		CollapseBtn = Instance.new("TextButton", HeaderControls)
 		CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
-		CollapseBtn.Position = UDim2.new(1, config.Version and -54 or -24, 0.5, 0)
 		CollapseBtn.BackgroundColor3 = Theme.Surface
+		CollapseBtn.BackgroundTransparency = 0
 		CollapseBtn.Text = "−"
 		CollapseBtn.TextColor3 = Theme.Muted
 		CollapseBtn.Font = Enum.Font.GothamBold
 		CollapseBtn.TextSize = 14
 		CollapseBtn.AutoButtonColor = false
+		CollapseBtn.LayoutOrder = nextBadgeOrder()
 		Instance.new("UICorner", CollapseBtn).CornerRadius = UDim.new(0, 6)
 
 		CollapseBtn.MouseEnter:Connect(function()
@@ -240,6 +330,14 @@ function EvolUI.Load(config)
 		CollapseBtn.MouseLeave:Connect(function()
 			TweenPlay(CollapseBtn, { BackgroundColor3 = Theme.Surface, TextColor3 = Theme.Muted })
 		end)
+	end
+
+	if config.Version then
+		CreateBadge(HeaderControls, config.Version, Theme, nextBadgeOrder())
+	end
+
+	for _, badge in ipairs(config.Badges or {}) do
+		CreateBadge(HeaderControls, badge, Theme, nextBadgeOrder())
 	end
 
 	local HeaderDivider = Instance.new("Frame", MainFrame)
@@ -290,7 +388,7 @@ function EvolUI.Load(config)
 	Footer.TextColor3 = Theme.Muted
 	Footer.Font = Enum.Font.Gotham
 	Footer.TextSize = 10
-	Footer.TextTransparency = 0.25
+	Footer.TextTransparency = 0.1
 	Footer.ZIndex = 2
 
 	local NotifyHolder = Instance.new("Frame", ScreenGui)
@@ -345,6 +443,7 @@ function EvolUI.Load(config)
 		Title = Title,
 		Subtitle = Subtitle,
 		Footer = Footer,
+		HeaderControls = HeaderControls,
 	}
 
 	local function animateVisibility(show)
@@ -354,8 +453,8 @@ function EvolUI.Load(config)
 			WindowScale.Scale = 0.94
 			MainFrame.BackgroundTransparency = 1
 			TweenPlay(WindowScale, { Scale = 1 }, 0.3, Enum.EasingStyle.Quint)
-			TweenPlay(MainFrame, { BackgroundTransparency = 0.04 }, 0.3, Enum.EasingStyle.Quint)
-			TweenPlay(Glow, { Transparency = 0.88 }, 0.3, Enum.EasingStyle.Quint)
+			TweenPlay(MainFrame, { BackgroundTransparency = FRAME_TRANSPARENCY }, 0.3, Enum.EasingStyle.Quint)
+			TweenPlay(Glow, { Transparency = 0.78 }, 0.3, Enum.EasingStyle.Quint)
 		else
 			visible = false
 			TweenPlay(WindowScale, { Scale = 0.94 }, 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
@@ -390,6 +489,11 @@ function EvolUI.Load(config)
 	function UI:Destroy()
 		pcall(function() ContextActionService:UnbindAction(toggleActionName) end)
 		ScreenGui:Destroy()
+	end
+
+	function UI:AddBadge(badgeConfig)
+		badgeOrder += 1
+		return CreateBadge(HeaderControls, badgeConfig, Theme, badgeOrder)
 	end
 
 	local toggleKey = config.ToggleKey
@@ -428,7 +532,7 @@ function EvolUI.Load(config)
 	WindowScale.Scale = 0.94
 	task.defer(function()
 		TweenPlay(WindowScale, { Scale = 1 }, 0.35, Enum.EasingStyle.Quint)
-		TweenPlay(MainFrame, { BackgroundTransparency = 0.04 }, 0.35, Enum.EasingStyle.Quint)
+		TweenPlay(MainFrame, { BackgroundTransparency = FRAME_TRANSPARENCY }, 0.35, Enum.EasingStyle.Quint)
 	end)
 
 	-- Title dot pulse
