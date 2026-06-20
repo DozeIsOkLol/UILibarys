@@ -1,55 +1,56 @@
 --[[
 	EvolUI — Minimal UI Library
-	By EvolEzod | v1.3.0
+	By EvolEzod | v2.0.0  (Updated build)
 
 	Usage (GitHub):
 		local EVOLUI_URL = "https://raw.githubusercontent.com/DozeIsOkLol/UILibarys/refs/heads/main/UILibrarys/EvolLib/Source.lua"
 		local EvolUI = loadstring(game:HttpGet(EVOLUI_URL))()
 
-	NEW IN v1.3.0:
-		• Tab system with sidebar navigation
-		• True HSV Color Picker (hue bar + SV square + hex input + alpha)
-		• Multi-select Dropdown
-		• Paragraph / rich text widget
-		• Console / Log widget
-		• Watermark overlay
-		• Dependency system (SetVisible / Depends)
-		• Interactive Notifications with buttons
-		• Config system (Save / Load / Delete via writefile)
-		• Modifier keybind support (Ctrl+F, Shift+P, etc.)
-		• Maid cleanup on :Destroy()
-		• Theme live-refresh helpers
-		• Resizable window (ResizeHandle corner)
+	NEW IN v2.0.0:
+		• Keybind widget  (click to rebind, modifier support, display label)
+		• StatRow widget  (live-updating value display, good for kills/fps/kdr)
+		• Subtitle support in Toggle rows  (sub-text under main label)
+		• Button style "Danger"  (red accent button)
+		• Button style "Success"  (green accent button)
+		• Section() now shows a coloured left-border accent strip
+		• Tooltip support on Toggle / Slider / Button  (hover delay)
+		• Slider now supports Suffix option  (e.g. "ms", "%", "studs")
+		• Notify() now supports "Success", "Error", "Warning", "Info" icons
+		• Config system now encodes/decodes Keybind widget state
+		• Window now has a live status dot in the footer
+		• Sidebar tab icons rendered as a small accent square
+		• Minor hover/tween polish throughout
 
 	Basic Usage:
 		local UI = EvolUI.Load({
 			Name        = "My Script",
-			Version     = "v1.3.0",
+			Version     = "v2.0.0",
 			Badges      = { "Dev", "Beta" },
 			ToggleKey   = Enum.KeyCode.RightShift,
-			TabSidebar  = true,   -- enable left-sidebar tab layout
-			Resizable   = true,   -- allow corner drag to resize
-			Footer      = "EvolUI v1.3.0",
+			TabSidebar  = true,
+			Resizable   = true,
+			Footer      = "EvolUI v2.0.0",
 		})
 
 		local Combat = UI:Tab("⚔  Combat")
-		Combat:Toggle({ Text = "Aimbot", Default = false, Callback = function(v) end })
-		Combat:Slider({ Text = "FOV", Min = 1, Max = 360, Default = 90, Callback = function(v) end })
+		Combat:Toggle({ Text = "Aimbot", Sub = "Auto-aim targeting", Default = false, Callback = function(v) end })
+		Combat:Slider({ Text = "FOV", Min = 1, Max = 360, Default = 90, Suffix = "°", Callback = function(v) end })
+		Combat:Keybind({ Text = "Toggle Key", Default = Enum.KeyCode.RightShift, Callback = function(kc) end })
 
-		UI:Watermark({ Text = "EvolUI | v1.3.0" })
+		UI:Watermark({ Text = "EvolUI | v2.0.0" })
 		UI:Notify({ Title = "Loaded", Text = "Script ready!", Type = "Success" })
 ]]
 
 local EvolUI = {}
-EvolUI.Version = "1.3.0"
+EvolUI.Version = "2.0.0"
 
 -- ─── Services ────────────────────────────────────────────────────────────────
-local TweenService        = game:GetService("TweenService")
-local UserInputService    = game:GetService("UserInputService")
+local TweenService         = game:GetService("TweenService")
+local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
-local Players             = game:GetService("Players")
-local CoreGui             = game:GetService("CoreGui")
-local RunService          = game:GetService("RunService")
+local Players              = game:GetService("Players")
+local CoreGui              = game:GetService("CoreGui")
+local RunService           = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -58,7 +59,7 @@ local PAD       = 16
 local HEADER_H  = 58
 local FOOTER_H  = 30
 local CONTENT_W = 268
-local SIDEBAR_W = 110   -- tab sidebar width
+local SIDEBAR_W = 110
 
 -- ─── Modifier key set ────────────────────────────────────────────────────────
 local MODIFIER_KEYS = {
@@ -71,34 +72,56 @@ local MODIFIER_KEYS = {
 	[Enum.KeyCode.F4] = true, [Enum.KeyCode.F5] = true,
 }
 
+local KEYCODE_NAMES = {
+	[Enum.KeyCode.LeftShift]    = "LShift",   [Enum.KeyCode.RightShift]   = "RShift",
+	[Enum.KeyCode.LeftControl]  = "LCtrl",    [Enum.KeyCode.RightControl] = "RCtrl",
+	[Enum.KeyCode.LeftAlt]      = "LAlt",     [Enum.KeyCode.RightAlt]     = "RAlt",
+	[Enum.KeyCode.CapsLock]     = "CapsLock", [Enum.KeyCode.Tab]          = "Tab",
+	[Enum.KeyCode.Backspace]    = "Bksp",     [Enum.KeyCode.Delete]       = "Del",
+	[Enum.KeyCode.Insert]       = "Ins",      [Enum.KeyCode.Home]         = "Home",
+	[Enum.KeyCode.End]          = "End",      [Enum.KeyCode.PageUp]       = "PgUp",
+	[Enum.KeyCode.PageDown]     = "PgDn",     [Enum.KeyCode.Return]       = "Enter",
+	[Enum.KeyCode.Space]        = "Space",    [Enum.KeyCode.Escape]       = "Esc",
+	[Enum.KeyCode.F1]  = "F1",  [Enum.KeyCode.F2]  = "F2",  [Enum.KeyCode.F3]  = "F3",
+	[Enum.KeyCode.F4]  = "F4",  [Enum.KeyCode.F5]  = "F5",  [Enum.KeyCode.F6]  = "F6",
+	[Enum.KeyCode.F7]  = "F7",  [Enum.KeyCode.F8]  = "F8",  [Enum.KeyCode.F9]  = "F9",
+	[Enum.KeyCode.F10] = "F10", [Enum.KeyCode.F11] = "F11", [Enum.KeyCode.F12] = "F12",
+}
+
+local function KeyCodeToName(kc)
+	if KEYCODE_NAMES[kc] then return KEYCODE_NAMES[kc] end
+	local s = tostring(kc)
+	return s:match("KeyCode%.(.+)") or s
+end
+
 -- ─── Default theme ───────────────────────────────────────────────────────────
 local DefaultTheme = {
-	Background   = Color3.fromRGB(14,  14,  17),
-	Surface      = Color3.fromRGB(24,  24,  29),
-	SurfaceHover = Color3.fromRGB(34,  34,  40),
-	Elevated     = Color3.fromRGB(30,  30,  36),
-	HeaderTop    = Color3.fromRGB(18,  18,  22),
-	Accent       = Color3.fromRGB(130, 114, 245),
-	AccentLight  = Color3.fromRGB(148, 134, 255),
-	AccentDim    = Color3.fromRGB(90,  78,  180),
-	Text         = Color3.fromRGB(242, 242, 246),
-	Muted        = Color3.fromRGB(118, 118, 130),
-	Border       = Color3.fromRGB(46,  46,  54),
-	Success      = Color3.fromRGB(68,  210, 148),
-	Danger       = Color3.fromRGB(240, 90,  90),
-	Warning      = Color3.fromRGB(248, 178, 60),
-	ActiveRow    = Color3.fromRGB(28,  42,  36),
-	Info         = Color3.fromRGB(96,  165, 250),
-	Sidebar      = Color3.fromRGB(18,  18,  22),
-	SidebarItem  = Color3.fromRGB(26,  26,  32),
-	SidebarActive= Color3.fromRGB(34,  32,  54),
+	Background    = Color3.fromRGB(14,  14,  17),
+	Surface       = Color3.fromRGB(24,  24,  29),
+	SurfaceHover  = Color3.fromRGB(34,  34,  40),
+	Elevated      = Color3.fromRGB(30,  30,  36),
+	HeaderTop     = Color3.fromRGB(18,  18,  22),
+	Accent        = Color3.fromRGB(130, 114, 245),
+	AccentLight   = Color3.fromRGB(148, 134, 255),
+	AccentDim     = Color3.fromRGB(90,  78,  180),
+	Text          = Color3.fromRGB(242, 242, 246),
+	Muted         = Color3.fromRGB(118, 118, 130),
+	Border        = Color3.fromRGB(46,  46,  54),
+	Success       = Color3.fromRGB(68,  210, 148),
+	Danger        = Color3.fromRGB(240, 90,  90),
+	Warning       = Color3.fromRGB(248, 178, 60),
+	ActiveRow     = Color3.fromRGB(28,  42,  36),
+	Info          = Color3.fromRGB(96,  165, 250),
+	Sidebar       = Color3.fromRGB(18,  18,  22),
+	SidebarItem   = Color3.fromRGB(26,  26,  32),
+	SidebarActive = Color3.fromRGB(34,  32,  54),
 }
 
 local BADGE_STYLES = {
-	Dev     = { Background = Color3.fromRGB(46,36,22),  Color = Color3.fromRGB(248,178,60),  Stroke = Color3.fromRGB(248,178,60) },
+	Dev     = { Background = Color3.fromRGB(46,36,22),  Color = Color3.fromRGB(248,178,60),  Stroke = Color3.fromRGB(248,178,60)  },
 	Beta    = { Background = Color3.fromRGB(30,28,50),  Color = Color3.fromRGB(148,134,255), Stroke = Color3.fromRGB(130,114,245) },
-	Tester  = { Background = Color3.fromRGB(24,42,36),  Color = Color3.fromRGB(68,210,148),  Stroke = Color3.fromRGB(68,210,148) },
-	Stable  = { Background = Color3.fromRGB(26,30,26),  Color = Color3.fromRGB(130,200,160), Stroke = Color3.fromRGB(72,180,120) },
+	Tester  = { Background = Color3.fromRGB(24,42,36),  Color = Color3.fromRGB(68,210,148),  Stroke = Color3.fromRGB(68,210,148)  },
+	Stable  = { Background = Color3.fromRGB(26,30,26),  Color = Color3.fromRGB(130,200,160), Stroke = Color3.fromRGB(72,180,120)  },
 	Premium = { Background = Color3.fromRGB(42,30,50),  Color = Color3.fromRGB(210,170,255), Stroke = Color3.fromRGB(180,130,245) },
 }
 
@@ -156,8 +179,8 @@ local function CreateBadge(parent, badgeConfig, theme, layoutOrder)
 		text = badgeConfig
 	else
 		text = badgeConfig.Text or "Badge"
-		customBg    = badgeConfig.Background
-		customColor = badgeConfig.Color
+		customBg     = badgeConfig.Background
+		customColor  = badgeConfig.Color
 		customStroke = badgeConfig.Stroke
 	end
 	local preset = BADGE_STYLES[text] or {}
@@ -168,7 +191,7 @@ local function CreateBadge(parent, badgeConfig, theme, layoutOrder)
 		bg = theme.Elevated; color = theme.Muted; stroke = theme.Border
 	end
 	local badge = Instance.new("TextLabel", parent)
-	badge.Size = UDim2.new(0,0,0,20)
+	badge.Size = UDim2.new(0, 0, 0, 20)
 	badge.AutomaticSize = Enum.AutomaticSize.X
 	badge.BackgroundColor3 = bg
 	badge.Text = text
@@ -176,21 +199,17 @@ local function CreateBadge(parent, badgeConfig, theme, layoutOrder)
 	badge.Font = Enum.Font.GothamBold
 	badge.TextSize = 9
 	badge.LayoutOrder = layoutOrder
-	Instance.new("UICorner", badge).CornerRadius = UDim.new(0,6)
+	Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 6)
 	local s = Instance.new("UIStroke", badge)
 	s.Color = stroke; s.Thickness = 1; s.Transparency = 0.55
 	local p = Instance.new("UIPadding", badge)
-	p.PaddingLeft = UDim.new(0,7); p.PaddingRight = UDim.new(0,7)
+	p.PaddingLeft = UDim.new(0, 7); p.PaddingRight = UDim.new(0, 7)
 	return badge
 end
 
--- HSV <-> Color3 helpers
-local function Color3ToHSV(c)
-	return Color3.toHSV(c)
-end
-local function HSVToColor3(h, s, v)
-	return Color3.fromHSV(h, s, v)
-end
+-- HSV helpers
+local function Color3ToHSV(c)  return Color3.toHSV(c) end
+local function HSVToColor3(h, s, v) return Color3.fromHSV(h, s, v) end
 
 local function RGBToHex(c)
 	return string.format("%02X%02X%02X",
@@ -209,11 +228,9 @@ local function HexToColor3(hex)
 	return Color3.fromRGB(r, g, b)
 end
 
--- pcall-safe file IO (only works in exploits that expose writefile/readfile)
+-- Safe file IO (exploit env)
 local function SafeWrite(path, data)
-	pcall(function()
-		if writefile then writefile(path, data) end
-	end)
+	pcall(function() if writefile then writefile(path, data) end end)
 end
 local function SafeRead(path)
 	local ok, result = pcall(function()
@@ -223,9 +240,7 @@ local function SafeRead(path)
 	return ok and result or nil
 end
 local function SafeDelete(path)
-	pcall(function()
-		if delfile then delfile(path) end
-	end)
+	pcall(function() if delfile then delfile(path) end end)
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -234,21 +249,18 @@ end
 function EvolUI.Load(config)
 	config = config or {}
 
-	local Theme   = MergeTheme(config.Theme)
-	local useSidebar = config.TabSidebar ~= false  -- default true when tabs used
-	local width  = config.Width  or (CONTENT_W + PAD * 2)
-	local height = config.Height or 452
-	local collapsed = false
-	local visible   = true
+	local Theme      = MergeTheme(config.Theme)
+	local useSidebar = config.TabSidebar ~= false
+	local width      = config.Width  or (CONTENT_W + PAD * 2)
+	local height     = config.Height or 452
+	local collapsed  = false
+	local visible    = true
 	local globalOrder = 0
 	local toggleActionName = "EvolUI_Toggle_" .. tostring(tick()):gsub("%.", "")
 	local maid = Maid.new()
 
-	-- registered controls for config save/load
-	local configRegistry = {}   -- { id, widget, type }
-	-- registered controls for dependency links
-	-- global search index: { label=string, frame=Instance }
-	local searchIndex = {}
+	local configRegistry = {}
+	local searchIndex    = {}
 
 	local function nextOrder()
 		globalOrder += 1
@@ -287,7 +299,7 @@ function EvolUI.Load(config)
 
 	-- ── Header ──────────────────────────────────────────────────────────────
 	local HeaderBg = Instance.new("Frame", MainFrame)
-	HeaderBg.Size = UDim2.new(1,0,0,HEADER_H)
+	HeaderBg.Size = UDim2.new(1, 0, 0, HEADER_H)
 	HeaderBg.BackgroundColor3 = Theme.HeaderTop
 	HeaderBg.BorderSizePixel = 0
 	HeaderBg.ZIndex = 3
@@ -306,16 +318,16 @@ function EvolUI.Load(config)
 	HeaderFrame.ZIndex = 4
 
 	local TitleDot = Instance.new("Frame", HeaderFrame)
-	TitleDot.Size = UDim2.new(0,6,0,6)
-	TitleDot.Position = UDim2.new(0,0,0,15)
+	TitleDot.Size = UDim2.new(0, 6, 0, 6)
+	TitleDot.Position = UDim2.new(0, 0, 0, 15)
 	TitleDot.BackgroundColor3 = Theme.Accent
 	TitleDot.BackgroundTransparency = 0.15
 	TitleDot.BorderSizePixel = 0
-	Instance.new("UICorner", TitleDot).CornerRadius = UDim.new(1,0)
+	Instance.new("UICorner", TitleDot).CornerRadius = UDim.new(1, 0)
 
 	local Title = Instance.new("TextLabel", HeaderFrame)
-	Title.Size = UDim2.new(0.58,0,0,20)
-	Title.Position = UDim2.new(0,10,0,8)
+	Title.Size = UDim2.new(0.58, 0, 0, 20)
+	Title.Position = UDim2.new(0, 10, 0, 8)
 	Title.BackgroundTransparency = 1
 	Title.Text = config.Name or "EvolUI"
 	Title.TextColor3 = Theme.Text
@@ -324,17 +336,17 @@ function EvolUI.Load(config)
 	Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local TitleUnderline = Instance.new("Frame", HeaderFrame)
-	TitleUnderline.Size = UDim2.new(0,0,0,2)
-	TitleUnderline.Position = UDim2.new(0,10,0,28)
+	TitleUnderline.Size = UDim2.new(0, 0, 0, 2)
+	TitleUnderline.Position = UDim2.new(0, 10, 0, 28)
 	TitleUnderline.BackgroundColor3 = Theme.Accent
 	TitleUnderline.BackgroundTransparency = 0.55
 	TitleUnderline.BorderSizePixel = 0
-	Instance.new("UICorner", TitleUnderline).CornerRadius = UDim.new(1,0)
-	TweenPlay(TitleUnderline, { Size = UDim2.new(0,46,0,2) }, 0.5, Enum.EasingStyle.Quint)
+	Instance.new("UICorner", TitleUnderline).CornerRadius = UDim.new(1, 0)
+	TweenPlay(TitleUnderline, { Size = UDim2.new(0, 46, 0, 2) }, 0.5, Enum.EasingStyle.Quint)
 
 	local Subtitle = Instance.new("TextLabel", HeaderFrame)
-	Subtitle.Size = UDim2.new(0.58,0,0,14)
-	Subtitle.Position = UDim2.new(0,10,0,34)
+	Subtitle.Size = UDim2.new(0.58, 0, 0, 14)
+	Subtitle.Position = UDim2.new(0, 10, 0, 34)
 	Subtitle.BackgroundTransparency = 1
 	Subtitle.Text = config.Subtitle or ""
 	Subtitle.TextColor3 = Theme.Muted
@@ -343,25 +355,25 @@ function EvolUI.Load(config)
 	Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 
 	local HeaderControls = Instance.new("Frame", HeaderFrame)
-	HeaderControls.AnchorPoint = Vector2.new(1,0.5)
-	HeaderControls.Position = UDim2.new(1,0,0.5,0)
-	HeaderControls.Size = UDim2.new(0,0,0,24)
+	HeaderControls.AnchorPoint = Vector2.new(1, 0.5)
+	HeaderControls.Position = UDim2.new(1, 0, 0.5, 0)
+	HeaderControls.Size = UDim2.new(0, 0, 0, 24)
 	HeaderControls.AutomaticSize = Enum.AutomaticSize.X
 	HeaderControls.BackgroundTransparency = 1
 	local ctrlLayout = Instance.new("UIListLayout", HeaderControls)
 	ctrlLayout.FillDirection = Enum.FillDirection.Horizontal
 	ctrlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	ctrlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	ctrlLayout.Padding = UDim.new(0,4)
+	ctrlLayout.Padding = UDim.new(0, 4)
 	ctrlLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 	local badgeOrder = 0
-	local function nextBadgeOrder() badgeOrder += 1 return badgeOrder end
+	local function nextBadgeOrder() badgeOrder += 1; return badgeOrder end
 
 	local CollapseBtn
 	if config.Collapsible ~= false then
 		CollapseBtn = Instance.new("TextButton", HeaderControls)
-		CollapseBtn.Size = UDim2.new(0,24,0,24)
+		CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
 		CollapseBtn.BackgroundColor3 = Theme.Surface
 		CollapseBtn.Text = "−"
 		CollapseBtn.TextColor3 = Theme.Muted
@@ -369,7 +381,7 @@ function EvolUI.Load(config)
 		CollapseBtn.TextSize = 14
 		CollapseBtn.AutoButtonColor = false
 		CollapseBtn.LayoutOrder = nextBadgeOrder()
-		Instance.new("UICorner", CollapseBtn).CornerRadius = UDim.new(0,6)
+		Instance.new("UICorner", CollapseBtn).CornerRadius = UDim.new(0, 6)
 		maid:Add(CollapseBtn.MouseEnter:Connect(function()
 			TweenPlay(CollapseBtn, { BackgroundColor3 = Theme.SurfaceHover, TextColor3 = Theme.Text })
 		end))
@@ -393,10 +405,9 @@ function EvolUI.Load(config)
 	HeaderDivider.BorderSizePixel = 0
 	HeaderDivider.ZIndex = 3
 
-	-- ── Content area (split: optional sidebar + main scroll) ─────────────
+	-- ── Content area ─────────────────────────────────────────────────────────
 	local ContentTop = HEADER_H + 6
 
-	-- Left sidebar for tabs
 	local SidebarFrame = Instance.new("Frame", MainFrame)
 	SidebarFrame.Name = "Sidebar"
 	SidebarFrame.Size = UDim2.new(0, SIDEBAR_W, 1, -(ContentTop + FOOTER_H))
@@ -404,17 +415,17 @@ function EvolUI.Load(config)
 	SidebarFrame.BackgroundColor3 = Theme.Sidebar
 	SidebarFrame.BorderSizePixel = 0
 	SidebarFrame.ZIndex = 2
-	SidebarFrame.Visible = false  -- shown when tabs are added
+	SidebarFrame.Visible = false
 
 	local SidebarPad = Instance.new("UIPadding", SidebarFrame)
-	SidebarPad.PaddingTop = UDim.new(0,8)
-	SidebarPad.PaddingLeft = UDim.new(0,6)
-	SidebarPad.PaddingRight = UDim.new(0,6)
-	SidebarPad.PaddingBottom = UDim.new(0,8)
+	SidebarPad.PaddingTop = UDim.new(0, 8)
+	SidebarPad.PaddingLeft = UDim.new(0, 6)
+	SidebarPad.PaddingRight = UDim.new(0, 6)
+	SidebarPad.PaddingBottom = UDim.new(0, 8)
 
 	local SidebarLayout = Instance.new("UIListLayout", SidebarFrame)
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	SidebarLayout.Padding = UDim.new(0,4)
+	SidebarLayout.Padding = UDim.new(0, 4)
 
 	local SidebarDivider = Instance.new("Frame", MainFrame)
 	SidebarDivider.Size = UDim2.new(0, 1, 1, -(ContentTop + FOOTER_H))
@@ -425,7 +436,6 @@ function EvolUI.Load(config)
 	SidebarDivider.ZIndex = 2
 	SidebarDivider.Visible = false
 
-	-- Content host (tabs render here as child ScrollingFrames)
 	local ContentHost = Instance.new("Frame", MainFrame)
 	ContentHost.Name = "ContentHost"
 	ContentHost.Size = UDim2.new(1, 0, 1, -(ContentTop + FOOTER_H))
@@ -434,31 +444,29 @@ function EvolUI.Load(config)
 	ContentHost.ClipsDescendants = true
 	ContentHost.ZIndex = 2
 
-	-- Default (no-tab) scroll frame
 	local DefaultScroll = Instance.new("ScrollingFrame", ContentHost)
 	DefaultScroll.Name = "DefaultContent"
-	DefaultScroll.Size = UDim2.new(1,0,1,0)
-	DefaultScroll.Position = UDim2.new(0,0,0,0)
+	DefaultScroll.Size = UDim2.new(1, 0, 1, 0)
+	DefaultScroll.Position = UDim2.new(0, 0, 0, 0)
 	DefaultScroll.BackgroundTransparency = 1
 	DefaultScroll.BorderSizePixel = 0
 	DefaultScroll.ScrollBarThickness = 3
 	DefaultScroll.ScrollBarImageColor3 = Theme.AccentDim
 	DefaultScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	DefaultScroll.CanvasSize = UDim2.new(0,0,0,0)
+	DefaultScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 	DefaultScroll.ZIndex = 2
 
 	local DefaultLayout = Instance.new("UIListLayout", DefaultScroll)
 	DefaultLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	DefaultLayout.Padding = UDim.new(0,8)
+	DefaultLayout.Padding = UDim.new(0, 8)
 	DefaultLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 	local DefaultPad = Instance.new("UIPadding", DefaultScroll)
-	DefaultPad.PaddingTop = UDim.new(0,6)
-	DefaultPad.PaddingBottom = UDim.new(0,10)
-	DefaultPad.PaddingLeft = UDim.new(0,PAD)
-	DefaultPad.PaddingRight = UDim.new(0,PAD)
+	DefaultPad.PaddingTop = UDim.new(0, 6)
+	DefaultPad.PaddingBottom = UDim.new(0, 10)
+	DefaultPad.PaddingLeft = UDim.new(0, PAD)
+	DefaultPad.PaddingRight = UDim.new(0, PAD)
 
-	-- Active scroll frame pointer (used by widget builders)
 	local ActiveScroll = DefaultScroll
 
 	-- ── Footer ───────────────────────────────────────────────────────────────
@@ -470,16 +478,62 @@ function EvolUI.Load(config)
 	FooterDivider.BorderSizePixel = 0
 	FooterDivider.ZIndex = 2
 
-	local Footer = Instance.new("TextLabel", MainFrame)
-	Footer.Size = UDim2.new(1,0,0,FOOTER_H)
-	Footer.Position = UDim2.new(0,0,1,-FOOTER_H)
+	-- Footer frame (holds text + status dot)
+	local FooterFrame = Instance.new("Frame", MainFrame)
+	FooterFrame.Size = UDim2.new(1, 0, 0, FOOTER_H)
+	FooterFrame.Position = UDim2.new(0, 0, 1, -FOOTER_H)
+	FooterFrame.BackgroundTransparency = 1
+	FooterFrame.ZIndex = 2
+
+	local Footer = Instance.new("TextLabel", FooterFrame)
+	Footer.Size = UDim2.new(1, -60, 1, 0)
+	Footer.Position = UDim2.new(0, PAD, 0, 0)
 	Footer.BackgroundTransparency = 1
-	Footer.Text = config.Footer or ""
+	Footer.Text = config.Footer or ("EvolUI v" .. EvolUI.Version)
 	Footer.TextColor3 = Theme.Muted
 	Footer.Font = Enum.Font.Gotham
 	Footer.TextSize = 10
 	Footer.TextTransparency = 0.1
+	Footer.TextXAlignment = Enum.TextXAlignment.Left
 	Footer.ZIndex = 2
+
+	-- Status dot (right side of footer, pulses green)
+	local StatusDotFrame = Instance.new("Frame", FooterFrame)
+	StatusDotFrame.Size = UDim2.new(0, 0, 1, 0)
+	StatusDotFrame.AutomaticSize = Enum.AutomaticSize.X
+	StatusDotFrame.AnchorPoint = Vector2.new(1, 0)
+	StatusDotFrame.Position = UDim2.new(1, -PAD, 0, 0)
+	StatusDotFrame.BackgroundTransparency = 1
+	StatusDotFrame.ZIndex = 2
+	local sdLayout = Instance.new("UIListLayout", StatusDotFrame)
+	sdLayout.FillDirection = Enum.FillDirection.Horizontal
+	sdLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	sdLayout.Padding = UDim.new(0, 4)
+
+	local StatusDot = Instance.new("Frame", StatusDotFrame)
+	StatusDot.Size = UDim2.new(0, 5, 0, 5)
+	StatusDot.BackgroundColor3 = Theme.Success
+	StatusDot.BorderSizePixel = 0
+	Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+
+	local StatusLabel = Instance.new("TextLabel", StatusDotFrame)
+	StatusLabel.Size = UDim2.new(0, 0, 1, 0)
+	StatusLabel.AutomaticSize = Enum.AutomaticSize.X
+	StatusLabel.BackgroundTransparency = 1
+	StatusLabel.Text = "Ready"
+	StatusLabel.TextColor3 = Theme.Muted
+	StatusLabel.Font = Enum.Font.Gotham
+	StatusLabel.TextSize = 10
+	StatusLabel.ZIndex = 2
+
+	task.spawn(function()
+		while StatusDot.Parent do
+			TweenPlay(StatusDot, { BackgroundTransparency = 0 }, 1.2, Enum.EasingStyle.Sine)
+			task.wait(1.2)
+			TweenPlay(StatusDot, { BackgroundTransparency = 0.4 }, 1.2, Enum.EasingStyle.Sine)
+			task.wait(1.2)
+		end
+	end)
 
 	-- ── Notification holder ──────────────────────────────────────────────────
 	local NotifyHolder = Instance.new("Frame", MainFrame)
@@ -492,7 +546,7 @@ function EvolUI.Load(config)
 	NotifyHolder.ZIndex = 50
 	local NotifyLayout = Instance.new("UIListLayout", NotifyHolder)
 	NotifyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	NotifyLayout.Padding = UDim.new(0,6)
+	NotifyLayout.Padding = UDim.new(0, 6)
 	NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
 
 	-- ── Resize handle ────────────────────────────────────────────────────────
@@ -506,11 +560,10 @@ function EvolUI.Load(config)
 		ResizeHandle.Text = ""
 		ResizeHandle.AutoButtonColor = false
 		ResizeHandle.ZIndex = 10
-		Instance.new("UICorner", ResizeHandle).CornerRadius = UDim.new(0,4)
+		Instance.new("UICorner", ResizeHandle).CornerRadius = UDim.new(0, 4)
 
-		-- small grip lines
 		local grip = Instance.new("TextLabel", ResizeHandle)
-		grip.Size = UDim2.new(1,0,1,0)
+		grip.Size = UDim2.new(1, 0, 1, 0)
 		grip.BackgroundTransparency = 1
 		grip.Text = "⋱"
 		grip.TextColor3 = Theme.Muted
@@ -532,7 +585,7 @@ function EvolUI.Load(config)
 		maid:Add(UserInputService.InputChanged:Connect(function(input)
 			if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
 				local delta = input.Position - resizeStart
-				local newW = math.clamp(startSize.X + delta.X, 260, 600)
+				local newW = math.clamp(startSize.X + delta.X, 260, 700)
 				local newH = math.clamp(startSize.Y + delta.Y, 200, 700)
 				MainFrame.Size = UDim2.new(0, newW, 0, newH)
 			end
@@ -569,7 +622,7 @@ function EvolUI.Load(config)
 		end
 	end))
 
-	-- ── Title dot pulse ──────────────────────────────────────────────────────
+	-- ── Title dot pulse ───────────────────────────────────────────────────────
 	task.spawn(function()
 		while TitleDot.Parent do
 			TweenPlay(TitleDot, { BackgroundTransparency = 0 }, 1.4, Enum.EasingStyle.Sine)
@@ -585,7 +638,6 @@ function EvolUI.Load(config)
 
 	local function switchTab(tabData)
 		if activeTab == tabData then return end
-		-- hide old
 		if activeTab then
 			activeTab.ScrollFrame.Visible = false
 			TweenPlay(activeTab.SidebarBtn, {
@@ -610,20 +662,22 @@ function EvolUI.Load(config)
 
 	-- ── Main UI object ────────────────────────────────────────────────────────
 	local UI = {
-		Theme        = Theme,
-		ScreenGui    = ScreenGui,
-		Main         = MainFrame,
-		Content      = DefaultScroll,
-		Title        = Title,
-		Subtitle     = Subtitle,
-		Footer       = Footer,
+		Theme          = Theme,
+		ScreenGui      = ScreenGui,
+		Main           = MainFrame,
+		Content        = DefaultScroll,
+		TitleLabel     = Title,
+		SubtitleLabel  = Subtitle,
+		FooterLabel    = Footer,
+		StatusDot      = StatusDot,
+		StatusLabel    = StatusLabel,
 		HeaderControls = HeaderControls,
-		_maid        = maid,
-		_configReg   = configRegistry,
-		_searchIndex = searchIndex,
+		_maid          = maid,
+		_configReg     = configRegistry,
+		_searchIndex   = searchIndex,
 	}
 
-	-- ── Visibility helpers ───────────────────────────────────────────────────
+	-- ── Visibility helpers ────────────────────────────────────────────────────
 	local function animateVisibility(show)
 		if show then
 			visible = true
@@ -645,10 +699,17 @@ function EvolUI.Load(config)
 		end
 	end
 
-	function UI:Show()  animateVisibility(true)  end
-	function UI:Hide()  animateVisibility(false) end
-	function UI:Toggle() animateVisibility(not visible) end
+	function UI:Show()      animateVisibility(true)  end
+	function UI:Hide()      animateVisibility(false) end
+	function UI:Toggle()    animateVisibility(not visible) end
 	function UI:IsVisible() return visible end
+
+	function UI:SetStatus(text, color)
+		StatusLabel.Text = text or "Ready"
+		if color then
+			StatusDot.BackgroundColor3 = color
+		end
+	end
 
 	function UI:Destroy()
 		pcall(function() ContextActionService:UnbindAction(toggleActionName) end)
@@ -658,7 +719,6 @@ function EvolUI.Load(config)
 	function UI:SetTheme(overrides)
 		Theme = MergeTheme(overrides)
 		UI.Theme = Theme
-		-- live-refresh a few key surfaces
 		MainFrame.BackgroundColor3 = Theme.Background
 		HeaderBg.BackgroundColor3  = Theme.HeaderTop
 		SidebarFrame.BackgroundColor3 = Theme.Sidebar
@@ -669,11 +729,11 @@ function EvolUI.Load(config)
 		return CreateBadge(HeaderControls, badgeConfig, Theme, badgeOrder)
 	end
 
-	-- ── Toggle key (with modifier support) ───────────────────────────────────
-	local toggleKey = config.ToggleKey
-	local toggleModifier = config.ToggleModifier  -- optional e.g. Enum.KeyCode.LeftControl
-	local lastToggle = 0
-	local toggleLocked = false
+	-- ── Toggle key ────────────────────────────────────────────────────────────
+	local toggleKey      = config.ToggleKey
+	local toggleModifier = config.ToggleModifier
+	local lastToggle     = 0
+	local toggleLocked   = false
 
 	if toggleKey then
 		local function handleToggle()
@@ -720,18 +780,18 @@ function EvolUI.Load(config)
 			local targetH = collapsed and HEADER_H + 4 or fullHeight
 			TweenPlay(MainFrame, { Size = UDim2.new(0, width, 0, targetH) }, 0.28, Enum.EasingStyle.Quint)
 			task.delay(0.05, function()
-				ContentHost.Visible   = not collapsed
-				HeaderDivider.Visible = not collapsed
-				SidebarFrame.Visible  = not collapsed and #tabs > 0
+				ContentHost.Visible    = not collapsed
+				HeaderDivider.Visible  = not collapsed
+				SidebarFrame.Visible   = not collapsed and #tabs > 0
 				SidebarDivider.Visible = SidebarFrame.Visible
-				Footer.Visible       = not collapsed
-				FooterDivider.Visible = not collapsed
+				FooterFrame.Visible    = not collapsed
+				FooterDivider.Visible  = not collapsed
 			end)
 		end))
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- Shared widget builder helpers (bound to ActiveScroll dynamically)
+	-- Shared helpers
 	-- ─────────────────────────────────────────────────────────────────────────
 	local function bindButtonPress(btn)
 		local scale = Instance.new("UIScale", btn)
@@ -744,13 +804,14 @@ function EvolUI.Load(config)
 	end
 
 	local function setSwitchVisual(track, knob, isOn, animate)
-		local onColor  = Color3.fromRGB(48,72,58)
+		local onColor  = Color3.fromRGB(28, 52, 38)
 		local offColor = Theme.Elevated
-		local knobOn   = UDim2.new(1,-21,0.5,-9)
-		local knobOff  = UDim2.new(0,3,0.5,-9)
+		local knobOn   = UDim2.new(1, -21, 0.5, -9)
+		local knobOff  = UDim2.new(0, 3, 0.5, -9)
 		if animate then
 			TweenPlay(track, { BackgroundColor3 = isOn and onColor or offColor }, 0.2, Enum.EasingStyle.Quint)
-			TweenPlay(knob, { Position = isOn and knobOn or knobOff, BackgroundColor3 = isOn and Theme.Success or Theme.Muted }, 0.22, Enum.EasingStyle.Quint)
+			TweenPlay(knob,  { Position = isOn and knobOn or knobOff,
+				BackgroundColor3 = isOn and Theme.Success or Theme.Muted }, 0.22, Enum.EasingStyle.Quint)
 		else
 			track.BackgroundColor3 = isOn and onColor or offColor
 			knob.Position = isOn and knobOn or knobOff
@@ -762,16 +823,15 @@ function EvolUI.Load(config)
 	-- TAB
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Tab(name)
-		-- Show sidebar on first tab
 		if #tabs == 0 then
-			SidebarFrame.Visible = true
+			SidebarFrame.Visible   = true
 			SidebarDivider.Visible = true
-			DefaultScroll.Visible = false
+			DefaultScroll.Visible  = false
 		end
 
 		-- Sidebar button
 		local sideBtn = Instance.new("TextButton", SidebarFrame)
-		sideBtn.Size = UDim2.new(1,0,0,34)
+		sideBtn.Size = UDim2.new(1, 0, 0, 34)
 		sideBtn.BackgroundColor3 = Theme.SidebarItem
 		sideBtn.Text = name
 		sideBtn.TextColor3 = Theme.Muted
@@ -780,21 +840,20 @@ function EvolUI.Load(config)
 		sideBtn.AutoButtonColor = false
 		sideBtn.TextXAlignment = Enum.TextXAlignment.Left
 		sideBtn.LayoutOrder = #tabs + 1
-		Instance.new("UICorner", sideBtn).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", sideBtn).CornerRadius = UDim.new(0, 8)
 
 		local sidePad = Instance.new("UIPadding", sideBtn)
-		sidePad.PaddingLeft = UDim.new(0,10)
-		sidePad.PaddingRight = UDim.new(0,8)
+		sidePad.PaddingLeft = UDim.new(0, 10)
+		sidePad.PaddingRight = UDim.new(0, 8)
 
-		-- accent indicator strip
 		local indicator = Instance.new("Frame", sideBtn)
-		indicator.Size = UDim2.new(0,3,0.6,0)
-		indicator.AnchorPoint = Vector2.new(1,0.5)
-		indicator.Position = UDim2.new(1,0,0.5,0)
+		indicator.Size = UDim2.new(0, 3, 0.6, 0)
+		indicator.AnchorPoint = Vector2.new(1, 0.5)
+		indicator.Position = UDim2.new(1, 0, 0.5, 0)
 		indicator.BackgroundColor3 = Theme.Accent
 		indicator.BackgroundTransparency = 1
 		indicator.BorderSizePixel = 0
-		Instance.new("UICorner", indicator).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", indicator).CornerRadius = UDim.new(1, 0)
 
 		-- Tab scroll frame
 		local tabScroll = Instance.new("ScrollingFrame", ContentHost)
@@ -806,23 +865,23 @@ function EvolUI.Load(config)
 		tabScroll.ScrollBarThickness = 3
 		tabScroll.ScrollBarImageColor3 = Theme.AccentDim
 		tabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		tabScroll.CanvasSize = UDim2.new(0,0,0,0)
+		tabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 		tabScroll.Visible = false
 		tabScroll.ZIndex = 2
 
 		local tabLayout = Instance.new("UIListLayout", tabScroll)
 		tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		tabLayout.Padding = UDim.new(0,8)
+		tabLayout.Padding = UDim.new(0, 8)
 		tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 		local tabPad = Instance.new("UIPadding", tabScroll)
-		tabPad.PaddingTop = UDim.new(0,6)
-		tabPad.PaddingBottom = UDim.new(0,10)
-		tabPad.PaddingLeft = UDim.new(0,PAD)
-		tabPad.PaddingRight = UDim.new(0,PAD)
+		tabPad.PaddingTop = UDim.new(0, 6)
+		tabPad.PaddingBottom = UDim.new(0, 10)
+		tabPad.PaddingLeft = UDim.new(0, PAD)
+		tabPad.PaddingRight = UDim.new(0, PAD)
 
 		local tabOrder = 0
-		local function nextTabOrder() tabOrder += 1 return tabOrder end
+		local function nextTabOrder() tabOrder += 1; return tabOrder end
 
 		local tabData = {
 			Name        = name,
@@ -846,18 +905,10 @@ function EvolUI.Load(config)
 			end
 		end))
 
-		-- Auto-select first tab
-		if #tabs == 1 then
-			switchTab(tabData)
-		end
+		if #tabs == 1 then switchTab(tabData) end
 
-		-- Tab API — mirrors main UI widget API but writes into tabScroll
 		local Tab = {}
 
-		local function tabNextOrder() return nextTabOrder() end
-		local function getScroll() return tabScroll end
-
-		-- forward all shared widget methods onto tab
 		local function makeTabMethod(methodName)
 			Tab[methodName] = function(self, ...)
 				local prev = ActiveScroll
@@ -872,6 +923,7 @@ function EvolUI.Load(config)
 			"Spacer","Section","Divider","Label","Button","Toggle",
 			"ValueRow","Input","Slider","Dropdown","MultiDropdown",
 			"Grid","Progress","Paragraph","Console","ColorPicker",
+			"Keybind","StatRow","Search",
 		}) do
 			makeTabMethod(m)
 		end
@@ -884,7 +936,7 @@ function EvolUI.Load(config)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Spacer(h)
 		local s = Instance.new("Frame", ActiveScroll)
-		s.Size = UDim2.new(1,0,0,h or 10)
+		s.Size = UDim2.new(1, 0, 0, h or 10)
 		s.BackgroundTransparency = 1
 		s.LayoutOrder = nextOrder()
 		return s
@@ -892,19 +944,22 @@ function EvolUI.Load(config)
 
 	function UI:Section(text)
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,22)
+		holder.Size = UDim2.new(1, 0, 0, 24)
 		holder.BackgroundTransparency = 1
 		holder.LayoutOrder = nextOrder()
-		local accent = Instance.new("Frame", holder)
-		accent.Size = UDim2.new(0,2,0,10)
-		accent.Position = UDim2.new(0,0,1,-12)
-		accent.BackgroundColor3 = Theme.Border
-		accent.BackgroundTransparency = 0.3
-		accent.BorderSizePixel = 0
-		Instance.new("UICorner", accent).CornerRadius = UDim.new(1,0)
+
+		-- Left accent bar
+		local bar = Instance.new("Frame", holder)
+		bar.Size = UDim2.new(0, 2, 0, 12)
+		bar.Position = UDim2.new(0, 0, 1, -14)
+		bar.BackgroundColor3 = Theme.Accent
+		bar.BackgroundTransparency = 0.45
+		bar.BorderSizePixel = 0
+		Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
 		local label = Instance.new("TextLabel", holder)
-		label.Size = UDim2.new(1,-8,1,0)
-		label.Position = UDim2.new(0,8,0,0)
+		label.Size = UDim2.new(1, -8, 1, 0)
+		label.Position = UDim2.new(0, 8, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Text = string.upper(text or "")
 		label.TextColor3 = Theme.Muted
@@ -917,7 +972,7 @@ function EvolUI.Load(config)
 
 	function UI:Divider()
 		local line = Instance.new("Frame", ActiveScroll)
-		line.Size = UDim2.new(1,0,0,1)
+		line.Size = UDim2.new(1, 0, 0, 1)
 		line.BackgroundColor3 = Theme.Border
 		line.BackgroundTransparency = 0.45
 		line.BorderSizePixel = 0
@@ -927,7 +982,7 @@ function EvolUI.Load(config)
 
 	function UI:Label(text, muted)
 		local label = Instance.new("TextLabel", ActiveScroll)
-		label.Size = UDim2.new(1,0,0,18)
+		label.Size = UDim2.new(1, 0, 0, 18)
 		label.BackgroundTransparency = 1
 		label.Text = text or ""
 		label.TextColor3 = muted and Theme.Muted or Theme.Text
@@ -945,23 +1000,23 @@ function EvolUI.Load(config)
 	function UI:Paragraph(options)
 		options = options or {}
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,0)
+		holder.Size = UDim2.new(1, 0, 0, 0)
 		holder.AutomaticSize = Enum.AutomaticSize.Y
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local pad = Instance.new("UIPadding", holder)
-		pad.PaddingTop = UDim.new(0,10); pad.PaddingBottom = UDim.new(0,10)
-		pad.PaddingLeft = UDim.new(0,14); pad.PaddingRight = UDim.new(0,14)
+		pad.PaddingTop = UDim.new(0, 10); pad.PaddingBottom = UDim.new(0, 10)
+		pad.PaddingLeft = UDim.new(0, 14); pad.PaddingRight = UDim.new(0, 14)
 
 		local innerLayout = Instance.new("UIListLayout", holder)
 		innerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		innerLayout.Padding = UDim.new(0,4)
+		innerLayout.Padding = UDim.new(0, 4)
 
 		if options.Title and options.Title ~= "" then
 			local titleLbl = Instance.new("TextLabel", holder)
-			titleLbl.Size = UDim2.new(1,0,0,16)
+			titleLbl.Size = UDim2.new(1, 0, 0, 16)
 			titleLbl.BackgroundTransparency = 1
 			titleLbl.Text = options.Title
 			titleLbl.TextColor3 = Theme.Text
@@ -972,7 +1027,7 @@ function EvolUI.Load(config)
 		end
 
 		local contentLbl = Instance.new("TextLabel", holder)
-		contentLbl.Size = UDim2.new(1,0,0,0)
+		contentLbl.Size = UDim2.new(1, 0, 0, 0)
 		contentLbl.AutomaticSize = Enum.AutomaticSize.Y
 		contentLbl.BackgroundTransparency = 1
 		contentLbl.Text = options.Content or ""
@@ -998,23 +1053,23 @@ function EvolUI.Load(config)
 		local lines = {}
 
 		local outer = Instance.new("Frame", ActiveScroll)
-		outer.Size = UDim2.new(1,0,0,options.Height or 120)
-		outer.BackgroundColor3 = Color3.fromRGB(10,10,13)
+		outer.Size = UDim2.new(1, 0, 0, options.Height or 120)
+		outer.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
 		outer.LayoutOrder = nextOrder()
-		Instance.new("UICorner", outer).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", outer).CornerRadius = UDim.new(0, 10)
 
 		local outerStroke = Instance.new("UIStroke", outer)
 		outerStroke.Color = Theme.Border; outerStroke.Thickness = 1; outerStroke.Transparency = 0.35
 
-		-- title bar
 		local titleBar = Instance.new("Frame", outer)
-		titleBar.Size = UDim2.new(1,0,0,24)
-		titleBar.BackgroundColor3 = Color3.fromRGB(18,18,22)
+		titleBar.Size = UDim2.new(1, 0, 0, 24)
+		titleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 		titleBar.BorderSizePixel = 0
-		Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 10)
+
 		local titleLbl = Instance.new("TextLabel", titleBar)
-		titleLbl.Size = UDim2.new(1,-8,1,0)
-		titleLbl.Position = UDim2.new(0,8,0,0)
+		titleLbl.Size = UDim2.new(1, -8, 1, 0)
+		titleLbl.Position = UDim2.new(0, 8, 0, 0)
 		titleLbl.BackgroundTransparency = 1
 		titleLbl.Text = options.Title or "Console"
 		titleLbl.TextColor3 = Theme.Muted
@@ -1022,35 +1077,34 @@ function EvolUI.Load(config)
 		titleLbl.TextSize = 10
 		titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 
-		-- clear button
 		local clearBtn = Instance.new("TextButton", titleBar)
-		clearBtn.Size = UDim2.new(0,40,0,16)
-		clearBtn.AnchorPoint = Vector2.new(1,0.5)
-		clearBtn.Position = UDim2.new(1,-4,0.5,0)
+		clearBtn.Size = UDim2.new(0, 40, 0, 16)
+		clearBtn.AnchorPoint = Vector2.new(1, 0.5)
+		clearBtn.Position = UDim2.new(1, -4, 0.5, 0)
 		clearBtn.BackgroundColor3 = Theme.Elevated
 		clearBtn.Text = "Clear"
 		clearBtn.TextColor3 = Theme.Muted
 		clearBtn.Font = Enum.Font.GothamMedium
 		clearBtn.TextSize = 9
 		clearBtn.AutoButtonColor = false
-		Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0,4)
+		Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0, 4)
 
 		local scroll = Instance.new("ScrollingFrame", outer)
-		scroll.Size = UDim2.new(1,0,1,-24)
-		scroll.Position = UDim2.new(0,0,0,24)
+		scroll.Size = UDim2.new(1, 0, 1, -24)
+		scroll.Position = UDim2.new(0, 0, 0, 24)
 		scroll.BackgroundTransparency = 1
 		scroll.BorderSizePixel = 0
 		scroll.ScrollBarThickness = 2
 		scroll.ScrollBarImageColor3 = Theme.AccentDim
 		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		scroll.CanvasSize = UDim2.new(0,0,0,0)
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
 		local logLayout = Instance.new("UIListLayout", scroll)
 		logLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		logLayout.Padding = UDim.new(0,1)
+		logLayout.Padding = UDim.new(0, 1)
 		local logPad = Instance.new("UIPadding", scroll)
-		logPad.PaddingLeft = UDim.new(0,8); logPad.PaddingRight = UDim.new(0,8)
-		logPad.PaddingTop = UDim.new(0,4); logPad.PaddingBottom = UDim.new(0,4)
+		logPad.PaddingLeft = UDim.new(0, 8); logPad.PaddingRight = UDim.new(0, 8)
+		logPad.PaddingTop = UDim.new(0, 4); logPad.PaddingBottom = UDim.new(0, 4)
 
 		local typeColors = {
 			print   = Theme.Text,
@@ -1065,7 +1119,7 @@ function EvolUI.Load(config)
 			lineOrder += 1
 			local color = typeColors[lineType or "print"] or Theme.Text
 			local lbl = Instance.new("TextLabel", scroll)
-			lbl.Size = UDim2.new(1,0,0,0)
+			lbl.Size = UDim2.new(1, 0, 0, 0)
 			lbl.AutomaticSize = Enum.AutomaticSize.Y
 			lbl.BackgroundTransparency = 1
 			lbl.Text = text
@@ -1076,12 +1130,10 @@ function EvolUI.Load(config)
 			lbl.TextWrapped = true
 			lbl.LayoutOrder = lineOrder
 			table.insert(lines, lbl)
-			-- trim
 			if #lines > maxLines then
 				local old = table.remove(lines, 1)
 				pcall(function() old:Destroy() end)
 			end
-			-- scroll to bottom
 			task.defer(function()
 				scroll.CanvasPosition = Vector2.new(0, scroll.AbsoluteCanvasSize.Y)
 			end)
@@ -1110,43 +1162,60 @@ function EvolUI.Load(config)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Button(options)
 		options = options or {}
-		local style = options.Style or "Secondary"
-		local btnH = options.Height or (style == "Primary" and 40 or 38)
+		local style     = options.Style or "Secondary"
+		local btnH      = options.Height or (style == "Primary" and 40 or 38)
 		local isPrimary = style == "Primary"
+		local isDanger  = style == "Danger"
+		local isSuccess = style == "Success"
+
+		local bgColor, textColor, strokeColor
+		if isPrimary then
+			bgColor    = Theme.Accent
+			textColor  = Color3.fromRGB(255, 255, 255)
+			strokeColor = Theme.AccentLight
+		elseif isDanger then
+			bgColor    = Color3.fromRGB(52, 22, 22)
+			textColor  = Theme.Danger
+			strokeColor = Theme.Danger
+		elseif isSuccess then
+			bgColor    = Color3.fromRGB(22, 46, 32)
+			textColor  = Theme.Success
+			strokeColor = Theme.Success
+		else
+			bgColor    = Theme.Surface
+			textColor  = Theme.Text
+			strokeColor = Theme.Border
+		end
 
 		local btn = Instance.new("TextButton", ActiveScroll)
-		btn.Size = UDim2.new(1,0,0,btnH)
-		btn.BackgroundColor3 = isPrimary and Theme.Accent or Theme.Surface
+		btn.Size = UDim2.new(1, 0, 0, btnH)
+		btn.BackgroundColor3 = bgColor
 		btn.Text = options.Text or "Button"
-		btn.TextColor3 = isPrimary and Color3.fromRGB(255,255,255) or Theme.Text
+		btn.TextColor3 = textColor
 		btn.Font = isPrimary and Enum.Font.GothamBold or Enum.Font.GothamMedium
 		btn.TextSize = 12
 		btn.LayoutOrder = nextOrder()
 		btn.AutoButtonColor = false
 		btn.TextYAlignment = Enum.TextYAlignment.Center
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
 		local btnStroke = Instance.new("UIStroke", btn)
-		btnStroke.Color = isPrimary and Theme.AccentLight or Theme.Border
+		btnStroke.Color = strokeColor
 		btnStroke.Thickness = 1
 		btnStroke.Transparency = isPrimary and 0.45 or 0.55
 
-		local defaultColor = btn.BackgroundColor3
+		local hoverColor = isPrimary and Theme.AccentLight
+			or isDanger and Color3.fromRGB(72, 28, 28)
+			or isSuccess and Color3.fromRGB(28, 58, 38)
+			or Theme.SurfaceHover
+
 		maid:Add(btn.MouseEnter:Connect(function()
-			if isPrimary then
-				TweenPlay(btn, { BackgroundColor3 = Theme.AccentLight })
-				TweenPlay(btnStroke, { Transparency = 0.2 })
-			else
-				TweenPlay(btn, { BackgroundColor3 = Theme.SurfaceHover })
-			end
+			TweenPlay(btn, { BackgroundColor3 = hoverColor })
+			TweenPlay(btnStroke, { Transparency = 0.2 })
 		end))
 		maid:Add(btn.MouseLeave:Connect(function()
-			if isPrimary then
-				TweenPlay(btn, { BackgroundColor3 = defaultColor })
-				TweenPlay(btnStroke, { Transparency = 0.45 })
-			else
-				TweenPlay(btn, { BackgroundColor3 = Theme.Surface })
-			end
+			TweenPlay(btn, { BackgroundColor3 = bgColor })
+			TweenPlay(btnStroke, { Transparency = isPrimary and 0.45 or 0.55 })
 		end))
 
 		bindButtonPress(btn)
@@ -1158,21 +1227,21 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- TOGGLE
+	-- TOGGLE  (now supports Sub= subtitle text)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Toggle(options)
 		options = options or {}
 		local state = options.Default or false
+		local hasSub = options.Sub and options.Sub ~= ""
+		local rowH = hasSub and 50 or 42
 
 		local row = Instance.new("Frame", ActiveScroll)
-		row.Size = UDim2.new(1,0,0,42)
+		row.Size = UDim2.new(1, 0, 0, rowH)
 		row.BackgroundColor3 = Theme.Surface
 		row.LayoutOrder = nextOrder()
-		Instance.new("UICorner", row).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
 
 		local label = Instance.new("TextLabel", row)
-		label.Size = UDim2.new(1,-68,1,0)
-		label.Position = UDim2.new(0,14,0,0)
 		label.BackgroundTransparency = 1
 		label.Text = options.Text or "Toggle"
 		label.TextColor3 = Theme.Text
@@ -1181,23 +1250,41 @@ function EvolUI.Load(config)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.TextYAlignment = Enum.TextYAlignment.Center
 
+		if hasSub then
+			label.Size = UDim2.new(1, -68, 0, 18)
+			label.Position = UDim2.new(0, 14, 0, 10)
+
+			local subLabel = Instance.new("TextLabel", row)
+			subLabel.Size = UDim2.new(1, -68, 0, 14)
+			subLabel.Position = UDim2.new(0, 14, 0, 28)
+			subLabel.BackgroundTransparency = 1
+			subLabel.Text = options.Sub
+			subLabel.TextColor3 = Theme.Muted
+			subLabel.Font = Enum.Font.Gotham
+			subLabel.TextSize = 10
+			subLabel.TextXAlignment = Enum.TextXAlignment.Left
+		else
+			label.Size = UDim2.new(1, -68, 1, 0)
+			label.Position = UDim2.new(0, 14, 0, 0)
+		end
+
 		local track = Instance.new("Frame", row)
-		track.AnchorPoint = Vector2.new(1,0.5)
-		track.Size = UDim2.new(0,46,0,22)
-		track.Position = UDim2.new(1,-12,0.5,0)
+		track.AnchorPoint = Vector2.new(1, 0.5)
+		track.Size = UDim2.new(0, 46, 0, 22)
+		track.Position = UDim2.new(1, -12, 0.5, 0)
 		track.BackgroundColor3 = Theme.Elevated
 		track.BorderSizePixel = 0
-		Instance.new("UICorner", track).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
 		local knob = Instance.new("Frame", track)
-		knob.Size = UDim2.new(0,18,0,18)
-		knob.Position = UDim2.new(0,3,0.5,-9)
+		knob.Size = UDim2.new(0, 18, 0, 18)
+		knob.Position = UDim2.new(0, 3, 0.5, -9)
 		knob.BackgroundColor3 = Theme.Muted
 		knob.BorderSizePixel = 0
-		Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
 		local hitbox = Instance.new("TextButton", row)
-		hitbox.Size = UDim2.new(1,0,1,0)
+		hitbox.Size = UDim2.new(1, 0, 1, 0)
 		hitbox.BackgroundTransparency = 1
 		hitbox.Text = ""; hitbox.ZIndex = 2
 
@@ -1226,35 +1313,21 @@ function EvolUI.Load(config)
 			Row = row, Track = track, Knob = knob, Hitbox = hitbox,
 			Get = function() return state end,
 			Set = function(v) state = v and true or false; refresh(true) end,
-			SetError = function(text_, dur)
-				TweenPlay(track, { BackgroundColor3 = Color3.fromRGB(58,32,32) }, 0.15)
+			SetError = function(_, dur)
+				TweenPlay(track, { BackgroundColor3 = Color3.fromRGB(58, 32, 32) }, 0.15)
 				TweenPlay(knob,  { BackgroundColor3 = Theme.Danger }, 0.15)
 				task.delay(dur or 1.2, function() refresh(true) end)
 			end,
 			Refresh = refresh,
 		}
 
-		-- Dependency system
-		function widget:SetVisible(visible_)
-			row.Visible = visible_
-		end
+		function widget:SetVisible(visible_) row.Visible = visible_ end
 		function widget:Depends(otherWidget, invert)
-			local function update(v)
-				row.Visible = invert and not v or v
-			end
-			local origCb = options.Callback
-			options.Callback = function(v)
-				if origCb then origCb(v) end
-				-- update any dependents bound to this
-			end
-			-- Watch otherWidget
-			local origOtherCb = otherWidget.Hitbox and otherWidget.Hitbox.MouseButton1Click
-			-- Simple polling approach to keep generic
 			task.spawn(function()
 				local last
 				while row.Parent do
 					local cur = otherWidget.Get()
-					if cur ~= last then last = cur; update(cur) end
+					if cur ~= last then last = cur; row.Visible = invert and not cur or cur end
 					task.wait(0.1)
 				end
 			end)
@@ -1273,14 +1346,14 @@ function EvolUI.Load(config)
 	function UI:ValueRow(options)
 		options = options or {}
 		local row = Instance.new("Frame", ActiveScroll)
-		row.Size = UDim2.new(1,0,0,42)
+		row.Size = UDim2.new(1, 0, 0, 42)
 		row.BackgroundColor3 = Theme.Surface
 		row.LayoutOrder = nextOrder()
-		Instance.new("UICorner", row).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
 
 		local titleLabel = Instance.new("TextLabel", row)
-		titleLabel.Size = UDim2.new(1,-80,0,16)
-		titleLabel.Position = UDim2.new(0,14,0,7)
+		titleLabel.Size = UDim2.new(1, -80, 0, 16)
+		titleLabel.Position = UDim2.new(0, 14, 0, 7)
 		titleLabel.BackgroundTransparency = 1
 		titleLabel.Text = options.Title or "Value"
 		titleLabel.TextColor3 = Theme.Text
@@ -1289,8 +1362,8 @@ function EvolUI.Load(config)
 		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 		local hintLabel = Instance.new("TextLabel", row)
-		hintLabel.Size = UDim2.new(1,-80,0,12)
-		hintLabel.Position = UDim2.new(0,14,0,23)
+		hintLabel.Size = UDim2.new(1, -80, 0, 12)
+		hintLabel.Position = UDim2.new(0, 14, 0, 23)
 		hintLabel.BackgroundTransparency = 1
 		hintLabel.Text = options.Hint or ""
 		hintLabel.TextColor3 = Theme.Muted
@@ -1299,21 +1372,21 @@ function EvolUI.Load(config)
 		hintLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 		local valueLabel = Instance.new("TextLabel", row)
-		valueLabel.AnchorPoint = Vector2.new(1,0.5)
-		valueLabel.Size = UDim2.new(0,52,0,26)
-		valueLabel.Position = UDim2.new(1,-12,0.5,0)
+		valueLabel.AnchorPoint = Vector2.new(1, 0.5)
+		valueLabel.Size = UDim2.new(0, 52, 0, 26)
+		valueLabel.Position = UDim2.new(1, -12, 0.5, 0)
 		valueLabel.BackgroundColor3 = Theme.Elevated
 		valueLabel.Text = tostring(options.Value or 0)
 		valueLabel.TextColor3 = Theme.Accent
 		valueLabel.Font = Enum.Font.GothamBold
 		valueLabel.TextSize = 13
 		valueLabel.TextYAlignment = Enum.TextYAlignment.Center
-		Instance.new("UICorner", valueLabel).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", valueLabel).CornerRadius = UDim.new(0, 8)
 
 		local valueScale = Instance.new("UIScale", valueLabel)
 
 		local hitbox = Instance.new("TextButton", row)
-		hitbox.Size = UDim2.new(1,0,1,0)
+		hitbox.Size = UDim2.new(1, 0, 1, 0)
 		hitbox.BackgroundTransparency = 1
 		hitbox.Text = ""; hitbox.ZIndex = 2
 
@@ -1342,19 +1415,71 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
+	-- STAT ROW  (v2.0.0 — live display-only value, no click)
+	-- Usage: local stat = Tab:StatRow({ Text = "Kills", Value = 0, Color = Theme.Success })
+	--        stat.Set(42)
+	-- ─────────────────────────────────────────────────────────────────────────
+	function UI:StatRow(options)
+		options = options or {}
+		local row = Instance.new("Frame", ActiveScroll)
+		row.Size = UDim2.new(1, 0, 0, 42)
+		row.BackgroundColor3 = Theme.Surface
+		row.LayoutOrder = nextOrder()
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+
+		local label = Instance.new("TextLabel", row)
+		label.Size = UDim2.new(1, -80, 1, 0)
+		label.Position = UDim2.new(0, 14, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Text = options.Text or "Stat"
+		label.TextColor3 = Theme.Text
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 12
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextYAlignment = Enum.TextYAlignment.Center
+
+		local badge = Instance.new("TextLabel", row)
+		badge.AnchorPoint = Vector2.new(1, 0.5)
+		badge.Size = UDim2.new(0, 64, 0, 26)
+		badge.Position = UDim2.new(1, -12, 0.5, 0)
+		badge.BackgroundColor3 = Theme.Elevated
+		badge.Text = tostring(options.Value or 0)
+		badge.TextColor3 = options.Color or Theme.AccentLight
+		badge.Font = Enum.Font.GothamBold
+		badge.TextSize = 13
+		badge.TextYAlignment = Enum.TextYAlignment.Center
+		Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 8)
+
+		local badgeStroke = Instance.new("UIStroke", badge)
+		badgeStroke.Color = options.Color or Theme.AccentDim
+		badgeStroke.Thickness = 1
+		badgeStroke.Transparency = 0.65
+
+		return {
+			Row = row,
+			Set = function(v)
+				badge.Text = tostring(v)
+			end,
+			Get = function()
+				return badge.Text
+			end,
+		}
+	end
+
+	-- ─────────────────────────────────────────────────────────────────────────
 	-- INPUT
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Input(options)
 		options = options or {}
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,40)
+		holder.Size = UDim2.new(1, 0, 0, 40)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local box = Instance.new("TextBox", holder)
-		box.Size = UDim2.new(1,-24,1,-12)
-		box.Position = UDim2.new(0,12,0,6)
+		box.Size = UDim2.new(1, -24, 1, -12)
+		box.Position = UDim2.new(0, 12, 0, 6)
 		box.BackgroundTransparency = 1
 		box.Text = ""
 		box.PlaceholderText = options.Placeholder or "Enter text..."
@@ -1377,24 +1502,25 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- SLIDER
+	-- SLIDER  (v2.0.0: added Suffix option)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Slider(options)
 		options = options or {}
-		local min   = options.Min or 0
-		local max   = options.Max or 100
-		local step  = options.Step or 1
-		local value = options.Default or min
+		local min    = options.Min or 0
+		local max    = options.Max or 100
+		local step   = options.Step or 1
+		local value  = options.Default or min
+		local suffix = options.Suffix or ""
 
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,52)
+		holder.Size = UDim2.new(1, 0, 0, 52)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local label = Instance.new("TextLabel", holder)
-		label.Size = UDim2.new(1,-60,0,18)
-		label.Position = UDim2.new(0,14,0,8)
+		label.Size = UDim2.new(1, -64, 0, 18)
+		label.Position = UDim2.new(0, 14, 0, 8)
 		label.BackgroundTransparency = 1
 		label.Text = options.Text or "Slider"
 		label.TextColor3 = Theme.Text
@@ -1403,42 +1529,43 @@ function EvolUI.Load(config)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 
 		local valueLabel = Instance.new("TextLabel", holder)
-		valueLabel.AnchorPoint = Vector2.new(1,0)
-		valueLabel.Size = UDim2.new(0,40,0,18)
-		valueLabel.Position = UDim2.new(1,-12,0,8)
+		valueLabel.AnchorPoint = Vector2.new(1, 0)
+		valueLabel.Size = UDim2.new(0, 52, 0, 18)
+		valueLabel.Position = UDim2.new(1, -12, 0, 8)
 		valueLabel.BackgroundTransparency = 1
-		valueLabel.Text = tostring(value)
+		valueLabel.Text = tostring(value) .. suffix
 		valueLabel.TextColor3 = Theme.Accent
 		valueLabel.Font = Enum.Font.GothamBold
 		valueLabel.TextSize = 12
+		valueLabel.TextXAlignment = Enum.TextXAlignment.Right
 
 		local track = Instance.new("Frame", holder)
-		track.Size = UDim2.new(1,-28,0,6)
-		track.Position = UDim2.new(0,14,0,34)
+		track.Size = UDim2.new(1, -28, 0, 6)
+		track.Position = UDim2.new(0, 14, 0, 34)
 		track.BackgroundColor3 = Theme.Elevated
 		track.BorderSizePixel = 0
-		Instance.new("UICorner", track).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
 		local fill = Instance.new("Frame", track)
-		fill.Size = UDim2.new((value-min)/(max-min),0,1,0)
+		fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
 		fill.BackgroundColor3 = Theme.Accent
 		fill.BorderSizePixel = 0
-		Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
 		local knob = Instance.new("TextButton", track)
-		knob.AnchorPoint = Vector2.new(0.5,0.5)
-		knob.Size = UDim2.new(0,14,0,14)
-		knob.Position = UDim2.new((value-min)/(max-min),0,0.5,0)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.Size = UDim2.new(0, 14, 0, 14)
+		knob.Position = UDim2.new((value - min) / (max - min), 0, 0.5, 0)
 		knob.BackgroundColor3 = Theme.Text
 		knob.Text = ""; knob.AutoButtonColor = false
-		Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
 		local function setValue(newValue, fire)
-			value = math.clamp(math.floor((newValue-min)/step+0.5)*step+min, min, max)
-			local alpha = (value-min)/(max-min)
-			TweenPlay(fill, { Size = UDim2.new(alpha,0,1,0) }, 0.12, Enum.EasingStyle.Quint)
-			TweenPlay(knob, { Position = UDim2.new(alpha,0,0.5,0) }, 0.12, Enum.EasingStyle.Quint)
-			valueLabel.Text = tostring(value)
+			value = math.clamp(math.floor((newValue - min) / step + 0.5) * step + min, min, max)
+			local alpha = (value - min) / (max - min)
+			TweenPlay(fill, { Size = UDim2.new(alpha, 0, 1, 0) }, 0.12, Enum.EasingStyle.Quint)
+			TweenPlay(knob, { Position = UDim2.new(alpha, 0, 0.5, 0) }, 0.12, Enum.EasingStyle.Quint)
+			valueLabel.Text = tostring(value) .. suffix
 			if fire and options.Callback then options.Callback(value) end
 		end
 
@@ -1450,13 +1577,13 @@ function EvolUI.Load(config)
 		maid:Add(UserInputService.InputChanged:Connect(function(input)
 			if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
 				local rel = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-				setValue(min + (max-min)*rel, true)
+				setValue(min + (max - min) * rel, true)
 			end
 		end))
 		maid:Add(track.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				local rel = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-				setValue(min + (max-min)*rel, true)
+				setValue(min + (max - min) * rel, true)
 			end
 		end))
 
@@ -1476,25 +1603,25 @@ function EvolUI.Load(config)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Dropdown(options)
 		options = options or {}
-		local open     = false
-		local selected = options.Default or (options.Options and options.Options[1]) or ""
+		local open       = false
+		local selected   = options.Default or (options.Options and options.Options[1]) or ""
 		local optionList = options.Options or {}
 		local optionCount = #optionList
 
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,40)
+		holder.Size = UDim2.new(1, 0, 0, 40)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
 		holder.ClipsDescendants = true
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local topRow = Instance.new("Frame", holder)
-		topRow.Size = UDim2.new(1,0,0,40)
+		topRow.Size = UDim2.new(1, 0, 0, 40)
 		topRow.BackgroundTransparency = 1; topRow.ZIndex = 2
 
 		local label = Instance.new("TextLabel", topRow)
-		label.Size = UDim2.new(0.45,0,1,0)
-		label.Position = UDim2.new(0,14,0,0)
+		label.Size = UDim2.new(0.45, 0, 1, 0)
+		label.Position = UDim2.new(0, 14, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Text = options.Text or "Select"
 		label.TextColor3 = Theme.Text
@@ -1504,40 +1631,40 @@ function EvolUI.Load(config)
 		label.TextYAlignment = Enum.TextYAlignment.Center
 
 		local display = Instance.new("TextButton", topRow)
-		display.AnchorPoint = Vector2.new(1,0.5)
-		display.Size = UDim2.new(0,120,0,28)
-		display.Position = UDim2.new(1,-12,0.5,0)
+		display.AnchorPoint = Vector2.new(1, 0.5)
+		display.Size = UDim2.new(0, 120, 0, 28)
+		display.Position = UDim2.new(1, -12, 0.5, 0)
 		display.BackgroundColor3 = Theme.Elevated
 		display.Text = tostring(selected) .. "  ▾"
 		display.TextColor3 = Theme.Text
 		display.Font = Enum.Font.GothamMedium
 		display.TextSize = 11
 		display.AutoButtonColor = false; display.ZIndex = 3
-		Instance.new("UICorner", display).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", display).CornerRadius = UDim.new(0, 8)
 		local dispStroke = Instance.new("UIStroke", display)
 		dispStroke.Color = Theme.Border; dispStroke.Thickness = 1; dispStroke.Transparency = 0.45
 
 		local divider = Instance.new("Frame", holder)
-		divider.Size = UDim2.new(1,-16,0,1)
-		divider.Position = UDim2.new(0,8,0,40)
+		divider.Size = UDim2.new(1, -16, 0, 1)
+		divider.Position = UDim2.new(0, 8, 0, 40)
 		divider.BackgroundColor3 = Theme.Border; divider.BackgroundTransparency = 0.5
 		divider.BorderSizePixel = 0; divider.Visible = false; divider.ZIndex = 2
 
 		local list = Instance.new("Frame", holder)
-		list.Size = UDim2.new(1,-16,0,0)
-		list.Position = UDim2.new(0,8,0,41)
+		list.Size = UDim2.new(1, -16, 0, 0)
+		list.Position = UDim2.new(0, 8, 0, 41)
 		list.BackgroundTransparency = 1; list.Visible = false
 		list.ClipsDescendants = true; list.ZIndex = 2
 
 		local listLayout = Instance.new("UIListLayout", list)
 		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Padding = UDim.new(0,4)
+		listLayout.Padding = UDim.new(0, 4)
 		local listPad = Instance.new("UIPadding", list)
-		listPad.PaddingTop = UDim.new(0,4); listPad.PaddingBottom = UDim.new(0,6)
+		listPad.PaddingTop = UDim.new(0, 4); listPad.PaddingBottom = UDim.new(0, 6)
 
 		local function getListHeight()
 			if optionCount == 0 then return 0 end
-			return optionCount * 32 + (optionCount-1)*4 + 10
+			return optionCount * 32 + (optionCount - 1) * 4 + 10
 		end
 		local function setOpen(s)
 			open = s
@@ -1545,22 +1672,23 @@ function EvolUI.Load(config)
 			list.Visible = open and lh > 0
 			divider.Visible = list.Visible
 			display.Text = tostring(selected) .. (open and "  ▴" or "  ▾")
-			TweenPlay(list, { Size = UDim2.new(1,-16,0,lh) }, 0.2, Enum.EasingStyle.Quint)
-			TweenPlay(holder, { Size = UDim2.new(1,0,0,40+lh) }, 0.2, Enum.EasingStyle.Quint)
+			TweenPlay(list, { Size = UDim2.new(1, -16, 0, lh) }, 0.2, Enum.EasingStyle.Quint)
+			TweenPlay(holder, { Size = UDim2.new(1, 0, 0, 40 + lh) }, 0.2, Enum.EasingStyle.Quint)
 		end
 
 		for i, option in ipairs(optionList) do
 			local optBtn = Instance.new("TextButton", list)
-			optBtn.Size = UDim2.new(1,0,0,32)
+			optBtn.Size = UDim2.new(1, 0, 0, 32)
 			optBtn.BackgroundColor3 = Theme.Elevated
 			optBtn.Text = tostring(option)
 			optBtn.TextColor3 = Theme.Text
 			optBtn.Font = Enum.Font.GothamMedium
 			optBtn.TextSize = 11; optBtn.AutoButtonColor = false
 			optBtn.LayoutOrder = i
-			Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0,8)
+			Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 8)
 			local optStroke = Instance.new("UIStroke", optBtn)
 			optStroke.Color = Theme.Border; optStroke.Thickness = 1; optStroke.Transparency = 0.55
+
 			maid:Add(optBtn.MouseEnter:Connect(function()
 				TweenPlay(optBtn, { BackgroundColor3 = Theme.SurfaceHover })
 				TweenPlay(optStroke, { Color = Theme.Accent, Transparency = 0.25 })
@@ -1606,7 +1734,7 @@ function EvolUI.Load(config)
 	function UI:MultiDropdown(options)
 		options = options or {}
 		local open = false
-		local optionList = options.Options or {}
+		local optionList  = options.Options or {}
 		local optionCount = #optionList
 		local selected = {}
 		if options.Default then
@@ -1614,18 +1742,18 @@ function EvolUI.Load(config)
 		end
 
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,40)
+		holder.Size = UDim2.new(1, 0, 0, 40)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
 		holder.ClipsDescendants = true
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local topRow = Instance.new("Frame", holder)
-		topRow.Size = UDim2.new(1,0,0,40); topRow.BackgroundTransparency = 1; topRow.ZIndex = 2
+		topRow.Size = UDim2.new(1, 0, 0, 40); topRow.BackgroundTransparency = 1; topRow.ZIndex = 2
 
 		local label = Instance.new("TextLabel", topRow)
-		label.Size = UDim2.new(0.45,0,1,0)
-		label.Position = UDim2.new(0,14,0,0)
+		label.Size = UDim2.new(0.45, 0, 1, 0)
+		label.Position = UDim2.new(0, 14, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Text = options.Text or "Multi-Select"
 		label.TextColor3 = Theme.Text
@@ -1643,49 +1771,50 @@ function EvolUI.Load(config)
 		end
 
 		local display = Instance.new("TextButton", topRow)
-		display.AnchorPoint = Vector2.new(1,0.5)
-		display.Size = UDim2.new(0,120,0,28)
-		display.Position = UDim2.new(1,-12,0.5,0)
+		display.AnchorPoint = Vector2.new(1, 0.5)
+		display.Size = UDim2.new(0, 120, 0, 28)
+		display.Position = UDim2.new(1, -12, 0.5, 0)
 		display.BackgroundColor3 = Theme.Elevated
 		display.Text = selectedText()
 		display.TextColor3 = Theme.Text
 		display.Font = Enum.Font.GothamMedium
 		display.TextSize = 11; display.AutoButtonColor = false; display.ZIndex = 3
-		Instance.new("UICorner", display).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", display).CornerRadius = UDim.new(0, 8)
 
 		local list = Instance.new("Frame", holder)
-		list.Size = UDim2.new(1,-16,0,0)
-		list.Position = UDim2.new(0,8,0,41)
+		list.Size = UDim2.new(1, -16, 0, 0)
+		list.Position = UDim2.new(0, 8, 0, 41)
 		list.BackgroundTransparency = 1; list.Visible = false
 		list.ClipsDescendants = true; list.ZIndex = 2
+
 		local listLayout = Instance.new("UIListLayout", list)
 		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Padding = UDim.new(0,4)
+		listLayout.Padding = UDim.new(0, 4)
 		local listPad = Instance.new("UIPadding", list)
-		listPad.PaddingTop = UDim.new(0,4); listPad.PaddingBottom = UDim.new(0,6)
+		listPad.PaddingTop = UDim.new(0, 4); listPad.PaddingBottom = UDim.new(0, 6)
 
 		local optionBtns = {}
 		local function getListHeight()
 			if optionCount == 0 then return 0 end
-			return optionCount * 32 + (optionCount-1)*4 + 10
+			return optionCount * 32 + (optionCount - 1) * 4 + 10
 		end
 		local function setOpen(s)
 			open = s
 			local lh = open and getListHeight() or 0
 			list.Visible = open and lh > 0
 			display.Text = selectedText():gsub("▾", open and "▴" or "▾")
-			TweenPlay(list, { Size = UDim2.new(1,-16,0,lh) }, 0.2, Enum.EasingStyle.Quint)
-			TweenPlay(holder, { Size = UDim2.new(1,0,0,40+lh) }, 0.2, Enum.EasingStyle.Quint)
+			TweenPlay(list, { Size = UDim2.new(1, -16, 0, lh) }, 0.2, Enum.EasingStyle.Quint)
+			TweenPlay(holder, { Size = UDim2.new(1, 0, 0, 40 + lh) }, 0.2, Enum.EasingStyle.Quint)
 		end
 		local function refreshBtn(optBtn, option)
 			local isOn = selected[option]
-			TweenPlay(optBtn, { BackgroundColor3 = isOn and Color3.fromRGB(28,42,36) or Theme.Elevated })
+			TweenPlay(optBtn, { BackgroundColor3 = isOn and Color3.fromRGB(28, 42, 36) or Theme.Elevated })
 			optBtn.TextColor3 = isOn and Theme.Success or Theme.Text
 		end
 
 		for i, option in ipairs(optionList) do
 			local optBtn = Instance.new("TextButton", list)
-			optBtn.Size = UDim2.new(1,0,0,32)
+			optBtn.Size = UDim2.new(1, 0, 0, 32)
 			optBtn.BackgroundColor3 = Theme.Elevated
 			optBtn.Text = "  " .. tostring(option)
 			optBtn.TextColor3 = Theme.Text
@@ -1693,7 +1822,7 @@ function EvolUI.Load(config)
 			optBtn.TextSize = 11; optBtn.AutoButtonColor = false
 			optBtn.TextXAlignment = Enum.TextXAlignment.Left
 			optBtn.LayoutOrder = i
-			Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0,8)
+			Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 8)
 			table.insert(optionBtns, { btn = optBtn, option = option })
 			refreshBtn(optBtn, option)
 
@@ -1730,29 +1859,28 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- COLOR PICKER (HSV square + hue bar + alpha + hex input)
+	-- COLOR PICKER  (HSV square + hue bar + alpha bar + hex input)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:ColorPicker(options)
 		options = options or {}
-		local currentColor = options.Default or Color3.fromRGB(255,100,100)
+		local currentColor = options.Default or Color3.fromRGB(255, 100, 100)
 		local h, s, v = Color3ToHSV(currentColor)
 		local alpha = options.DefaultAlpha or 1
-		local open = false
+		local open  = false
 
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,40)
+		holder.Size = UDim2.new(1, 0, 0, 40)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
 		holder.ClipsDescendants = true
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
-		-- Top row
 		local topRow = Instance.new("Frame", holder)
-		topRow.Size = UDim2.new(1,0,0,40); topRow.BackgroundTransparency = 1; topRow.ZIndex = 2
+		topRow.Size = UDim2.new(1, 0, 0, 40); topRow.BackgroundTransparency = 1; topRow.ZIndex = 2
 
 		local rowLabel = Instance.new("TextLabel", topRow)
-		rowLabel.Size = UDim2.new(0.55,0,1,0)
-		rowLabel.Position = UDim2.new(0,14,0,0)
+		rowLabel.Size = UDim2.new(0.55, 0, 1, 0)
+		rowLabel.Position = UDim2.new(0, 14, 0, 0)
 		rowLabel.BackgroundTransparency = 1
 		rowLabel.Text = options.Text or "Color"
 		rowLabel.TextColor3 = Theme.Text
@@ -1762,34 +1890,31 @@ function EvolUI.Load(config)
 		rowLabel.TextYAlignment = Enum.TextYAlignment.Center
 
 		local swatch = Instance.new("TextButton", topRow)
-		swatch.AnchorPoint = Vector2.new(1,0.5)
-		swatch.Size = UDim2.new(0,60,0,24)
-		swatch.Position = UDim2.new(1,-12,0.5,0)
+		swatch.AnchorPoint = Vector2.new(1, 0.5)
+		swatch.Size = UDim2.new(0, 60, 0, 24)
+		swatch.Position = UDim2.new(1, -12, 0.5, 0)
 		swatch.BackgroundColor3 = currentColor
 		swatch.Text = ""
 		swatch.AutoButtonColor = false; swatch.ZIndex = 3
-		Instance.new("UICorner", swatch).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", swatch).CornerRadius = UDim.new(0, 8)
 		local swatchStroke = Instance.new("UIStroke", swatch)
 		swatchStroke.Color = Theme.Border; swatchStroke.Thickness = 1; swatchStroke.Transparency = 0.45
 
-		-- Picker panel
 		local PANEL_H = 188
+		local SQ = 140
 		local panel = Instance.new("Frame", holder)
-		panel.Size = UDim2.new(1,-16,0,0)
-		panel.Position = UDim2.new(0,8,0,44)
+		panel.Size = UDim2.new(1, -16, 0, 0)
+		panel.Position = UDim2.new(0, 8, 0, 44)
 		panel.BackgroundTransparency = 1
 		panel.Visible = false; panel.ClipsDescendants = false; panel.ZIndex = 2
 
-		-- SV Square (saturation/value)
-		local SQ = 140
 		local svFrame = Instance.new("Frame", panel)
-		svFrame.Size = UDim2.new(0,SQ,0,SQ)
-		svFrame.Position = UDim2.new(0,0,0,0)
-		svFrame.BackgroundColor3 = HSVToColor3(h,1,1)
+		svFrame.Size = UDim2.new(0, SQ, 0, SQ)
+		svFrame.Position = UDim2.new(0, 0, 0, 0)
+		svFrame.BackgroundColor3 = HSVToColor3(h, 1, 1)
 		svFrame.BorderSizePixel = 0
-		Instance.new("UICorner", svFrame).CornerRadius = UDim.new(0,6)
+		Instance.new("UICorner", svFrame).CornerRadius = UDim.new(0, 6)
 
-		-- white->transparent gradient (left saturation axis)
 		local satGrad = Instance.new("UIGradient", svFrame)
 		satGrad.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
@@ -1800,13 +1925,12 @@ function EvolUI.Load(config)
 			NumberSequenceKeypoint.new(1, 1),
 		})
 
-		-- black overlay for value axis
 		local valOverlay = Instance.new("Frame", svFrame)
-		valOverlay.Size = UDim2.new(1,0,1,0)
+		valOverlay.Size = UDim2.new(1, 0, 1, 0)
 		valOverlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
 		valOverlay.BackgroundTransparency = 0
 		valOverlay.BorderSizePixel = 0
-		Instance.new("UICorner", valOverlay).CornerRadius = UDim.new(0,6)
+		Instance.new("UICorner", valOverlay).CornerRadius = UDim.new(0, 6)
 		local valGrad = Instance.new("UIGradient", valOverlay)
 		valGrad.Rotation = 270
 		valGrad.Color = ColorSequence.new({
@@ -1818,54 +1942,50 @@ function EvolUI.Load(config)
 			NumberSequenceKeypoint.new(1, 0),
 		})
 
-		-- SV cursor
 		local svCursor = Instance.new("Frame", svFrame)
-		svCursor.Size = UDim2.new(0,10,0,10)
-		svCursor.AnchorPoint = Vector2.new(0.5,0.5)
+		svCursor.Size = UDim2.new(0, 10, 0, 10)
+		svCursor.AnchorPoint = Vector2.new(0.5, 0.5)
 		svCursor.BackgroundColor3 = Color3.fromRGB(255,255,255)
-		svCursor.BorderSizePixel = 0
-		svCursor.ZIndex = 5
-		Instance.new("UICorner", svCursor).CornerRadius = UDim.new(1,0)
+		svCursor.BorderSizePixel = 0; svCursor.ZIndex = 5
+		Instance.new("UICorner", svCursor).CornerRadius = UDim.new(1, 0)
 		local svCursorStroke = Instance.new("UIStroke", svCursor)
 		svCursorStroke.Color = Color3.fromRGB(30,30,30); svCursorStroke.Thickness = 1.5
 
-		-- Hue bar (right of SV)
 		local hueBar = Instance.new("Frame", panel)
-		hueBar.Size = UDim2.new(0,14,0,SQ)
-		hueBar.Position = UDim2.new(0,SQ+6,0,0)
+		hueBar.Size = UDim2.new(0, 14, 0, SQ)
+		hueBar.Position = UDim2.new(0, SQ + 6, 0, 0)
 		hueBar.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		hueBar.BorderSizePixel = 0
-		Instance.new("UICorner", hueBar).CornerRadius = UDim.new(0,4)
+		Instance.new("UICorner", hueBar).CornerRadius = UDim.new(0, 4)
 
 		local hueGrad = Instance.new("UIGradient", hueBar)
 		hueGrad.Rotation = 270
 		hueGrad.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0,   Color3.fromHSV(0,1,1)),
-			ColorSequenceKeypoint.new(1/6, Color3.fromHSV(1/6,1,1)),
-			ColorSequenceKeypoint.new(2/6, Color3.fromHSV(2/6,1,1)),
-			ColorSequenceKeypoint.new(3/6, Color3.fromHSV(3/6,1,1)),
-			ColorSequenceKeypoint.new(4/6, Color3.fromHSV(4/6,1,1)),
-			ColorSequenceKeypoint.new(5/6, Color3.fromHSV(5/6,1,1)),
-			ColorSequenceKeypoint.new(1,   Color3.fromHSV(1,1,1)),
+			ColorSequenceKeypoint.new(0,   Color3.fromHSV(0,   1,1)),
+			ColorSequenceKeypoint.new(1/6, Color3.fromHSV(1/6, 1,1)),
+			ColorSequenceKeypoint.new(2/6, Color3.fromHSV(2/6, 1,1)),
+			ColorSequenceKeypoint.new(3/6, Color3.fromHSV(3/6, 1,1)),
+			ColorSequenceKeypoint.new(4/6, Color3.fromHSV(4/6, 1,1)),
+			ColorSequenceKeypoint.new(5/6, Color3.fromHSV(5/6, 1,1)),
+			ColorSequenceKeypoint.new(1,   Color3.fromHSV(1,   1,1)),
 		})
 
 		local hueCursor = Instance.new("Frame", hueBar)
-		hueCursor.Size = UDim2.new(1,4,0,4)
-		hueCursor.AnchorPoint = Vector2.new(0.5,0.5)
-		hueCursor.Position = UDim2.new(0.5,0,1-h,0)
+		hueCursor.Size = UDim2.new(1, 4, 0, 4)
+		hueCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+		hueCursor.Position = UDim2.new(0.5, 0, 1 - h, 0)
 		hueCursor.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		hueCursor.BorderSizePixel = 0; hueCursor.ZIndex = 5
-		Instance.new("UICorner", hueCursor).CornerRadius = UDim.new(0,2)
+		Instance.new("UICorner", hueCursor).CornerRadius = UDim.new(0, 2)
 		local hueCursorStroke = Instance.new("UIStroke", hueCursor)
 		hueCursorStroke.Color = Color3.fromRGB(30,30,30); hueCursorStroke.Thickness = 1.5
 
-		-- Alpha bar
 		local alphaBar = Instance.new("Frame", panel)
-		alphaBar.Size = UDim2.new(0,14,0,SQ)
-		alphaBar.Position = UDim2.new(0,SQ+6+14+4,0,0)
+		alphaBar.Size = UDim2.new(0, 14, 0, SQ)
+		alphaBar.Position = UDim2.new(0, SQ + 6 + 14 + 4, 0, 0)
 		alphaBar.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		alphaBar.BorderSizePixel = 0
-		Instance.new("UICorner", alphaBar).CornerRadius = UDim.new(0,4)
+		Instance.new("UICorner", alphaBar).CornerRadius = UDim.new(0, 4)
 
 		local alphaGrad = Instance.new("UIGradient", alphaBar)
 		alphaGrad.Rotation = 270
@@ -1879,19 +1999,18 @@ function EvolUI.Load(config)
 		})
 
 		local alphaCursor = Instance.new("Frame", alphaBar)
-		alphaCursor.Size = UDim2.new(1,4,0,4)
-		alphaCursor.AnchorPoint = Vector2.new(0.5,0.5)
-		alphaCursor.Position = UDim2.new(0.5,0,1-alpha,0)
+		alphaCursor.Size = UDim2.new(1, 4, 0, 4)
+		alphaCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+		alphaCursor.Position = UDim2.new(0.5, 0, 1 - alpha, 0)
 		alphaCursor.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		alphaCursor.BorderSizePixel = 0; alphaCursor.ZIndex = 5
-		Instance.new("UICorner", alphaCursor).CornerRadius = UDim.new(0,2)
+		Instance.new("UICorner", alphaCursor).CornerRadius = UDim.new(0, 2)
 		local alphaCursorStroke = Instance.new("UIStroke", alphaCursor)
 		alphaCursorStroke.Color = Color3.fromRGB(30,30,30); alphaCursorStroke.Thickness = 1.5
 
-		-- Hex input
 		local hexBox = Instance.new("TextBox", panel)
-		hexBox.Size = UDim2.new(0,SQ,0,26)
-		hexBox.Position = UDim2.new(0,0,0,SQ+6)
+		hexBox.Size = UDim2.new(0, SQ, 0, 26)
+		hexBox.Position = UDim2.new(0, 0, 0, SQ + 6)
 		hexBox.BackgroundColor3 = Theme.Elevated
 		hexBox.Text = RGBToHex(currentColor)
 		hexBox.PlaceholderText = "RRGGBB"
@@ -1899,22 +2018,18 @@ function EvolUI.Load(config)
 		hexBox.TextColor3 = Theme.Text
 		hexBox.Font = Enum.Font.Code; hexBox.TextSize = 11
 		hexBox.ClearTextOnFocus = false
-		Instance.new("UICorner", hexBox).CornerRadius = UDim.new(0,6)
+		Instance.new("UICorner", hexBox).CornerRadius = UDim.new(0, 6)
 		local hexPad = Instance.new("UIPadding", hexBox)
-		hexPad.PaddingLeft = UDim.new(0,8)
+		hexPad.PaddingLeft = UDim.new(0, 8)
 
-		-- Preview swatch (small, in panel)
 		local previewSwatch = Instance.new("Frame", panel)
-		previewSwatch.Size = UDim2.new(0,26,0,26)
-		previewSwatch.Position = UDim2.new(0,SQ+6,0,SQ+6)
+		previewSwatch.Size = UDim2.new(0, 26, 0, 26)
+		previewSwatch.Position = UDim2.new(0, SQ + 6, 0, SQ + 6)
 		previewSwatch.BackgroundColor3 = currentColor
 		previewSwatch.BorderSizePixel = 0
-		Instance.new("UICorner", previewSwatch).CornerRadius = UDim.new(0,6)
+		Instance.new("UICorner", previewSwatch).CornerRadius = UDim.new(0, 6)
 
-		local function computeColor()
-			return HSVToColor3(h, s, v)
-		end
-
+		local function computeColor() return HSVToColor3(h, s, v) end
 		local function notifyChange()
 			currentColor = computeColor()
 			swatch.BackgroundColor3 = currentColor
@@ -1922,27 +2037,21 @@ function EvolUI.Load(config)
 			hexBox.Text = RGBToHex(currentColor)
 			if options.Callback then options.Callback(currentColor, alpha) end
 		end
-
-		local function updateSVCursor()
-			svCursor.Position = UDim2.new(s, 0, 1-v, 0)
-		end
+		local function updateSVCursor() svCursor.Position = UDim2.new(s, 0, 1 - v, 0) end
 		local function updateHueCursor()
-			hueCursor.Position = UDim2.new(0.5,0,1-h,0)
-			svFrame.BackgroundColor3 = HSVToColor3(h,1,1)
+			hueCursor.Position = UDim2.new(0.5, 0, 1 - h, 0)
+			svFrame.BackgroundColor3 = HSVToColor3(h, 1, 1)
 		end
-		local function updateAlphaCursor()
-			alphaCursor.Position = UDim2.new(0.5,0,1-alpha,0)
-		end
+		local function updateAlphaCursor() alphaCursor.Position = UDim2.new(0.5, 0, 1 - alpha, 0) end
 		updateSVCursor(); updateHueCursor(); updateAlphaCursor()
 
-		-- SV drag
 		local svDragging = false
 		maid:Add(svFrame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				svDragging = true
 				local rx = math.clamp((input.Position.X - svFrame.AbsolutePosition.X)/svFrame.AbsoluteSize.X,0,1)
 				local ry = math.clamp((input.Position.Y - svFrame.AbsolutePosition.Y)/svFrame.AbsoluteSize.Y,0,1)
-				s = rx; v = 1-ry
+				s = rx; v = 1 - ry
 				updateSVCursor(); notifyChange()
 				input.Changed:Connect(function()
 					if input.UserInputState == Enum.UserInputState.End then svDragging = false end
@@ -1953,12 +2062,11 @@ function EvolUI.Load(config)
 			if svDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 				local rx = math.clamp((input.Position.X - svFrame.AbsolutePosition.X)/svFrame.AbsoluteSize.X,0,1)
 				local ry = math.clamp((input.Position.Y - svFrame.AbsolutePosition.Y)/svFrame.AbsoluteSize.Y,0,1)
-				s = rx; v = 1-ry
+				s = rx; v = 1 - ry
 				updateSVCursor(); notifyChange()
 			end
 		end))
 
-		-- Hue drag
 		local hueDragging = false
 		maid:Add(hueBar.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1977,7 +2085,6 @@ function EvolUI.Load(config)
 			end
 		end))
 
-		-- Alpha drag
 		local alphaDragging = false
 		maid:Add(alphaBar.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1996,27 +2103,23 @@ function EvolUI.Load(config)
 			end
 		end))
 
-		-- Hex input
 		maid:Add(hexBox.FocusLost:Connect(function()
 			local c = HexToColor3(hexBox.Text)
 			if c then
-				currentColor = c
-				h, s, v = Color3ToHSV(c)
+				currentColor = c; h, s, v = Color3ToHSV(c)
 				updateSVCursor(); updateHueCursor()
-				swatch.BackgroundColor3 = c
-				previewSwatch.BackgroundColor3 = c
+				swatch.BackgroundColor3 = c; previewSwatch.BackgroundColor3 = c
 				if options.Callback then options.Callback(c, alpha) end
 			else
 				hexBox.Text = RGBToHex(currentColor)
 			end
 		end))
 
-		-- Open/close toggle
 		local function setPickerOpen(state)
 			open = state
-			local pHeight = open and (PANEL_H) or 0
+			local pHeight = open and PANEL_H or 0
 			panel.Visible = open
-			TweenPlay(holder, { Size = UDim2.new(1,0,0,40 + pHeight) }, 0.22, Enum.EasingStyle.Quint)
+			TweenPlay(holder, { Size = UDim2.new(1, 0, 0, 40 + pHeight) }, 0.22, Enum.EasingStyle.Quint)
 		end
 
 		maid:Add(swatch.MouseButton1Click:Connect(function()
@@ -2029,8 +2132,7 @@ function EvolUI.Load(config)
 				currentColor = color; alpha = a or alpha
 				h, s, v = Color3ToHSV(color)
 				updateSVCursor(); updateHueCursor(); updateAlphaCursor()
-				swatch.BackgroundColor3 = color
-				previewSwatch.BackgroundColor3 = color
+				swatch.BackgroundColor3 = color; previewSwatch.BackgroundColor3 = color
 				hexBox.Text = RGBToHex(color)
 			end,
 			Close = function() setPickerOpen(false) end,
@@ -2040,12 +2142,102 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
+	-- KEYBIND  (v2.0.0 — NEW)
+	-- Usage: local kb = Tab:Keybind({ Text = "Fly Key", Default = Enum.KeyCode.F, Callback = function(kc) end })
+	--        kb.Get() → Enum.KeyCode
+	-- ─────────────────────────────────────────────────────────────────────────
+	function UI:Keybind(options)
+		options = options or {}
+		local currentKey = options.Default or Enum.KeyCode.Unknown
+		local listening  = false
+
+		local row = Instance.new("Frame", ActiveScroll)
+		row.Size = UDim2.new(1, 0, 0, 42)
+		row.BackgroundColor3 = Theme.Surface
+		row.LayoutOrder = nextOrder()
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+
+		local label = Instance.new("TextLabel", row)
+		label.Size = UDim2.new(1, -100, 1, 0)
+		label.Position = UDim2.new(0, 14, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Text = options.Text or "Keybind"
+		label.TextColor3 = Theme.Text
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 12
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextYAlignment = Enum.TextYAlignment.Center
+
+		local keyBtn = Instance.new("TextButton", row)
+		keyBtn.AnchorPoint = Vector2.new(1, 0.5)
+		keyBtn.Size = UDim2.new(0, 76, 0, 26)
+		keyBtn.Position = UDim2.new(1, -12, 0.5, 0)
+		keyBtn.BackgroundColor3 = Theme.Elevated
+		keyBtn.Text = KeyCodeToName(currentKey)
+		keyBtn.TextColor3 = Theme.Muted
+		keyBtn.Font = Enum.Font.GothamBold
+		keyBtn.TextSize = 11
+		keyBtn.AutoButtonColor = false
+		Instance.new("UICorner", keyBtn).CornerRadius = UDim.new(0, 7)
+
+		local keyStroke = Instance.new("UIStroke", keyBtn)
+		keyStroke.Color = Theme.Border; keyStroke.Thickness = 1; keyStroke.Transparency = 0.45
+
+		local function setListening(v)
+			listening = v
+			if v then
+				keyBtn.Text = "..."
+				keyBtn.TextColor3 = Theme.AccentLight
+				TweenPlay(keyBtn, { BackgroundColor3 = Theme.SurfaceHover })
+				TweenPlay(keyStroke, { Color = Theme.Accent, Transparency = 0.15 })
+			else
+				keyBtn.Text = KeyCodeToName(currentKey)
+				keyBtn.TextColor3 = Theme.Muted
+				TweenPlay(keyBtn, { BackgroundColor3 = Theme.Elevated })
+				TweenPlay(keyStroke, { Color = Theme.Border, Transparency = 0.45 })
+			end
+		end
+
+		maid:Add(keyBtn.MouseButton1Click:Connect(function()
+			setListening(not listening)
+		end))
+
+		maid:Add(UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if not listening then return end
+			if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+			currentKey = input.KeyCode
+			setListening(false)
+			if options.Callback then options.Callback(currentKey) end
+		end))
+
+		maid:Add(row.MouseEnter:Connect(function()
+			TweenPlay(row, { BackgroundColor3 = Theme.SurfaceHover }, 0.15)
+		end))
+		maid:Add(row.MouseLeave:Connect(function()
+			TweenPlay(row, { BackgroundColor3 = Theme.Surface }, 0.15)
+		end))
+
+		local widget = {
+			Get = function() return currentKey end,
+			Set = function(kc)
+				currentKey = kc
+				if not listening then keyBtn.Text = KeyCodeToName(currentKey) end
+			end,
+		}
+		if options.Id then
+			table.insert(configRegistry, { id = options.Id, type = "Keybind", widget = widget })
+		end
+		table.insert(searchIndex, { label = options.Text or "Keybind", frame = row })
+		return widget
+	end
+
+	-- ─────────────────────────────────────────────────────────────────────────
 	-- GRID
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Grid(options)
 		options = options or {}
 		local gridFrame = Instance.new("Frame", ActiveScroll)
-		gridFrame.Size = UDim2.new(1,0,0,0)
+		gridFrame.Size = UDim2.new(1, 0, 0, 0)
 		gridFrame.AutomaticSize = Enum.AutomaticSize.Y
 		gridFrame.BackgroundTransparency = 1
 		gridFrame.LayoutOrder = nextOrder()
@@ -2064,7 +2256,7 @@ function EvolUI.Load(config)
 			pBtn.Text = text; pBtn.TextColor3 = Theme.Muted
 			pBtn.Font = Enum.Font.GothamMedium; pBtn.TextSize = 11
 			pBtn.AutoButtonColor = false
-			Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0,8)
+			Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 8)
 			local stroke = Instance.new("UIStroke", pBtn)
 			stroke.Color = Theme.Border; stroke.Thickness = 1; stroke.Transparency = 0.4
 			local btnScale = Instance.new("UIScale", pBtn)
@@ -2106,32 +2298,36 @@ function EvolUI.Load(config)
 		options = options or {}
 		local value = math.clamp(options.Value or 0, 0, 1)
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,34)
+		holder.Size = UDim2.new(1, 0, 0, 34)
 		holder.BackgroundTransparency = 1; holder.LayoutOrder = nextOrder()
+
 		local label = Instance.new("TextLabel", holder)
-		label.Size = UDim2.new(1,0,0,14)
+		label.Size = UDim2.new(1, 0, 0, 14)
 		label.BackgroundTransparency = 1; label.Text = options.Text or "Progress"
 		label.TextColor3 = Theme.Muted; label.Font = Enum.Font.Gotham; label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
+
 		local track = Instance.new("Frame", holder)
-		track.Size = UDim2.new(1,0,0,6); track.Position = UDim2.new(0,0,0,20)
+		track.Size = UDim2.new(1, 0, 0, 6); track.Position = UDim2.new(0, 0, 0, 20)
 		track.BackgroundColor3 = Theme.Elevated; track.BorderSizePixel = 0
-		Instance.new("UICorner", track).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
 		local fill = Instance.new("Frame", track)
-		fill.Size = UDim2.new(value,0,1,0)
+		fill.Size = UDim2.new(value, 0, 1, 0)
 		fill.BackgroundColor3 = Theme.Accent; fill.BorderSizePixel = 0
-		Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
 		return {
 			Set = function(newVal)
 				value = math.clamp(newVal, 0, 1)
-				TweenPlay(fill, { Size = UDim2.new(value,0,1,0) }, 0.25, Enum.EasingStyle.Quint)
+				TweenPlay(fill, { Size = UDim2.new(value, 0, 1, 0) }, 0.25, Enum.EasingStyle.Quint)
 			end,
 			Get = function() return value end,
 		}
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- NOTIFY (with optional action buttons)
+	-- NOTIFY  (with optional action buttons)
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Notify(options)
 		options = options or {}
@@ -2140,79 +2336,78 @@ function EvolUI.Load(config)
 		local buttons    = options.Buttons or {}
 
 		local palette = {
-			Success = { accent = Theme.Success, bg = Color3.fromRGB(22,36,30), icon = "✓", title = "Success" },
-			Error   = { accent = Theme.Danger,  bg = Color3.fromRGB(38,22,24), icon = "✕", title = "Error" },
-			Warning = { accent = Theme.Warning, bg = Color3.fromRGB(38,32,20), icon = "!",  title = "Warning" },
-			Info    = { accent = Theme.Info,    bg = Color3.fromRGB(22,28,38), icon = "i",  title = "Info" },
+			Success = { accent = Theme.Success, bg = Color3.fromRGB(16, 34, 26), icon = "✓" },
+			Error   = { accent = Theme.Danger,  bg = Color3.fromRGB(38, 16, 16), icon = "✕" },
+			Warning = { accent = Theme.Warning, bg = Color3.fromRGB(38, 28, 14), icon = "!" },
+			Info    = { accent = Theme.Info,    bg = Color3.fromRGB(16, 26, 38), icon = "i" },
 		}
-		local style    = palette[notifyType] or palette.Info
-		local titleText = options.Title or style.title
-		local bodyText  = options.Text or options.Description or "Notification"
+		local style     = palette[notifyType] or palette.Info
+		local titleText = options.Title or notifyType
+		local bodyText  = options.Text or options.Description or ""
 
 		local toast = Instance.new("Frame", NotifyHolder)
-		toast.Size = UDim2.new(1,0,0,0)
+		toast.Size = UDim2.new(1, 0, 0, 0)
 		toast.AutomaticSize = Enum.AutomaticSize.Y
 		toast.BackgroundColor3 = style.bg
 		toast.BackgroundTransparency = 1
 		toast.LayoutOrder = math.floor(tick() * 1000)
-		Instance.new("UICorner", toast).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 10)
 		local toastStroke = Instance.new("UIStroke", toast)
 		toastStroke.Color = style.accent; toastStroke.Thickness = 1; toastStroke.Transparency = 0.55
 
 		local accentBar = Instance.new("Frame", toast)
-		accentBar.Size = UDim2.new(0,4,1,-8)
-		accentBar.Position = UDim2.new(0,0,0,4)
+		accentBar.Size = UDim2.new(0, 4, 1, -8)
+		accentBar.Position = UDim2.new(0, 0, 0, 4)
 		accentBar.BackgroundColor3 = style.accent; accentBar.BorderSizePixel = 0
-		Instance.new("UICorner", accentBar).CornerRadius = UDim.new(0,2)
+		Instance.new("UICorner", accentBar).CornerRadius = UDim.new(0, 2)
 
 		local icon = Instance.new("TextLabel", toast)
-		icon.Size = UDim2.new(0,22,0,22)
-		icon.Position = UDim2.new(0,12,0,10)
+		icon.Size = UDim2.new(0, 22, 0, 22)
+		icon.Position = UDim2.new(0, 12, 0, 10)
 		icon.BackgroundColor3 = style.accent; icon.BackgroundTransparency = 0.82
 		icon.Text = style.icon; icon.TextColor3 = style.accent
 		icon.Font = Enum.Font.GothamBold; icon.TextSize = 12
-		Instance.new("UICorner", icon).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", icon).CornerRadius = UDim.new(1, 0)
 
 		local titleLbl = Instance.new("TextLabel", toast)
-		titleLbl.Size = UDim2.new(1,-52,0,16)
-		titleLbl.Position = UDim2.new(0,40,0,8)
+		titleLbl.Size = UDim2.new(1, -52, 0, 16)
+		titleLbl.Position = UDim2.new(0, 40, 0, 8)
 		titleLbl.BackgroundTransparency = 1
 		titleLbl.Text = titleText; titleLbl.TextColor3 = Theme.Text; titleLbl.TextTransparency = 1
 		titleLbl.Font = Enum.Font.GothamBold; titleLbl.TextSize = 12; titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 
 		local textLbl = Instance.new("TextLabel", toast)
-		textLbl.Size = UDim2.new(1,-52,0,0)
-		textLbl.Position = UDim2.new(0,40,0,24)
+		textLbl.Size = UDim2.new(1, -52, 0, 0)
+		textLbl.Position = UDim2.new(0, 40, 0, 24)
 		textLbl.AutomaticSize = Enum.AutomaticSize.Y
 		textLbl.BackgroundTransparency = 1
 		textLbl.Text = bodyText; textLbl.TextColor3 = Theme.Muted; textLbl.TextTransparency = 1
 		textLbl.Font = Enum.Font.Gotham; textLbl.TextSize = 11
 		textLbl.TextWrapped = true; textLbl.TextXAlignment = Enum.TextXAlignment.Left
 
-		-- Action buttons
 		if #buttons > 0 then
 			local btnHolder = Instance.new("Frame", toast)
-			btnHolder.Size = UDim2.new(1,-52,0,28)
-			btnHolder.Position = UDim2.new(0,40,0,44)
+			btnHolder.Size = UDim2.new(1, -52, 0, 28)
+			btnHolder.Position = UDim2.new(0, 40, 0, 44)
 			btnHolder.BackgroundTransparency = 1
 			local btnLayout = Instance.new("UIListLayout", btnHolder)
 			btnLayout.FillDirection = Enum.FillDirection.Horizontal
-			btnLayout.Padding = UDim.new(0,6)
+			btnLayout.Padding = UDim.new(0, 6)
 			btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 			for i, btnDef in ipairs(buttons) do
 				local label_, cb = btnDef[1], btnDef[2]
 				local actionBtn = Instance.new("TextButton", btnHolder)
-				actionBtn.Size = UDim2.new(0,0,1,0)
+				actionBtn.Size = UDim2.new(0, 0, 1, 0)
 				actionBtn.AutomaticSize = Enum.AutomaticSize.X
 				actionBtn.BackgroundColor3 = i == 1 and style.accent or Theme.Elevated
 				actionBtn.Text = label_
 				actionBtn.TextColor3 = Color3.fromRGB(255,255,255)
 				actionBtn.Font = Enum.Font.GothamMedium; actionBtn.TextSize = 11
 				actionBtn.AutoButtonColor = false; actionBtn.LayoutOrder = i
-				Instance.new("UICorner", actionBtn).CornerRadius = UDim.new(0,6)
+				Instance.new("UICorner", actionBtn).CornerRadius = UDim.new(0, 6)
 				local aPad = Instance.new("UIPadding", actionBtn)
-				aPad.PaddingLeft = UDim.new(0,8); aPad.PaddingRight = UDim.new(0,8)
+				aPad.PaddingLeft = UDim.new(0, 8); aPad.PaddingRight = UDim.new(0, 8)
 				actionBtn.MouseButton1Click:Connect(function()
 					if cb then pcall(cb) end
 					pcall(function() toast:Destroy() end)
@@ -2220,28 +2415,27 @@ function EvolUI.Load(config)
 			end
 		end
 
-		-- Progress bar
 		local progressTrack = Instance.new("Frame", toast)
-		progressTrack.AnchorPoint = Vector2.new(0,1)
-		progressTrack.Size = UDim2.new(1,-12,0,2)
-		progressTrack.Position = UDim2.new(0,6,1,-4)
+		progressTrack.AnchorPoint = Vector2.new(0, 1)
+		progressTrack.Size = UDim2.new(1, -12, 0, 2)
+		progressTrack.Position = UDim2.new(0, 6, 1, -4)
 		progressTrack.BackgroundColor3 = Theme.Elevated; progressTrack.BackgroundTransparency = 0.35
 		progressTrack.BorderSizePixel = 0
-		Instance.new("UICorner", progressTrack).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", progressTrack).CornerRadius = UDim.new(1, 0)
 		local progressFill = Instance.new("Frame", progressTrack)
-		progressFill.Size = UDim2.new(1,0,1,0); progressFill.BackgroundColor3 = style.accent; progressFill.BorderSizePixel = 0
-		Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1,0)
+		progressFill.Size = UDim2.new(1, 0, 1, 0); progressFill.BackgroundColor3 = style.accent; progressFill.BorderSizePixel = 0
+		Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
 
 		local pad = Instance.new("UIPadding", toast)
-		pad.PaddingTop = UDim.new(0,8); pad.PaddingBottom = UDim.new(0,12); pad.PaddingRight = UDim.new(0,10)
+		pad.PaddingTop = UDim.new(0, 8); pad.PaddingBottom = UDim.new(0, 12); pad.PaddingRight = UDim.new(0, 10)
 
 		local toastScale = Instance.new("UIScale", toast); toastScale.Scale = 0.92
 
 		TweenPlay(toastScale, { Scale = 1 }, 0.28, Enum.EasingStyle.Quint)
-		TweenPlay(toast,    { BackgroundTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
-		TweenPlay(titleLbl, { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
-		TweenPlay(textLbl,  { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
-		TweenPlay(progressFill, { Size = UDim2.new(0,0,1,0) }, duration, Enum.EasingStyle.Linear)
+		TweenPlay(toast,     { BackgroundTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(titleLbl,  { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(textLbl,   { TextTransparency = 0 }, 0.28, Enum.EasingStyle.Quint)
+		TweenPlay(progressFill, { Size = UDim2.new(0, 0, 1, 0) }, duration, Enum.EasingStyle.Linear)
 
 		task.delay(duration, function()
 			if not toast.Parent then return end
@@ -2269,35 +2463,34 @@ function EvolUI.Load(config)
 		maid:Add(wmGui)
 
 		local wmFrame = Instance.new("Frame", wmGui)
-		wmFrame.Size = UDim2.new(0,0,0,28)
+		wmFrame.Size = UDim2.new(0, 0, 0, 28)
 		wmFrame.AutomaticSize = Enum.AutomaticSize.X
 		wmFrame.Position = options.Position or UDim2.new(0, 12, 0, 12)
 		wmFrame.BackgroundColor3 = Theme.Surface
 		wmFrame.BackgroundTransparency = 0.1
-		Instance.new("UICorner", wmFrame).CornerRadius = UDim.new(0,8)
+		Instance.new("UICorner", wmFrame).CornerRadius = UDim.new(0, 8)
 		local wmStroke = Instance.new("UIStroke", wmFrame)
 		wmStroke.Color = Theme.Border; wmStroke.Thickness = 1; wmStroke.Transparency = 0.4
 		local wmPad = Instance.new("UIPadding", wmFrame)
-		wmPad.PaddingLeft = UDim.new(0,10); wmPad.PaddingRight = UDim.new(0,10)
+		wmPad.PaddingLeft = UDim.new(0, 10); wmPad.PaddingRight = UDim.new(0, 10)
 
 		local wmDot = Instance.new("Frame", wmFrame)
-		wmDot.Size = UDim2.new(0,5,0,5)
-		wmDot.Position = UDim2.new(0,0,0.5,-2.5)
+		wmDot.Size = UDim2.new(0, 5, 0, 5)
+		wmDot.Position = UDim2.new(0, 0, 0.5, -2.5)
 		wmDot.BackgroundColor3 = Theme.Accent
 		wmDot.BorderSizePixel = 0
-		Instance.new("UICorner", wmDot).CornerRadius = UDim.new(1,0)
+		Instance.new("UICorner", wmDot).CornerRadius = UDim.new(1, 0)
 
 		local wmLabel = Instance.new("TextLabel", wmFrame)
-		wmLabel.Size = UDim2.new(0,0,1,0)
+		wmLabel.Size = UDim2.new(0, 0, 1, 0)
 		wmLabel.AutomaticSize = Enum.AutomaticSize.X
-		wmLabel.Position = UDim2.new(0,10,0,0)
+		wmLabel.Position = UDim2.new(0, 10, 0, 0)
 		wmLabel.BackgroundTransparency = 1
 		wmLabel.Text = options.Text or "EvolUI"
 		wmLabel.TextColor3 = Theme.Text
 		wmLabel.Font = Enum.Font.GothamMedium
 		wmLabel.TextSize = 11
 
-		-- Drag watermark
 		local wmDragging, wmDragStart, wmStartPos = false, nil, nil
 		wmFrame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -2310,11 +2503,10 @@ function EvolUI.Load(config)
 		UserInputService.InputChanged:Connect(function(input)
 			if wmDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 				local d = input.Position - wmDragStart
-				wmFrame.Position = UDim2.new(wmStartPos.X.Scale, wmStartPos.X.Offset+d.X, wmStartPos.Y.Scale, wmStartPos.Y.Offset+d.Y)
+				wmFrame.Position = UDim2.new(wmStartPos.X.Scale, wmStartPos.X.Offset + d.X, wmStartPos.Y.Scale, wmStartPos.Y.Offset + d.Y)
 			end
 		end)
 
-		-- Dot pulse
 		task.spawn(function()
 			while wmDot.Parent do
 				TweenPlay(wmDot, { BackgroundTransparency = 0 }, 1.2, Enum.EasingStyle.Sine)
@@ -2325,14 +2517,14 @@ function EvolUI.Load(config)
 		end)
 
 		return {
-			SetText = function(text) wmLabel.Text = text end,
+			SetText    = function(text) wmLabel.Text = text end,
 			SetVisible = function(v_) wmGui.Enabled = v_ end,
-			Destroy = function() wmGui:Destroy() end,
+			Destroy    = function() wmGui:Destroy() end,
 		}
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- CONFIG SYSTEM (requires writefile / readfile in exploit env)
+	-- CONFIG SYSTEM
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:Config()
 		local configApi = {}
@@ -2352,9 +2544,10 @@ function EvolUI.Load(config)
 					data[entry.id] = entry.widget.Get()
 				elseif t == "Dropdown" then
 					data[entry.id] = entry.widget.Get()
+				elseif t == "Keybind" then
+					data[entry.id] = tostring(entry.widget.Get())
 				end
 			end
-			-- naive JSON encode
 			local parts = {}
 			for k, v in pairs(data) do
 				local val
@@ -2369,7 +2562,6 @@ function EvolUI.Load(config)
 		function configApi:Load(name)
 			local raw = SafeRead(getPath(name))
 			if not raw then return false end
-			-- naive JSON decode
 			for k, v in raw:gmatch('"([^"]+)":([^,}]+)') do
 				for _, entry in ipairs(configRegistry) do
 					if entry.id == k then
@@ -2380,6 +2572,10 @@ function EvolUI.Load(config)
 							entry.widget.Set(tonumber(v))
 						elseif t == "Dropdown" then
 							entry.widget.Set(v:gsub('^"', ''):gsub('"$', ''))
+						elseif t == "Keybind" then
+							local kcName = v:gsub('^"', ''):gsub('"$', '')
+							local kc = Enum.KeyCode[kcName]
+							if kc then entry.widget.Set(kc) end
 						end
 					end
 				end
@@ -2412,22 +2608,22 @@ function EvolUI.Load(config)
 	function UI:Search(options)
 		options = options or {}
 		local holder = Instance.new("Frame", ActiveScroll)
-		holder.Size = UDim2.new(1,0,0,36)
+		holder.Size = UDim2.new(1, 0, 0, 36)
 		holder.BackgroundColor3 = Theme.Surface
 		holder.LayoutOrder = nextOrder()
-		Instance.new("UICorner", holder).CornerRadius = UDim.new(0,10)
+		Instance.new("UICorner", holder).CornerRadius = UDim.new(0, 10)
 
 		local icon = Instance.new("TextLabel", holder)
-		icon.Size = UDim2.new(0,24,1,0)
-		icon.Position = UDim2.new(0,8,0,0)
+		icon.Size = UDim2.new(0, 24, 1, 0)
+		icon.Position = UDim2.new(0, 8, 0, 0)
 		icon.BackgroundTransparency = 1
 		icon.Text = "🔍"; icon.TextSize = 12
 		icon.Font = Enum.Font.GothamMedium
 		icon.TextColor3 = Theme.Muted
 
 		local box = Instance.new("TextBox", holder)
-		box.Size = UDim2.new(1,-38,1,-10)
-		box.Position = UDim2.new(0,32,0,5)
+		box.Size = UDim2.new(1, -38, 1, -10)
+		box.Position = UDim2.new(0, 32, 0, 5)
 		box.BackgroundTransparency = 1
 		box.Text = ""
 		box.PlaceholderText = options.Placeholder or "Search..."
@@ -2443,7 +2639,6 @@ function EvolUI.Load(config)
 		maid:Add(box.FocusLost:Connect(function()
 			TweenPlay(holder, { BackgroundColor3 = Theme.Surface }, 0.15, Enum.EasingStyle.Quint)
 		end))
-
 		maid:Add(box:GetPropertyChangedSignal("Text"):Connect(function()
 			local query = box.Text:lower()
 			for _, entry in ipairs(searchIndex) do
@@ -2457,7 +2652,7 @@ function EvolUI.Load(config)
 	end
 
 	-- ─────────────────────────────────────────────────────────────────────────
-	-- Utility button helpers (backward compat)
+	-- Utility helpers
 	-- ─────────────────────────────────────────────────────────────────────────
 	function UI:SetButtonColor(button, color)
 		if button and button:IsA("TextButton") then
