@@ -1,20 +1,32 @@
--- LoderLib UI Library (v1.0)
+-- LoderLib UI Library (v2.0)
 -- Dark terminal-aesthetic UI library for Roblox executors.
--- API: Window > Tab > Section > Elements (Button, Toggle, Slider, Dropdown, Textbox, Label, Bind, Colorpicker, Separator)
+--
+-- Hierarchy:  Lib  >  Window  >  Tab  >  Section  >  Elements
+--
+-- Elements:
+--   Button, ButtonGroup, Toggle, MultiToggle, Slider, Textbox,
+--   Input (multiline), Dropdown, Colorpicker, Bind, Label,
+--   Separator, Progress, Table
+--
+-- Window-level:
+--   :Tab(name, icon?)  :Badge(tabObj, count)  :Destroy()
+--
+-- Library-level:
+--   :Window()  :Notification()  :Dialog()  :SetTheme()
 
 ---------------------------------------------------------------------
 -- Services
 ---------------------------------------------------------------------
-local Players           = game:GetService("Players")
-local TweenService      = game:GetService("TweenService")
-local UserInputService  = game:GetService("UserInputService")
-local RunService        = game:GetService("RunService")
+local Players          = game:GetService("Players")
+local TweenService     = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService       = game:GetService("RunService")
 
-local LocalPlayer       = Players.LocalPlayer
-local PlayerGui         = LocalPlayer:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui   = LocalPlayer:WaitForChild("PlayerGui")
 
 ---------------------------------------------------------------------
--- Colour palette
+-- Default colour palette
 ---------------------------------------------------------------------
 local C = {
     BG          = Color3.fromRGB(13,  15,  23),
@@ -38,9 +50,20 @@ local C = {
     RED_DOT     = Color3.fromRGB(224,  92,  92),
     YLW_DOT     = Color3.fromRGB(240, 180,  41),
     GRN_DOT     = Color3.fromRGB(92,  184,  92),
-    WHITE       = Color3.new(1, 1, 1),
-    SLIDER_FILL = Color3.fromRGB(59, 125, 216),
-    SLIDER_BG   = Color3.fromRGB(30,  34,  48),
+    WHITE       = Color3.new(1,1,1),
+    SLIDER_BG   = Color3.fromRGB(30, 34, 48),
+    BADGE_BG    = Color3.fromRGB(224, 92, 92),
+    BADGE_TEXT  = Color3.new(1,1,1),
+}
+
+---------------------------------------------------------------------
+-- Severity accent colours for notifications / dialog
+---------------------------------------------------------------------
+local SEVERITY = {
+    info    = Color3.fromRGB(59,  125, 216),
+    success = Color3.fromRGB(92,  184,  92),
+    warning = Color3.fromRGB(240, 180,  41),
+    error   = Color3.fromRGB(224,  92,  92),
 }
 
 ---------------------------------------------------------------------
@@ -87,10 +110,10 @@ local function tween(obj, t, props)
 end
 
 local function hoverBtn(btn, base, hover)
-    btn.MouseEnter:Connect(function() tween(btn, 0.12, {BackgroundColor3 = hover}) end)
-    btn.MouseLeave:Connect(function() tween(btn, 0.12, {BackgroundColor3 = base}) end)
+    btn.MouseEnter:Connect(function()    tween(btn, 0.12, {BackgroundColor3 = hover})       end)
+    btn.MouseLeave:Connect(function()    tween(btn, 0.12, {BackgroundColor3 = base})        end)
     btn.MouseButton1Down:Connect(function() tween(btn, 0.06, {BackgroundColor3 = C.ACCENT_DIM}) end)
-    btn.MouseButton1Up:Connect(function() tween(btn, 0.06, {BackgroundColor3 = hover}) end)
+    btn.MouseButton1Up:Connect(function()   tween(btn, 0.06, {BackgroundColor3 = hover})    end)
 end
 
 ---------------------------------------------------------------------
@@ -100,50 +123,102 @@ local LoderLib = {}
 LoderLib.__index = LoderLib
 
 ---------------------------------------------------------------------
--- Notification
+-- SetTheme  –  swap accent colour at runtime; affects all new elements
 ---------------------------------------------------------------------
-function LoderLib:Notification(title, message, btnText)
-    local existing = PlayerGui:FindFirstChild("LoderLibNotif")
-    if existing then existing:Destroy() end
+function LoderLib:SetTheme(accentColor)
+    C.ACCENT      = accentColor
+    C.TOGGLE_ON   = accentColor
+    C.SLIDER_FILL = accentColor
+    -- Dim variant: darken by blending toward black
+    C.ACCENT_DIM  = accentColor:Lerp(Color3.new(0,0,0), 0.35)
+    C.ACCENT_BG   = accentColor:Lerp(Color3.new(0,0,0), 0.75)
+end
 
+---------------------------------------------------------------------
+-- Notification  (severity: "info" | "success" | "warning" | "error")
+---------------------------------------------------------------------
+function LoderLib:Notification(title, message, btnText, severity, duration)
+    severity = severity or "info"
+    duration = duration or 5
+    local accentCol = SEVERITY[severity] or C.ACCENT
+    btnText = btnText or "OK"
+
+    -- Stack notifications instead of replacing
+    local yOffset = 20
+    for _, gui in ipairs(PlayerGui:GetChildren()) do
+        if gui.Name:sub(1, 13) == "LoderLibNotif" then
+            yOffset = yOffset + 110
+        end
+    end
+
+    local uid = tostring(os.clock()):gsub("%.", "")
     local sg = make("ScreenGui", {
-        Name           = "LoderLibNotif",
+        Name           = "LoderLibNotif" .. uid,
         ResetOnSpawn   = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         IgnoreGuiInset = true,
     }, PlayerGui)
 
     local frame = make("Frame", {
-        Size             = UDim2.new(0, 300, 0, 0),
+        Size             = UDim2.new(0, 310, 0, 0),
         AutomaticSize    = Enum.AutomaticSize.Y,
-        Position         = UDim2.new(1, -320, 1, -20),
+        Position         = UDim2.new(1, 20, 1, -yOffset),
         AnchorPoint      = Vector2.new(0, 1),
         BackgroundColor3 = C.SURFACE,
         BorderSizePixel  = 0,
     }, sg)
     corner(8, frame)
     stroke(1, C.BORDER, frame)
-    pad(14, 14, 16, 16, frame)
-    listLayout(frame, Enum.FillDirection.Vertical, 8)
+    pad(0, 12, 0, 0, frame)
+    listLayout(frame, Enum.FillDirection.Vertical, 6)
 
-    -- Accent top bar
-    make("Frame", {
-        Size             = UDim2.new(1, 0, 0, 2),
-        BackgroundColor3 = C.ACCENT,
+    -- Coloured accent top bar
+    local topBar = make("Frame", {
+        Size             = UDim2.new(1, 0, 0, 3),
+        BackgroundColor3 = accentCol,
         BorderSizePixel  = 0,
         LayoutOrder      = 0,
     }, frame)
+    corner(8, topBar)
+
+    -- Title row with severity icon
+    local icons = {info = "ℹ", success = "✔", warning = "⚠", error = "✕"}
+    local titleRow = make("Frame", {
+        Size                  = UDim2.new(1, 0, 0, 20),
+        BackgroundTransparency = 1,
+        LayoutOrder           = 1,
+    }, frame)
+    pad(0, 0, 14, 14, titleRow)
 
     make("TextLabel", {
-        Size                  = UDim2.new(1, 0, 0, 16),
+        Size                  = UDim2.new(0, 16, 1, 0),
+        BackgroundTransparency = 1,
+        Text                  = icons[severity] or "ℹ",
+        TextColor3            = accentCol,
+        Font                  = Enum.Font.GothamBold,
+        TextSize              = 12,
+        TextXAlignment        = Enum.TextXAlignment.Left,
+    }, titleRow)
+
+    make("TextLabel", {
+        Size                  = UDim2.new(1, -20, 1, 0),
+        Position              = UDim2.new(0, 20, 0, 0),
         BackgroundTransparency = 1,
         Text                  = title,
         TextColor3            = C.TEXT,
         Font                  = Enum.Font.GothamBold,
         TextSize              = 13,
         TextXAlignment        = Enum.TextXAlignment.Left,
-        LayoutOrder           = 1,
+    }, titleRow)
+
+    -- Message
+    local msgWrap = make("Frame", {
+        Size                  = UDim2.new(1, 0, 0, 0),
+        AutomaticSize         = Enum.AutomaticSize.Y,
+        BackgroundTransparency = 1,
+        LayoutOrder           = 2,
     }, frame)
+    pad(0, 0, 14, 14, msgWrap)
 
     make("TextLabel", {
         Size                  = UDim2.new(1, 0, 0, 0),
@@ -155,33 +230,162 @@ function LoderLib:Notification(title, message, btnText)
         TextSize              = 11,
         TextXAlignment        = Enum.TextXAlignment.Left,
         TextWrapped           = true,
-        LayoutOrder           = 2,
-    }, frame)
+    }, msgWrap)
 
-    local ok = make("TextButton", {
-        Size             = UDim2.new(1, 0, 0, 28),
-        BackgroundColor3 = C.ACCENT,
+    -- Progress bar (auto-dismiss timer visual)
+    local progressBg = make("Frame", {
+        Size             = UDim2.new(1, 0, 0, 2),
+        BackgroundColor3 = C.SURFACE3,
         BorderSizePixel  = 0,
-        Text             = btnText or "OK",
-        TextColor3       = C.WHITE,
-        Font             = Enum.Font.GothamBold,
-        TextSize         = 12,
         LayoutOrder      = 3,
     }, frame)
-    corner(6, ok)
-    ok.MouseButton1Click:Connect(function() sg:Destroy() end)
+    local progressFill = make("Frame", {
+        Size             = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = accentCol,
+        BorderSizePixel  = 0,
+    }, progressBg)
 
-    -- Slide in from right
-    frame.Position = UDim2.new(1, 20, 1, -20)
-    tween(frame, 0.3, {Position = UDim2.new(1, -320, 1, -20)})
+    -- Button row
+    local btnRow = make("Frame", {
+        Size                  = UDim2.new(1, 0, 0, 28),
+        BackgroundTransparency = 1,
+        LayoutOrder           = 4,
+    }, frame)
+    pad(0, 0, 12, 12, btnRow)
+    listLayout(btnRow, Enum.FillDirection.Horizontal, 6)
 
-    task.delay(5, function()
+    local okBtn = make("TextButton", {
+        Size             = UDim2.new(0, 70, 1, 0),
+        BackgroundColor3 = accentCol,
+        BorderSizePixel  = 0,
+        Text             = btnText,
+        TextColor3       = C.WHITE,
+        Font             = Enum.Font.GothamBold,
+        TextSize         = 11,
+        LayoutOrder      = 1,
+    }, btnRow)
+    corner(5, okBtn)
+    okBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
+
+    -- Slide in
+    tween(frame, 0.3, {Position = UDim2.new(1, -330, 1, -yOffset)})
+
+    -- Countdown bar
+    TweenService:Create(progressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+
+    task.delay(duration, function()
         if sg and sg.Parent then
-            tween(frame, 0.25, {Position = UDim2.new(1, 20, 1, -20)})
+            tween(frame, 0.25, {Position = UDim2.new(1, 20, 1, -yOffset)})
             task.wait(0.3)
             sg:Destroy()
         end
     end)
+
+    return sg
+end
+
+---------------------------------------------------------------------
+-- Dialog  –  modal confirm/cancel popup
+-- buttons = { {text="Confirm", color=C.ACCENT, callback=fn}, ... }
+---------------------------------------------------------------------
+function LoderLib:Dialog(title, message, buttons)
+    buttons = buttons or {{text = "OK", callback = nil}}
+
+    local sg = make("ScreenGui", {
+        Name           = "LoderLibDialog",
+        ResetOnSpawn   = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        IgnoreGuiInset = true,
+    }, PlayerGui)
+
+    -- Dim overlay
+    local overlay = make("Frame", {
+        Size             = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.new(0,0,0),
+        BackgroundTransparency = 0.5,
+        BorderSizePixel  = 0,
+        ZIndex           = 50,
+    }, sg)
+
+    local box = make("Frame", {
+        Size             = UDim2.new(0, 340, 0, 0),
+        AutomaticSize    = Enum.AutomaticSize.Y,
+        Position         = UDim2.new(0.5, -170, 0.5, -80),
+        BackgroundColor3 = C.SURFACE,
+        BorderSizePixel  = 0,
+        ZIndex           = 51,
+    }, sg)
+    corner(10, box)
+    stroke(1, C.BORDER, box)
+    pad(18, 18, 20, 20, box)
+    listLayout(box, Enum.FillDirection.Vertical, 12)
+
+    -- Accent stripe
+    make("Frame", {
+        Size             = UDim2.new(1, 0, 0, 3),
+        BackgroundColor3 = C.ACCENT,
+        BorderSizePixel  = 0,
+        LayoutOrder      = 0,
+    }, box)
+
+    make("TextLabel", {
+        Size                  = UDim2.new(1, 0, 0, 20),
+        BackgroundTransparency = 1,
+        Text                  = title,
+        TextColor3            = C.TEXT,
+        Font                  = Enum.Font.GothamBold,
+        TextSize              = 15,
+        TextXAlignment        = Enum.TextXAlignment.Left,
+        LayoutOrder           = 1,
+    }, box)
+
+    make("TextLabel", {
+        Size                  = UDim2.new(1, 0, 0, 0),
+        AutomaticSize         = Enum.AutomaticSize.Y,
+        BackgroundTransparency = 1,
+        Text                  = message,
+        TextColor3            = C.TEXT_DIM,
+        Font                  = Enum.Font.Gotham,
+        TextSize              = 12,
+        TextXAlignment        = Enum.TextXAlignment.Left,
+        TextWrapped           = true,
+        LayoutOrder           = 2,
+    }, box)
+
+    -- Button row
+    local brow = make("Frame", {
+        Size                  = UDim2.new(1, 0, 0, 32),
+        BackgroundTransparency = 1,
+        LayoutOrder           = 3,
+    }, box)
+    listLayout(brow, Enum.FillDirection.Horizontal, 8)
+
+    for i, def in ipairs(buttons) do
+        local bCol = def.color or C.ACCENT
+        local b = make("TextButton", {
+            Size             = UDim2.new(0, 90, 1, 0),
+            BackgroundColor3 = bCol,
+            BorderSizePixel  = 0,
+            Text             = def.text or "OK",
+            TextColor3       = C.WHITE,
+            Font             = Enum.Font.GothamBold,
+            TextSize         = 12,
+            LayoutOrder      = i,
+        }, brow)
+        corner(6, b)
+        hoverBtn(b, bCol, bCol:Lerp(Color3.new(1,1,1), 0.1))
+        b.MouseButton1Click:Connect(function()
+            sg:Destroy()
+            if def.callback then pcall(def.callback) end
+        end)
+    end
+
+    -- Animate in
+    box.Position = UDim2.new(0.5, -170, 0.5, -60)
+    box.BackgroundTransparency = 1
+    tween(box, 0.2, {Position = UDim2.new(0.5, -170, 0.5, -80), BackgroundTransparency = 0})
+
+    return sg
 end
 
 ---------------------------------------------------------------------
@@ -198,7 +402,6 @@ function LoderLib:Window(title, width, height)
         IgnoreGuiInset = true,
     }, PlayerGui)
 
-    -- Root window frame
     local win = make("Frame", {
         Size             = UDim2.new(0, width, 0, height),
         Position         = UDim2.new(0.5, -width/2, 0.5, -height/2),
@@ -218,7 +421,6 @@ function LoderLib:Window(title, width, height)
         BorderSizePixel  = 0,
     }, win)
     corner(10, titleBar)
-    -- Cover bottom rounded corners of title bar
     make("Frame", {
         Size             = UDim2.new(1, 0, 0, 10),
         Position         = UDim2.new(0, 0, 1, -10),
@@ -252,7 +454,7 @@ function LoderLib:Window(title, width, height)
         TextXAlignment        = Enum.TextXAlignment.Center,
     }, titleBar)
 
-    -- Close
+    -- Close + Minimise
     local closeBtn = make("TextButton", {
         Size                  = UDim2.new(0, 28, 0, 28),
         Position              = UDim2.new(1, -36, 0.5, -14),
@@ -264,7 +466,6 @@ function LoderLib:Window(title, width, height)
     }, titleBar)
     closeBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
-    -- Minimise
     local minBtn = make("TextButton", {
         Size                  = UDim2.new(0, 28, 0, 28),
         Position              = UDim2.new(1, -68, 0.5, -14),
@@ -275,7 +476,7 @@ function LoderLib:Window(title, width, height)
         TextSize              = 13,
     }, titleBar)
 
-    local minimised = false
+    local minimised  = false
     local normalSize = UDim2.new(0, width, 0, height)
     local miniSize   = UDim2.new(0, width, 0, 40)
     minBtn.MouseButton1Click:Connect(function()
@@ -307,7 +508,7 @@ function LoderLib:Window(title, width, height)
     end)
 
     ----------------------------------------------------------------
-    -- Tab bar (horizontal pill tabs)
+    -- Tab bar
     ----------------------------------------------------------------
     local tabBar = make("Frame", {
         Size             = UDim2.new(1, 0, 0, 36),
@@ -323,7 +524,6 @@ function LoderLib:Window(title, width, height)
         Padding       = UDim.new(0, 6),
     }, tabBar)
 
-    -- Divider under tab bar
     make("Frame", {
         Size             = UDim2.new(1, 0, 0, 1),
         Position         = UDim2.new(0, 0, 0, 76),
@@ -332,7 +532,7 @@ function LoderLib:Window(title, width, height)
     }, win)
 
     ----------------------------------------------------------------
-    -- Content area (pages live here)
+    -- Content area
     ----------------------------------------------------------------
     local contentArea = make("Frame", {
         Size             = UDim2.new(1, 0, 1, -77),
@@ -345,28 +545,66 @@ function LoderLib:Window(title, width, height)
     ----------------------------------------------------------------
     -- Window object
     ----------------------------------------------------------------
-    local winObj  = {_tabBtns = {}, _pages = {}, _activeTab = nil, _sg = sg, _lib = self}
+    local winObj   = {_tabBtns = {}, _pages = {}, _sg = sg, _lib = self}
     local tabCount = 0
 
-    function winObj:Tab(tabName)
+    ----------------------------------------------------------------
+    -- Badge helper  (call after Tab creation)
+    -- winObj:Badge(tabObj, count)   count=0 hides it
+    ----------------------------------------------------------------
+    function winObj:Badge(tabObj, count)
+        if tabObj._badgeLabel then
+            tabObj._badgeLabel.Text    = tostring(count)
+            tabObj._badgeLabel.Visible = count > 0
+        end
+    end
+
+    ----------------------------------------------------------------
+    -- Destroy window
+    ----------------------------------------------------------------
+    function winObj:Destroy()
+        sg:Destroy()
+    end
+
+    ----------------------------------------------------------------
+    -- Tab
+    ----------------------------------------------------------------
+    function winObj:Tab(tabName, icon)
         tabCount += 1
         local order = tabCount
 
-        -- Tab button
+        local displayText = icon and (icon .. "  " .. tabName) or tabName
+
         local tabBtn = make("TextButton", {
             Size             = UDim2.new(0, 0, 1, -8),
             AutomaticSize    = Enum.AutomaticSize.X,
             BackgroundColor3 = C.SURFACE2,
             BorderSizePixel  = 0,
-            Text             = "  " .. tabName .. "  ",
+            Text             = "  " .. displayText .. "  ",
             TextColor3       = C.TEXT_DIM,
             Font             = Enum.Font.GothamBold,
             TextSize         = 11,
             LayoutOrder      = order,
+            ClipsDescendants = true,
         }, tabBar)
         corner(6, tabBtn)
 
-        -- Page scroll frame
+        -- Badge dot
+        local badge = make("TextLabel", {
+            Size             = UDim2.new(0, 16, 0, 16),
+            Position         = UDim2.new(1, -14, 0, -2),
+            BackgroundColor3 = C.BADGE_BG,
+            BorderSizePixel  = 0,
+            Text             = "0",
+            TextColor3       = C.BADGE_TEXT,
+            Font             = Enum.Font.GothamBold,
+            TextSize         = 9,
+            TextXAlignment   = Enum.TextXAlignment.Center,
+            Visible          = false,
+            ZIndex           = 5,
+        }, tabBtn)
+        corner(8, badge)
+
         local page = make("ScrollingFrame", {
             Size               = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
@@ -390,30 +628,31 @@ function LoderLib:Window(title, width, height)
             for _, pg in ipairs(self._pages) do pg.Visible = false end
             tween(tabBtn, 0.15, {BackgroundColor3 = C.ACCENT, TextColor3 = C.WHITE})
             page.Visible = true
-            self._activeTab = order
         end
 
         tabBtn.MouseButton1Click:Connect(activateTab)
-
-        -- Auto-activate first tab
         if order == 1 then activateTab() end
 
         ----------------------------------------------------------------
-        -- Tab object → Sections
+        -- Tab object
         ----------------------------------------------------------------
-        local tabObj = {_page = page, _sectionCount = 0}
+        local tabObj = {_page = page, _sectionCount = 0, _badgeLabel = badge}
 
-        function tabObj:Section(sectionName)
+        ----------------------------------------------------------------
+        -- Section
+        ----------------------------------------------------------------
+        function tabObj:Section(sectionName, collapsible)
             self._sectionCount += 1
             local secOrder = self._sectionCount
+            local collapsed = false
 
-            -- Section card
             local sec = make("Frame", {
                 Size             = UDim2.new(1, 0, 0, 0),
                 AutomaticSize    = Enum.AutomaticSize.Y,
                 BackgroundColor3 = C.SURFACE,
                 BorderSizePixel  = 0,
                 LayoutOrder      = secOrder,
+                ClipsDescendants = collapsible or false,
             }, self._page)
             corner(8, sec)
             stroke(1, C.BORDER2, sec)
@@ -421,14 +660,16 @@ function LoderLib:Window(title, width, height)
             listLayout(sec, Enum.FillDirection.Vertical, 6)
 
             -- Section header
+            local headerHeight = 20
             if sectionName and sectionName ~= "" then
                 local hdr = make("Frame", {
-                    Size             = UDim2.new(1, 0, 0, 20),
+                    Size             = UDim2.new(1, 0, 0, headerHeight),
                     BackgroundTransparency = 1,
                     LayoutOrder      = 0,
                 }, sec)
+
                 make("TextLabel", {
-                    Size                  = UDim2.new(1, -4, 1, 0),
+                    Size                  = UDim2.new(1, collapsible and -20 or -4, 1, 0),
                     Position              = UDim2.new(0, 4, 0, 0),
                     BackgroundTransparency = 1,
                     Text                  = sectionName:upper(),
@@ -437,13 +678,46 @@ function LoderLib:Window(title, width, height)
                     TextSize              = 10,
                     TextXAlignment        = Enum.TextXAlignment.Left,
                 }, hdr)
-                -- Thin accent line under header
+
                 make("Frame", {
                     Size             = UDim2.new(1, 0, 0, 1),
                     Position         = UDim2.new(0, 0, 1, -1),
                     BackgroundColor3 = C.BORDER2,
                     BorderSizePixel  = 0,
                 }, hdr)
+
+                -- Collapse arrow
+                if collapsible then
+                    local arrow = make("TextLabel", {
+                        Size                  = UDim2.new(0, 16, 1, 0),
+                        Position              = UDim2.new(1, -16, 0, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = "▾",
+                        TextColor3            = C.TEXT_DARK,
+                        Font                  = Enum.Font.GothamBold,
+                        TextSize              = 12,
+                        TextXAlignment        = Enum.TextXAlignment.Center,
+                    }, hdr)
+
+                    local clickArea = make("TextButton", {
+                        Size                  = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = "",
+                    }, hdr)
+
+                    clickArea.MouseButton1Click:Connect(function()
+                        collapsed = not collapsed
+                        tween(arrow, 0.15, {Rotation = collapsed and -90 or 0})
+                        if collapsed then
+                            -- collapse: fix size to header only, hide content
+                            sec.AutomaticSize = Enum.AutomaticSize.None
+                            tween(sec, 0.2, {Size = UDim2.new(1, 0, 0, headerHeight + 22)})
+                        else
+                            sec.AutomaticSize = Enum.AutomaticSize.Y
+                            sec.Size = UDim2.new(1, 0, 0, 0)
+                        end
+                    end)
+                end
             end
 
             local elemCount = 0
@@ -479,6 +753,47 @@ function LoderLib:Window(title, width, height)
             end
 
             ----------------------------------------------------------------
+            -- ButtonGroup  –  horizontal row of equal-width buttons
+            -- defs = { {text="A", callback=fn}, ... }
+            ----------------------------------------------------------------
+            function secObj:ButtonGroup(defs)
+                local lo  = nextOrder()
+                local row = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 32),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = lo,
+                }, sec)
+                listLayout(row, Enum.FillDirection.Horizontal, 6)
+                make("UIListLayout", {
+                    FillDirection = Enum.FillDirection.Horizontal,
+                    SortOrder     = Enum.SortOrder.LayoutOrder,
+                    Padding       = UDim.new(0, 6),
+                }, row)
+
+                local btnCount = #defs
+                for i, def in ipairs(defs) do
+                    local b = make("TextButton", {
+                        Size             = UDim2.new(1/btnCount, -(6*(btnCount-1)/btnCount), 1, 0),
+                        BackgroundColor3 = def.color or C.SURFACE2,
+                        BorderSizePixel  = 0,
+                        Text             = def.text or "Btn",
+                        TextColor3       = def.textColor or C.TEXT,
+                        Font             = Enum.Font.GothamBold,
+                        TextSize         = 11,
+                        LayoutOrder      = i,
+                    }, row)
+                    corner(6, b)
+                    stroke(1, C.BORDER2, b)
+                    hoverBtn(b, def.color or C.SURFACE2, C.SURFACE3)
+                    b.MouseButton1Click:Connect(function()
+                        if def.callback then pcall(def.callback) end
+                    end)
+                end
+                return row
+            end
+
+            ----------------------------------------------------------------
             -- Separator
             ----------------------------------------------------------------
             function secObj:Separator()
@@ -494,20 +809,24 @@ function LoderLib:Window(title, width, height)
             ----------------------------------------------------------------
             -- Label
             ----------------------------------------------------------------
-            function secObj:Label(text)
+            function secObj:Label(text, color)
                 local lo = nextOrder()
-                make("TextLabel", {
+                local lbl = make("TextLabel", {
                     Size                  = UDim2.new(1, 0, 0, 0),
                     AutomaticSize         = Enum.AutomaticSize.Y,
                     BackgroundTransparency = 1,
                     Text                  = text,
-                    TextColor3            = C.TEXT_DIM,
+                    TextColor3            = color or C.TEXT_DIM,
                     Font                  = Enum.Font.Gotham,
                     TextSize              = 11,
                     TextXAlignment        = Enum.TextXAlignment.Left,
                     TextWrapped           = true,
                     LayoutOrder           = lo,
                 }, sec)
+                local lblObj = {}
+                function lblObj:SetText(t) lbl.Text = t end
+                function lblObj:SetColor(c) lbl.TextColor3 = c end
+                return lblObj
             end
 
             ----------------------------------------------------------------
@@ -547,14 +866,14 @@ function LoderLib:Window(title, width, height)
 
                 local thumb = make("Frame", {
                     Size             = UDim2.new(0, 14, 0, 14),
-                    Position         = state and UDim2.new(0, 19, 0.5, -7) or UDim2.new(0, 3, 0.5, -7),
+                    Position         = state and UDim2.new(0,19,0.5,-7) or UDim2.new(0,3,0.5,-7),
                     BackgroundColor3 = C.WHITE,
                     BorderSizePixel  = 0,
                 }, track)
                 corner(7, thumb)
 
                 local clickLayer = make("TextButton", {
-                    Size                  = UDim2.new(1, 0, 1, 0),
+                    Size                  = UDim2.new(1,0,1,0),
                     BackgroundTransparency = 1,
                     Text                  = "",
                 }, row)
@@ -563,7 +882,7 @@ function LoderLib:Window(title, width, height)
 
                 local function updateVisual()
                     tween(track, 0.15, {BackgroundColor3 = state and C.TOGGLE_ON or C.TOGGLE_OFF})
-                    tween(thumb, 0.15, {Position = state and UDim2.new(0, 19, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)})
+                    tween(thumb, 0.15, {Position = state and UDim2.new(0,19,0.5,-7) or UDim2.new(0,3,0.5,-7)})
                 end
 
                 clickLayer.MouseButton1Click:Connect(function()
@@ -581,6 +900,105 @@ function LoderLib:Window(title, width, height)
                 end
 
                 return togObj
+            end
+
+            ----------------------------------------------------------------
+            -- MultiToggle  –  checkbox group
+            -- options = {"A","B","C"}   returns set of selected values
+            ----------------------------------------------------------------
+            function secObj:MultiToggle(label, options, defaults, callback)
+                local lo      = nextOrder()
+                local selected = {}
+                for _, v in ipairs(defaults or {}) do selected[v] = true end
+
+                local wrap = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize    = Enum.AutomaticSize.Y,
+                    BackgroundColor3 = C.SURFACE2,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = lo,
+                }, sec)
+                corner(6, wrap)
+                stroke(1, C.BORDER2, wrap)
+                pad(8, 8, 10, 10, wrap)
+                listLayout(wrap, Enum.FillDirection.Vertical, 4)
+
+                make("TextLabel", {
+                    Size                  = UDim2.new(1, 0, 0, 14),
+                    BackgroundTransparency = 1,
+                    Text                  = label,
+                    TextColor3            = C.TEXT,
+                    Font                  = Enum.Font.GothamBold,
+                    TextSize              = 11,
+                    TextXAlignment        = Enum.TextXAlignment.Left,
+                    LayoutOrder           = 0,
+                }, wrap)
+
+                local mtObj = {Value = selected}
+
+                for i, opt in ipairs(options) do
+                    local isOn = selected[opt] or false
+
+                    local row = make("Frame", {
+                        Size             = UDim2.new(1, 0, 0, 24),
+                        BackgroundTransparency = 1,
+                        LayoutOrder      = i,
+                    }, wrap)
+
+                    local box = make("Frame", {
+                        Size             = UDim2.new(0, 14, 0, 14),
+                        Position         = UDim2.new(0, 0, 0.5, -7),
+                        BackgroundColor3 = isOn and C.ACCENT or C.SURFACE3,
+                        BorderSizePixel  = 0,
+                    }, row)
+                    corner(3, box)
+                    stroke(1, C.BORDER, box)
+
+                    local tick = make("TextLabel", {
+                        Size                  = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = "✔",
+                        TextColor3            = C.WHITE,
+                        Font                  = Enum.Font.GothamBold,
+                        TextSize              = 9,
+                        TextXAlignment        = Enum.TextXAlignment.Center,
+                        Visible               = isOn,
+                    }, box)
+
+                    make("TextLabel", {
+                        Size                  = UDim2.new(1, -22, 1, 0),
+                        Position              = UDim2.new(0, 22, 0, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = opt,
+                        TextColor3            = C.TEXT_DIM,
+                        Font                  = Enum.Font.Gotham,
+                        TextSize              = 11,
+                        TextXAlignment        = Enum.TextXAlignment.Left,
+                    }, row)
+
+                    local clk = make("TextButton", {
+                        Size                  = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = "",
+                    }, row)
+
+                    clk.MouseButton1Click:Connect(function()
+                        isOn = not isOn
+                        selected[opt] = isOn or nil
+                        tween(box, 0.12, {BackgroundColor3 = isOn and C.ACCENT or C.SURFACE3})
+                        tick.Visible = isOn
+                        mtObj.Value = selected
+                        if callback then pcall(callback, selected) end
+                    end)
+                end
+
+                function mtObj:GetSelected()
+                    local out = {}
+                    for k, _ in pairs(selected) do table.insert(out, k) end
+                    return out
+                end
+
+                return mtObj
             end
 
             ----------------------------------------------------------------
@@ -631,7 +1049,6 @@ function LoderLib:Window(title, width, height)
                     TextXAlignment        = Enum.TextXAlignment.Right,
                 }, topRow)
 
-                -- Track
                 local trackBg = make("Frame", {
                     Size             = UDim2.new(1, 0, 0, 6),
                     BackgroundColor3 = C.SLIDER_BG,
@@ -642,13 +1059,24 @@ function LoderLib:Window(title, width, height)
                 stroke(1, C.BORDER2, trackBg)
 
                 local fill = make("Frame", {
-                    Size             = UDim2.new((val - min) / (max - min), 0, 1, 0),
-                    BackgroundColor3 = C.SLIDER_FILL,
+                    Size             = UDim2.new((val-min)/(max-min), 0, 1, 0),
+                    BackgroundColor3 = C.ACCENT,
                     BorderSizePixel  = 0,
                 }, trackBg)
                 corner(3, fill)
 
-                -- Interaction
+                -- Thumb knob
+                local thumb = make("Frame", {
+                    Size             = UDim2.new(0, 12, 0, 12),
+                    AnchorPoint      = Vector2.new(0.5, 0.5),
+                    Position         = UDim2.new((val-min)/(max-min), 0, 0.5, 0),
+                    BackgroundColor3 = C.WHITE,
+                    BorderSizePixel  = 0,
+                    ZIndex           = 2,
+                }, trackBg)
+                corner(6, thumb)
+                stroke(2, C.ACCENT, thumb)
+
                 local draggingSlider = false
 
                 local function updateSlider(inputX)
@@ -657,7 +1085,8 @@ function LoderLib:Window(title, width, height)
                     local pct  = math.clamp((inputX - abs) / size, 0, 1)
                     val = math.floor(min + pct * (max - min))
                     valLabel.Text = tostring(val)
-                    tween(fill, 0.05, {Size = UDim2.new(pct, 0, 1, 0)})
+                    tween(fill,  0.05, {Size     = UDim2.new(pct, 0, 1, 0)})
+                    tween(thumb, 0.05, {Position = UDim2.new(pct, 0, 0.5, 0)})
                     if callback then pcall(callback, val) end
                 end
 
@@ -686,7 +1115,8 @@ function LoderLib:Window(title, width, height)
                     sliderObj.Value = val
                     local pct = (val - min) / (max - min)
                     valLabel.Text = tostring(val)
-                    tween(fill, 0.1, {Size = UDim2.new(pct, 0, 1, 0)})
+                    tween(fill,  0.1, {Size     = UDim2.new(pct, 0, 1, 0)})
+                    tween(thumb, 0.1, {Position = UDim2.new(pct, 0, 0.5, 0)})
                     if callback then pcall(callback, val) end
                 end
 
@@ -694,7 +1124,7 @@ function LoderLib:Window(title, width, height)
             end
 
             ----------------------------------------------------------------
-            -- Textbox
+            -- Textbox  (single-line)
             ----------------------------------------------------------------
             function secObj:Textbox(label, placeholder, clearOnFocus, callback)
                 local lo = nextOrder()
@@ -739,7 +1169,12 @@ function LoderLib:Window(title, width, height)
                 stroke(1, C.BORDER2, box)
                 pad(0, 0, 8, 8, box)
 
-                box.FocusLost:Connect(function(enter)
+                -- Focus highlight
+                box.Focused:Connect(function()
+                    tween(box, 0.1, {BackgroundColor3 = C.SURFACE})
+                end)
+                box.FocusLost:Connect(function()
+                    tween(box, 0.1, {BackgroundColor3 = C.SURFACE3})
                     if callback then pcall(callback, box.Text) end
                 end)
 
@@ -751,12 +1186,290 @@ function LoderLib:Window(title, width, height)
             end
 
             ----------------------------------------------------------------
+            -- Input  (multi-line text area)
+            ----------------------------------------------------------------
+            function secObj:Input(label, placeholder, lines, callback)
+                local lo    = nextOrder()
+                lines       = lines or 4
+                local rowH  = 16
+                local totalH= 22 + (rowH * lines) + 8
+
+                local wrap = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, totalH),
+                    BackgroundColor3 = C.SURFACE2,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = lo,
+                }, sec)
+                corner(6, wrap)
+                stroke(1, C.BORDER2, wrap)
+                pad(6, 8, 10, 10, wrap)
+                listLayout(wrap, Enum.FillDirection.Vertical, 4)
+
+                make("TextLabel", {
+                    Size                  = UDim2.new(1, 0, 0, 14),
+                    BackgroundTransparency = 1,
+                    Text                  = label,
+                    TextColor3            = C.TEXT,
+                    Font                  = Enum.Font.GothamBold,
+                    TextSize              = 11,
+                    TextXAlignment        = Enum.TextXAlignment.Left,
+                    LayoutOrder           = 1,
+                }, wrap)
+
+                local area = make("TextBox", {
+                    Size              = UDim2.new(1, 0, 0, rowH * lines),
+                    BackgroundColor3  = C.SURFACE3,
+                    BorderSizePixel   = 0,
+                    Text              = "",
+                    PlaceholderText   = placeholder or "Enter text...",
+                    PlaceholderColor3 = C.TEXT_DARK,
+                    TextColor3        = C.INFO,
+                    Font              = Enum.Font.Code,
+                    TextSize          = 11,
+                    TextXAlignment    = Enum.TextXAlignment.Left,
+                    TextYAlignment    = Enum.TextYAlignment.Top,
+                    MultiLine         = true,
+                    ClearTextOnFocus  = false,
+                    LayoutOrder       = 2,
+                }, wrap)
+                corner(4, area)
+                stroke(1, C.BORDER2, area)
+                pad(4, 4, 8, 8, area)
+
+                area.Focused:Connect(function()    tween(area, 0.1, {BackgroundColor3 = C.SURFACE}) end)
+                area.FocusLost:Connect(function()
+                    tween(area, 0.1, {BackgroundColor3 = C.SURFACE3})
+                    if callback then pcall(callback, area.Text) end
+                end)
+
+                local inObj = {}
+                function inObj:SetText(t) area.Text = t end
+                function inObj:GetText() return area.Text end
+
+                return inObj
+            end
+
+            ----------------------------------------------------------------
+            -- Progress bar
+            -- :Set(percent)  0-100
+            -- :SetLabel(text)
+            ----------------------------------------------------------------
+            function secObj:Progress(label, initial, color)
+                local lo  = nextOrder()
+                local pct = math.clamp(initial or 0, 0, 100)
+                local col = color or C.ACCENT
+
+                local wrap = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 46),
+                    BackgroundColor3 = C.SURFACE2,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = lo,
+                }, sec)
+                corner(6, wrap)
+                stroke(1, C.BORDER2, wrap)
+                pad(6, 6, 10, 10, wrap)
+                listLayout(wrap, Enum.FillDirection.Vertical, 6)
+
+                local topRow = make("Frame", {
+                    Size                  = UDim2.new(1, 0, 0, 14),
+                    BackgroundTransparency = 1,
+                    LayoutOrder           = 1,
+                }, wrap)
+
+                make("TextLabel", {
+                    Size                  = UDim2.new(0.7, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Text                  = label,
+                    TextColor3            = C.TEXT,
+                    Font                  = Enum.Font.GothamBold,
+                    TextSize              = 11,
+                    TextXAlignment        = Enum.TextXAlignment.Left,
+                }, topRow)
+
+                local pctLabel = make("TextLabel", {
+                    Size                  = UDim2.new(0.3, 0, 1, 0),
+                    Position              = UDim2.new(0.7, 0, 0, 0),
+                    BackgroundTransparency = 1,
+                    Text                  = tostring(pct) .. "%",
+                    TextColor3            = col,
+                    Font                  = Enum.Font.Code,
+                    TextSize              = 11,
+                    TextXAlignment        = Enum.TextXAlignment.Right,
+                }, topRow)
+
+                local trackBg = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 8),
+                    BackgroundColor3 = C.SURFACE3,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = 2,
+                }, wrap)
+                corner(4, trackBg)
+                stroke(1, C.BORDER2, trackBg)
+
+                local fill = make("Frame", {
+                    Size             = UDim2.new(pct/100, 0, 1, 0),
+                    BackgroundColor3 = col,
+                    BorderSizePixel  = 0,
+                }, trackBg)
+                corner(4, fill)
+
+                local progObj = {Value = pct}
+
+                function progObj:Set(newPct)
+                    newPct = math.clamp(newPct, 0, 100)
+                    pct = newPct
+                    progObj.Value = pct
+                    pctLabel.Text = tostring(math.floor(pct)) .. "%"
+                    tween(fill, 0.3, {Size = UDim2.new(pct/100, 0, 1, 0)})
+                end
+
+                function progObj:SetLabel(text)
+                    pctLabel.Text = text
+                end
+
+                function progObj:SetColor(newCol)
+                    col = newCol
+                    tween(fill, 0.15, {BackgroundColor3 = newCol})
+                    pctLabel.TextColor3 = newCol
+                end
+
+                return progObj
+            end
+
+            ----------------------------------------------------------------
+            -- Table  –  scrollable key/value or multi-column data table
+            -- columns = {"Name","Value","Status"}
+            -- :AddRow({"Alice","100","OK"})
+            -- :Clear()
+            ----------------------------------------------------------------
+            function secObj:Table(columns, maxRows)
+                local lo    = nextOrder()
+                maxRows     = maxRows or 6
+                local rowH  = 24
+                local colW  = 1 / #columns
+
+                local wrap = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize    = Enum.AutomaticSize.Y,
+                    BackgroundColor3 = C.SURFACE2,
+                    BorderSizePixel  = 0,
+                    LayoutOrder      = lo,
+                }, sec)
+                corner(6, wrap)
+                stroke(1, C.BORDER2, wrap)
+
+                -- Header row
+                local hdrRow = make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 26),
+                    BackgroundColor3 = C.ACCENT_BG,
+                    BorderSizePixel  = 0,
+                }, wrap)
+                corner(6, hdrRow)
+                -- cover bottom corners
+                make("Frame", {
+                    Size             = UDim2.new(1, 0, 0, 8),
+                    Position         = UDim2.new(0, 0, 1, -8),
+                    BackgroundColor3 = C.ACCENT_BG,
+                    BorderSizePixel  = 0,
+                }, hdrRow)
+                for i, col in ipairs(columns) do
+                    make("TextLabel", {
+                        Size                  = UDim2.new(colW, 0, 1, 0),
+                        Position              = UDim2.new(colW*(i-1), 0, 0, 0),
+                        BackgroundTransparency = 1,
+                        Text                  = col:upper(),
+                        TextColor3            = C.ACCENT,
+                        Font                  = Enum.Font.GothamBold,
+                        TextSize              = 10,
+                        TextXAlignment        = Enum.TextXAlignment.Left,
+                    }, hdrRow)
+                end
+                pad(0, 0, 10, 10, hdrRow)
+
+                -- Body scroll
+                local body = make("ScrollingFrame", {
+                    Size               = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize      = Enum.AutomaticSize.Y,
+                    Position           = UDim2.new(0, 0, 0, 26),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel    = 0,
+                    ScrollBarThickness = 2,
+                    ScrollBarImageColor3 = C.BORDER,
+                    CanvasSize         = UDim2.new(0, 0, 0, 0),
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                }, wrap)
+                listLayout(body, Enum.FillDirection.Vertical, 0)
+
+                local rowCount  = 0
+                local tableObj  = {}
+
+                function tableObj:AddRow(cells)
+                    rowCount += 1
+                    local even   = rowCount % 2 == 0
+                    local rowBg  = even and C.SURFACE3 or C.SURFACE2
+
+                    local row = make("Frame", {
+                        Size             = UDim2.new(1, 0, 0, rowH),
+                        BackgroundColor3 = rowBg,
+                        BorderSizePixel  = 0,
+                        LayoutOrder      = rowCount,
+                    }, body)
+
+                    pad(0, 0, 10, 10, row)
+
+                    for i, cell in ipairs(cells) do
+                        make("TextLabel", {
+                            Size                  = UDim2.new(colW, 0, 1, 0),
+                            Position              = UDim2.new(colW*(i-1), 0, 0, 0),
+                            BackgroundTransparency = 1,
+                            Text                  = tostring(cell),
+                            TextColor3            = i == 1 and C.TEXT or C.TEXT_DIM,
+                            Font                  = i == 1 and Enum.Font.GothamBold or Enum.Font.Code,
+                            TextSize              = 11,
+                            TextXAlignment        = Enum.TextXAlignment.Left,
+                            TextTruncate          = Enum.TextTruncate.AtEnd,
+                        }, row)
+                    end
+
+                    return row
+                end
+
+                function tableObj:Clear()
+                    for _, c in ipairs(body:GetChildren()) do
+                        if c:IsA("Frame") then c:Destroy() end
+                    end
+                    rowCount = 0
+                end
+
+                function tableObj:UpdateRow(index, cells)
+                    local rows = {}
+                    for _, c in ipairs(body:GetChildren()) do
+                        if c:IsA("Frame") then table.insert(rows, c) end
+                    end
+                    if rows[index] then
+                        local row = rows[index]
+                        local labels = {}
+                        for _, c in ipairs(row:GetChildren()) do
+                            if c:IsA("TextLabel") then table.insert(labels, c) end
+                        end
+                        table.sort(labels, function(a,b) return a.Position.X.Scale < b.Position.X.Scale end)
+                        for i, cell in ipairs(cells) do
+                            if labels[i] then labels[i].Text = tostring(cell) end
+                        end
+                    end
+                end
+
+                return tableObj
+            end
+
+            ----------------------------------------------------------------
             -- Dropdown
             ----------------------------------------------------------------
             function secObj:Dropdown(label, options, callback)
-                local lo      = nextOrder()
+                local lo       = nextOrder()
                 local selected = nil
                 local open     = false
+                options        = options or {}
 
                 local wrap = make("Frame", {
                     Size             = UDim2.new(1, 0, 0, 0),
@@ -769,12 +1482,11 @@ function LoderLib:Window(title, width, height)
                 corner(6, wrap)
                 stroke(1, C.BORDER2, wrap)
 
-                -- Header
                 local header = make("TextButton", {
-                    Size             = UDim2.new(1, 0, 0, 32),
+                    Size                  = UDim2.new(1, 0, 0, 32),
                     BackgroundTransparency = 1,
-                    BorderSizePixel  = 0,
-                    Text             = "",
+                    BorderSizePixel       = 0,
+                    Text                  = "",
                 }, wrap)
 
                 make("TextLabel", {
@@ -811,7 +1523,24 @@ function LoderLib:Window(title, width, height)
                     Visible               = false,
                 }, header)
 
-                -- Dropdown list container
+                -- Search box inside dropdown
+                local searchBox = make("TextBox", {
+                    Size              = UDim2.new(1, 0, 0, 26),
+                    BackgroundColor3  = C.SURFACE3,
+                    BorderSizePixel   = 0,
+                    Text              = "",
+                    PlaceholderText   = "Search...",
+                    PlaceholderColor3 = C.TEXT_DARK,
+                    TextColor3        = C.TEXT,
+                    Font              = Enum.Font.Code,
+                    TextSize          = 11,
+                    Visible           = false,
+                    LayoutOrder       = 0,
+                }, wrap)
+                corner(4, searchBox)
+                stroke(1, C.BORDER2, searchBox)
+                pad(0, 0, 8, 8, searchBox)
+
                 local listContainer = make("Frame", {
                     Size             = UDim2.new(1, 0, 0, 0),
                     AutomaticSize    = Enum.AutomaticSize.Y,
@@ -822,60 +1551,79 @@ function LoderLib:Window(title, width, height)
                 pad(0, 4, 8, 8, listContainer)
                 listLayout(listContainer, Enum.FillDirection.Vertical, 3)
 
-                local optionBtns = {}
+                local dropObj = {Value = selected}
 
-                local function buildOptions()
+                local function buildOptions(filter)
                     for _, c in ipairs(listContainer:GetChildren()) do
                         if c:IsA("TextButton") then c:Destroy() end
                     end
-                    optionBtns = {}
+                    local count = 0
                     for i, opt in ipairs(options) do
-                        local optBtn = make("TextButton", {
-                            Size             = UDim2.new(1, 0, 0, 26),
-                            BackgroundColor3 = C.SURFACE3,
-                            BorderSizePixel  = 0,
-                            Text             = opt,
-                            TextColor3       = C.TEXT_DIM,
-                            Font             = Enum.Font.Gotham,
-                            TextSize         = 11,
-                            LayoutOrder      = i,
-                        }, listContainer)
-                        corner(4, optBtn)
-                        hoverBtn(optBtn, C.SURFACE3, C.BORDER2)
-                        optBtn.MouseButton1Click:Connect(function()
-                            selected = opt
-                            selectedLabel.Text    = opt
-                            selectedLabel.Visible = true
-                            arrow.Text = "▾"
-                            open = false
-                            listContainer.Visible = false
-                            if callback then pcall(callback, opt) end
-                        end)
-                        table.insert(optionBtns, optBtn)
+                        if not filter or filter == "" or opt:lower():find(filter:lower(), 1, true) then
+                            count += 1
+                            local optBtn = make("TextButton", {
+                                Size             = UDim2.new(1, 0, 0, 26),
+                                BackgroundColor3 = opt == selected and C.ACCENT_BG or C.SURFACE3,
+                                BorderSizePixel  = 0,
+                                Text             = opt,
+                                TextColor3       = opt == selected and C.ACCENT or C.TEXT_DIM,
+                                Font             = Enum.Font.Gotham,
+                                TextSize         = 11,
+                                LayoutOrder      = count,
+                            }, listContainer)
+                            corner(4, optBtn)
+                            hoverBtn(optBtn, opt == selected and C.ACCENT_BG or C.SURFACE3, C.BORDER2)
+                            optBtn.MouseButton1Click:Connect(function()
+                                selected = opt
+                                dropObj.Value = opt
+                                selectedLabel.Text    = opt
+                                selectedLabel.Visible = true
+                                open = false
+                                listContainer.Visible = false
+                                searchBox.Visible = false
+                                searchBox.Text = ""
+                                tween(arrow, 0.15, {Rotation = 0})
+                                buildOptions("")
+                                if callback then pcall(callback, opt) end
+                            end)
+                        end
                     end
                 end
 
-                buildOptions()
+                buildOptions("")
                 listContainer.Visible = false
+
+                searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                    buildOptions(searchBox.Text)
+                end)
 
                 header.MouseButton1Click:Connect(function()
                     open = not open
                     listContainer.Visible = open
+                    searchBox.Visible = open
+                    if open then searchBox:CaptureFocus() end
                     tween(arrow, 0.15, {Rotation = open and 180 or 0})
                 end)
-
-                local dropObj = {Value = selected}
 
                 function dropObj:Clear()
                     selected = nil
                     dropObj.Value = nil
                     selectedLabel.Text    = ""
                     selectedLabel.Visible = false
+                    buildOptions("")
                 end
 
                 function dropObj:Add(opt)
                     table.insert(options, opt)
-                    buildOptions()
+                    buildOptions(searchBox.Text)
+                end
+
+                function dropObj:Remove(opt)
+                    for i, v in ipairs(options) do
+                        if v == opt then table.remove(options, i) break end
+                    end
+                    if selected == opt then dropObj:Clear() end
+                    buildOptions(searchBox.Text)
                 end
 
                 function dropObj:Set(opt)
@@ -884,6 +1632,7 @@ function LoderLib:Window(title, width, height)
                         dropObj.Value = opt
                         selectedLabel.Text    = opt
                         selectedLabel.Visible = true
+                        buildOptions("")
                         if callback then pcall(callback, opt) end
                     end
                 end
@@ -896,7 +1645,7 @@ function LoderLib:Window(title, width, height)
             ----------------------------------------------------------------
             function secObj:Colorpicker(label, default, callback)
                 local lo    = nextOrder()
-                local color = default or Color3.new(1, 1, 1)
+                local color = default or Color3.new(1,1,1)
 
                 local row = make("Frame", {
                     Size             = UDim2.new(1, 0, 0, 32),
@@ -927,7 +1676,6 @@ function LoderLib:Window(title, width, height)
                 corner(4, swatch)
                 stroke(1, C.BORDER, swatch)
 
-                -- Simple HSV picker popup
                 local pickerOpen = false
                 local pickerGui  = nil
 
@@ -947,95 +1695,131 @@ function LoderLib:Window(title, width, height)
                     pickerOpen = true
 
                     pickerGui = make("Frame", {
-                        Size             = UDim2.new(0, 220, 0, 180),
+                        Size             = UDim2.new(0, 230, 0, 200),
                         Position         = UDim2.new(0, row.AbsolutePosition.X, 0, row.AbsolutePosition.Y + 36),
                         BackgroundColor3 = C.SURFACE,
                         BorderSizePixel  = 0,
-                        ZIndex           = 10,
+                        ZIndex           = 20,
                     }, sg:FindFirstChildOfClass("Frame") or win)
                     corner(8, pickerGui)
                     stroke(1, C.BORDER, pickerGui)
-                    pad(10, 10, 10, 10, pickerGui)
+                    pad(12, 12, 12, 12, pickerGui)
                     listLayout(pickerGui, Enum.FillDirection.Vertical, 8)
-                    pickerGui.ZIndex = 20
 
                     local h, s, v = Color3.toHSV(color)
 
-                    local function rgbRow(ch, getter, setter, colAcc)
+                    local hexBox = make("TextBox", {
+                        Size              = UDim2.new(1, 0, 0, 24),
+                        BackgroundColor3  = C.SURFACE3,
+                        BorderSizePixel   = 0,
+                        Text              = string.format("%02X%02X%02X", color.R*255, color.G*255, color.B*255),
+                        PlaceholderText   = "RRGGBB",
+                        PlaceholderColor3 = C.TEXT_DARK,
+                        TextColor3        = C.INFO,
+                        Font              = Enum.Font.Code,
+                        TextSize          = 12,
+                        TextXAlignment    = Enum.TextXAlignment.Center,
+                        ClearTextOnFocus  = true,
+                    }, pickerGui)
+                    corner(4, hexBox)
+                    stroke(1, C.BORDER2, hexBox)
+
+                    hexBox.FocusLost:Connect(function()
+                        local hex = hexBox.Text:gsub("#","")
+                        if #hex == 6 then
+                            local r = tonumber(hex:sub(1,2),16)
+                            local g = tonumber(hex:sub(3,4),16)
+                            local b = tonumber(hex:sub(5,6),16)
+                            if r and g and b then
+                                color = Color3.fromRGB(r, g, b)
+                                h, s, v = Color3.toHSV(color)
+                                swatch.BackgroundColor3 = color
+                                if callback then pcall(callback, color) end
+                            end
+                        end
+                    end)
+
+                    local function hsvRow(ch, getter, setter, colAcc)
                         local rw = make("Frame", {
-                            Size                  = UDim2.new(1, 0, 0, 22),
+                            Size                  = UDim2.new(1, 0, 0, 24),
                             BackgroundTransparency = 1,
                         }, pickerGui)
+
                         make("TextLabel", {
-                            Size                  = UDim2.new(0, 16, 1, 0),
+                            Size                  = UDim2.new(0, 14, 1, 0),
                             BackgroundTransparency = 1,
                             Text                  = ch,
                             TextColor3            = colAcc,
                             Font                  = Enum.Font.GothamBold,
-                            TextSize              = 11,
+                            TextSize              = 10,
                         }, rw)
+
                         local bg2 = make("Frame", {
-                            Size             = UDim2.new(1, -50, 0, 6),
-                            Position         = UDim2.new(0, 20, 0.5, -3),
+                            Size             = UDim2.new(1, -54, 0, 6),
+                            Position         = UDim2.new(0, 18, 0.5, -3),
                             BackgroundColor3 = C.SURFACE3,
                             BorderSizePixel  = 0,
                         }, rw)
                         corner(3, bg2)
+
                         local fl2 = make("Frame", {
                             Size             = UDim2.new(getter(), 0, 1, 0),
                             BackgroundColor3 = colAcc,
                             BorderSizePixel  = 0,
                         }, bg2)
                         corner(3, fl2)
+
                         local vLbl = make("TextLabel", {
-                            Size                  = UDim2.new(0, 26, 1, 0),
-                            Position              = UDim2.new(1, -26, 0, 0),
+                            Size                  = UDim2.new(0, 32, 1, 0),
+                            Position              = UDim2.new(1, -32, 0, 0),
                             BackgroundTransparency = 1,
-                            Text                  = tostring(math.floor(getter() * 255)),
+                            Text                  = tostring(math.floor(getter()*255)),
                             TextColor3            = C.TEXT_DIM,
                             Font                  = Enum.Font.Code,
                             TextSize              = 10,
                             TextXAlignment        = Enum.TextXAlignment.Right,
                         }, rw)
 
-                        local dragCh = false
+                        local dragC = false
                         bg2.InputBegan:Connect(function(inp)
                             if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                                dragCh = true
+                                dragC = true
                                 local pct = math.clamp((inp.Position.X - bg2.AbsolutePosition.X)/bg2.AbsoluteSize.X,0,1)
                                 setter(pct)
-                                fl2.Size = UDim2.new(pct, 0, 1, 0)
+                                fl2.Size  = UDim2.new(pct,0,1,0)
                                 vLbl.Text = tostring(math.floor(pct*255))
-                                color = Color3.fromHSV(h, s, v)
+                                color = Color3.fromHSV(h,s,v)
                                 swatch.BackgroundColor3 = color
+                                hexBox.Text = string.format("%02X%02X%02X", color.R*255, color.G*255, color.B*255)
                                 if callback then pcall(callback, color) end
                             end
                         end)
                         UserInputService.InputChanged:Connect(function(inp)
-                            if dragCh and inp.UserInputType == Enum.UserInputType.MouseMovement then
+                            if dragC and inp.UserInputType == Enum.UserInputType.MouseMovement then
                                 local pct = math.clamp((inp.Position.X - bg2.AbsolutePosition.X)/bg2.AbsoluteSize.X,0,1)
                                 setter(pct)
-                                fl2.Size = UDim2.new(pct, 0, 1, 0)
+                                fl2.Size  = UDim2.new(pct,0,1,0)
                                 vLbl.Text = tostring(math.floor(pct*255))
-                                color = Color3.fromHSV(h, s, v)
+                                color = Color3.fromHSV(h,s,v)
                                 swatch.BackgroundColor3 = color
+                                hexBox.Text = string.format("%02X%02X%02X", color.R*255, color.G*255, color.B*255)
                                 if callback then pcall(callback, color) end
                             end
                         end)
                         UserInputService.InputEnded:Connect(function(inp)
-                            if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragCh = false end
+                            if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragC = false end
                         end)
                     end
 
-                    rgbRow("H", function() return h end, function(val) h = val end, Color3.fromRGB(224,92,92))
-                    rgbRow("S", function() return s end, function(val) s = val end, Color3.fromRGB(92,184,92))
-                    rgbRow("V", function() return v end, function(val) v = val end, Color3.fromRGB(126,200,227))
+                    hsvRow("H", function() return h end, function(val) h=val end, Color3.fromRGB(224,92,92))
+                    hsvRow("S", function() return s end, function(val) s=val end, Color3.fromRGB(92,184,92))
+                    hsvRow("V", function() return v end, function(val) v=val end, Color3.fromRGB(126,200,227))
 
                     local doneBtn = make("TextButton", {
                         Size             = UDim2.new(1, 0, 0, 28),
                         BackgroundColor3 = C.ACCENT,
                         BorderSizePixel  = 0,
-                        Text             = "Done",
+                        Text             = "Apply",
                         TextColor3       = C.WHITE,
                         Font             = Enum.Font.GothamBold,
                         TextSize         = 12,
@@ -1060,8 +1844,8 @@ function LoderLib:Window(title, width, height)
             -- Keybind
             ----------------------------------------------------------------
             function secObj:Bind(label, default, callback)
-                local lo      = nextOrder()
-                local binding = default
+                local lo       = nextOrder()
+                local binding  = default
                 local listening = false
 
                 local row = make("Frame", {
